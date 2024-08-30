@@ -101,7 +101,8 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
         var spawnPoint = _pointGenerator.NextPoint(random);
 
-        var spawnPosition = context.Sector + spawnPoint + actionItem.Position;
+        var actionPosition = actionItem.Position ?? new Vec3();
+        var spawnPosition = context.Sector + spawnPoint + actionPosition;
         
         var fixture = ConstructFixture.FromSource(source);
         fixture.parentId = null;

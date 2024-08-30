@@ -60,6 +60,12 @@ public class ScriptService(IServiceProvider serviceProvider) : IScriptService
 
     public async Task<ScriptActionResult> ExecuteScriptAsync(string name, ScriptContext context)
     {
+        if (string.IsNullOrEmpty(name))
+        {
+            _logger.LogInformation("No script to run for the sector {Sector}", context.Sector);
+            return ScriptActionResult.Successful();
+        }
+        
         var repository = serviceProvider.GetRequiredService<IScriptActionItemRepository>();
 
         var scriptAction = await repository.FindAsync(name);

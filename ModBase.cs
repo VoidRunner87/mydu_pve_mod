@@ -9,7 +9,6 @@ using Backend.Business;
 using Backend.Scenegraph;
 using Backend.Voxels;
 using BotLib.BotClient;
-using BotLib.Generated;
 using BotLib.Protocols;
 using BotLib.Protocols.Queuing;
 using FluentMigrator.Runner;

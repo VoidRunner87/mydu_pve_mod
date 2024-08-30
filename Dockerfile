@@ -34,10 +34,10 @@ RUN apk add gcompat
 RUN apk add musl-dev
 
 ## Install NGINX and any other dependencies
-RUN apk update && \
-    apk add --no-cache nginx
+#RUN apk update && \
+#    apk add --no-cache nginx
 
-COPY nginx.conf /etc/nginx/nginx.conf
+#COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 9210
 

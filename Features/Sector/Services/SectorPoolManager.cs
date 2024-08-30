@@ -38,6 +38,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
         var random = _randomProvider.GetRandom();
 
+        var randomMinutes = random.Next(0, 60);
+
         for (var i = 0; i < missingQuantity; i++)
         {
             var radius = MathFunctions.Lerp(
@@ -45,7 +47,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 args.MaxRadius,
                 random.NextDouble()
             );
-
+            
             var position = random.RandomDirectionVec3() * radius;
             position += args.CenterPosition;
             position = position.GridSnap(SectorGridSnap);
@@ -57,7 +59,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 Id = Guid.NewGuid(),
                 Sector = position,
                 CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow + args.ExpirationTimeSpan,
+                ExpiresAt = DateTime.UtcNow + args.ExpirationTimeSpan + TimeSpan.FromMinutes(randomMinutes * i),
                 OnLoadScript = encounter.OnLoadScript,
                 OnSectorEnterScript = encounter.OnSectorEnterScript,
             };
@@ -129,7 +131,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         foreach (var sector in sectorsToActivate)
         {
             _logger.LogInformation(
-                "Starting up sector({Sector}) encounter: {Encounter}",
+                "Starting up sector({Sector}) encounter: '{Encounter}'",
                 sector.Sector,
                 sector.OnSectorEnterScript
             );

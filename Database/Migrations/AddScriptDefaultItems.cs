@@ -11,7 +11,7 @@ public class AddScriptDefaultItems : Migration
 {
     private const string ScriptTable = "mod_script";
     private const string ConstructDefinitionTable = "mod_construct_def";
-    
+
     public override void Up()
     {
         Insert.IntoTable(ScriptTable)
@@ -32,7 +32,7 @@ public class AddScriptDefaultItems : Migration
                     }
                 )
             });
-        
+
         Insert.IntoTable(ScriptTable)
             .InSchema("public")
             .Row(new
@@ -51,7 +51,7 @@ public class AddScriptDefaultItems : Migration
                     }
                 )
             });
-        
+
         Insert.IntoTable(ScriptTable)
             .InSchema("public")
             .Row(new
@@ -70,7 +70,7 @@ public class AddScriptDefaultItems : Migration
                     }
                 )
             });
-        
+
         Insert.IntoTable(ScriptTable)
             .InSchema("public")
             .Row(new
@@ -89,7 +89,7 @@ public class AddScriptDefaultItems : Migration
                     }
                 )
             });
-        
+
         Insert.IntoTable(ScriptTable)
             .InSchema("public")
             .Row(new
@@ -108,7 +108,7 @@ public class AddScriptDefaultItems : Migration
                     }
                 )
             });
-        
+
         Insert.IntoTable(ScriptTable)
             .InSchema("public")
             .Row(new
@@ -127,7 +127,7 @@ public class AddScriptDefaultItems : Migration
                     }
                 )
             });
-        
+
         Insert.IntoTable(ConstructDefinitionTable)
             .InSchema("public")
             .Row(new
@@ -152,7 +152,7 @@ public class AddScriptDefaultItems : Migration
                     }
                 )
             });
-        
+
         Insert.IntoTable(ConstructDefinitionTable)
             .InSchema("public")
             .Row(new
