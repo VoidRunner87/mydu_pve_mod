@@ -19,26 +19,32 @@ public class DeleteConstructAction(ulong constructId) : IScriptAction
         var provider = context.ServiceProvider;
 
         var logger = provider.CreateLogger<DeleteConstructAction>();
-        
         var orleans = provider.GetOrleans();
 
-        var constructInfoGrain = orleans.GetConstructInfoGrain(constructId);
-        var constructInfo = await constructInfoGrain.Get();
-
-        var ownerId = constructInfo.mutableData.ownerId.playerId;
-
-        // TODO remove hardcoded
-        if (ownerId is 2 or 4)
+        try
         {
-            logger.LogInformation("Prevented delete construct {ConstructId} because it was captured by a player", constructId);
+            var constructInfoGrain = orleans.GetConstructInfoGrain(constructId);
+            var constructInfo = await constructInfoGrain.Get();
+
+            var ownerId = constructInfo.mutableData.ownerId.playerId;
+
+            // TODO remove hardcoded
+            if (ownerId is 2 or 4)
+            {
+                logger.LogInformation("Prevented delete construct {ConstructId} because it was captured by a player", constructId);
             
-            return ScriptActionResult.Successful();
+                return ScriptActionResult.Successful();
+            }
+        
+            var parentingGrain = orleans.GetConstructParentingGrain();
+            await parentingGrain.DeleteConstruct(constructId, hardDelete: true);
+        
+            logger.LogInformation("Deleted construct {ConstructId}", constructId);
         }
-        
-        var parentingGrain = orleans.GetConstructParentingGrain();
-        await parentingGrain.DeleteConstruct(constructId, hardDelete: true);
-        
-        logger.LogInformation("Deleted construct {ConstructId}", constructId);
+        catch (Exception e)
+        {
+            logger.LogInformation(e, "Failed to delete construct {Construct}", constructId);
+        }
         
         return ScriptActionResult.Successful();
     }
