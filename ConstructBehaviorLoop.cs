@@ -30,16 +30,19 @@ public class ConstructBehaviorLoop : ModBase
         
         IEnumerable<ConstructHandleItem> constructHandleItems = new List<ConstructHandleItem>();
         double totalHandleItemsDeltaTime = 0;
+        double totalDeltaTimeFeatureCheck = 0;
         var previousTime = DateTime.UtcNow;
+        
+        var isEnabled = await featureService.GetEnabledValue<ConstructBehaviorLoop>(false);
         
         try
         {
             while (true)
             {
-                var isEnabled = await featureService.GetEnabledValue<ConstructBehaviorLoop>(false);
                 if (!isEnabled)
                 {
                     await Task.Delay(10000);
+                    isEnabled = await featureService.GetEnabledValue<ConstructBehaviorLoop>(false);
                     continue;
                 }
                 
@@ -51,7 +54,17 @@ public class ConstructBehaviorLoop : ModBase
                 var now = DateTime.UtcNow;
                 var deltaTime = (now - previousTime).TotalSeconds;
                 totalHandleItemsDeltaTime += deltaTime;
+                totalDeltaTimeFeatureCheck += deltaTime;
 
+                if (totalDeltaTimeFeatureCheck > 10)
+                {
+                    isEnabled = await featureService.GetEnabledValue<ConstructBehaviorLoop>(false);
+                    if (!isEnabled)
+                    {
+                        continue;
+                    }
+                }
+                
                 if (totalHandleItemsDeltaTime > 2)
                 {
                     constructHandleItems = (await constructHandleRepository.GetAllAsync()).ToList();

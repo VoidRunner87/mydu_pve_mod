@@ -28,7 +28,7 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
     public async Task CleanupExpiredConstructHandlesAsync()
     {
         var expirationMinutes = await _featureReaderService
-            .GetIntValueAsync(ConstructHandleExpirationMinutesFeatureName, 30);
+            .GetIntValueAsync(ConstructHandleExpirationMinutesFeatureName, 360);
 
         var expiredHandles = await _repository.FindExpiredAsync(expirationMinutes);
 

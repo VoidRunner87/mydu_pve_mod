@@ -41,4 +41,4 @@ RUN apk add musl-dev
 
 EXPOSE 9210
 
-CMD ["sh", "-c", "nginx && dotnet Mod.DynamicEncounters.dll"]
+CMD ["sh", "-c", "dotnet Mod.DynamicEncounters.dll"]
