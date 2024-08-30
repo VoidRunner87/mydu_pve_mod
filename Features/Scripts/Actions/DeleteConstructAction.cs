@@ -44,6 +44,7 @@ public class DeleteConstructAction(ulong constructId) : IScriptAction
         catch (Exception e)
         {
             logger.LogInformation(e, "Failed to delete construct {Construct}", constructId);
+            return ScriptActionResult.Failed();
         }
         
         return ScriptActionResult.Successful();
