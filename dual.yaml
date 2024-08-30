@@ -1,0 +1,25 @@
+orleans:
+    local_silo: True
+    gateway_port: 30000
+    local_silo_address: "127.0.0.1"
+user_content:
+    s3:
+        override_path: user_content
+    catalog_mongo_connection: "mongodb://mongo:mongo@localhost:27017/dual?authSource=admin"
+    catalog_mongo_database: "dual"
+    catalog_mongo_collection: s3catalog
+postgres:
+    host:               localhost
+    port:               5432
+    database:           dual
+    user:               dual
+    password:           dual
+    max_connection:     20                  # max number of connections.  Only honored by go apps
+    player_workers:     4                   # number of workers for players (in Front and Node)
+    construct_workers:  4                   # number of workers for constructs (in Front, Node and LoadBalancer)
+    load_workers:       1                   # number of workers for load-balancing operations (in LoadBalancer)
+    log_threshold:      15ms                # slower requests will be logged
+    extra: "Include Error Detail=true"
+s3:
+    override_base_path: ..\..\data          # Path based on where this project is to the data folder if locally
+    

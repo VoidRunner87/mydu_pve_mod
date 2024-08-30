@@ -1,0 +1,209 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Backend;
+using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
+using Mod.DynamicEncounters.Features.Spawner.Data;
+using Mod.DynamicEncounters.Helpers;
+using Mod.DynamicEncounters.Helpers.DU;
+using NQ;
+using NQ.Interfaces;
+using NQutils.Def;
+using Orleans;
+
+namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
+
+public class AggressiveBehavior(ulong constructId, IConstructDefinition constructDefinition) : IConstructBehavior
+{
+    private List<ElementId> _weaponsElements;
+    private List<WeaponHandle> _weaponUnits;
+    private IClusterClient _orleans;
+    private IGameplayBank _bank;
+    private ILogger<AggressiveBehavior> _logger;
+    private IConstructElementsGrain _constructElementsGrain;
+
+    private double _totalDeltaTime;
+    private ElementId _coreUnitElementId;
+    
+    private bool _active = true;
+
+    public bool IsActive() => _active;
+
+    public class WeaponHandle(ElementInfo elementInfo, WeaponUnit unit)
+    {
+        public ElementInfo ElementInfo { get; } = elementInfo;
+        public WeaponUnit Unit { get; } = unit;
+    }
+
+    public async Task InitializeAsync(BehaviorContext context)
+    {
+        var provider = context.ServiceProvider;
+        _orleans = provider.GetOrleans();
+
+        _constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
+
+        _bank = provider.GetGameplayBank();
+
+        _weaponsElements = await _constructElementsGrain.GetElementsOfType<WeaponUnit>();
+        var elementInfos = await Task.WhenAll(
+            _weaponsElements.Select(_constructElementsGrain.GetElement)
+        );
+        _weaponUnits = elementInfos
+            .Select(ei => new WeaponHandle(ei, _bank.GetBaseObject<WeaponUnit>(ei)!))
+            .Where(w => w.Unit is not StasisWeaponUnit) // TODO Implement Stasis later
+            .ToList();
+
+        _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).Single();
+        
+        _logger = provider.CreateLogger<AggressiveBehavior>();
+    }
+
+    public async Task TickAsync(BehaviorContext context)
+    {
+        var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
+
+        if (!context.IsAlive)
+        {
+            _active = false;
+            
+            return;
+        }
+
+        if (!context.TargetConstructId.HasValue)
+        {
+            return;
+        }
+
+        if (coreUnit.IsCoreStressHigh())
+        {
+            context.NotifyCoreStressHigh(new BehaviorEventArgs(constructId, constructDefinition));
+        }
+        
+        var provider = context.ServiceProvider;
+
+        var constructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
+        var npcShotGrain = _orleans.GetNpcShotGrain();
+
+        var constructInfo = await constructInfoGrain.Get();
+        var constructPos = constructInfo.rData.position;
+        var targetInfoGrain = _orleans.GetConstructInfoGrain(new ConstructId{constructId = context.TargetConstructId.Value});
+        var targetInfo = await targetInfoGrain.Get();
+        var targetSize = targetInfo.rData.geometry.size;
+
+        if (constructInfo.IsShieldLowerThanHalf())
+        {
+            context.NotifyShieldHpHalf(new BehaviorEventArgs(constructId, constructDefinition));
+        }
+        
+        if (constructInfo.IsShieldLowerThan25())
+        {
+            context.NotifyShieldHpLow(new BehaviorEventArgs(constructId, constructDefinition));
+        }
+        
+        if (constructInfo.IsShieldDown())
+        {
+            context.NotifyShieldHpDown(new BehaviorEventArgs(constructId, constructDefinition));
+        }
+        
+        var random = provider.GetRandomProvider()
+            .GetRandom();
+
+        // var hitPos = random.RandomDirectionVec3() * targetSize / 2;
+        var hitPos = random.RandomDirectionVec3() * targetSize / 4;
+        var constructSize = (ulong)constructInfo.rData.geometry.size;
+        var targetPos = targetInfo.rData.position;
+
+        var weapon = random.PickOneAtRandom(_weaponUnits);
+
+        await ShootAndCycleAsync(
+            new ShotContext(
+                context,
+                npcShotGrain,
+                weapon,
+                constructPos,
+                constructSize,
+                context.TargetConstructId.Value,
+                targetPos,
+                hitPos,
+                _weaponUnits.Count // One shot equivalent of all weapons for performance reasons
+            )
+        );
+    }
+
+    public class ShotContext(
+        BehaviorContext behaviorContext,
+        INpcShotGrain npcShotGrain,
+        WeaponHandle weaponHandle,
+        Vec3 constructPosition,
+        ulong constructSize,
+        ulong targetConstructId,
+        Vec3 targetPosition,
+        Vec3 hitPosition,
+        int quantityModifier
+    )
+    {
+        public BehaviorContext BehaviorContext { get; set; } = behaviorContext;
+        public INpcShotGrain NpcShotGrain { get; set; } = npcShotGrain;
+        public WeaponHandle WeaponHandle { get; set; } = weaponHandle;
+        public Vec3 ConstructPosition { get; set; } = constructPosition;
+        public ulong ConstructSize { get; set; } = constructSize;
+        public ulong TargetConstructId { get; set; } = targetConstructId;
+        public Vec3 TargetPosition { get; set; } = targetPosition;
+        public Vec3 HitPosition { get; set; } = hitPosition;
+        public int QuantityModifier { get; } = quantityModifier;
+    }
+
+    private async Task ShootAndCycleAsync(ShotContext context)
+    {
+        _totalDeltaTime += context.BehaviorContext.DeltaTime;
+        
+        var handle = context.WeaponHandle;
+
+        // TODO check if weapon is destroyed
+        var elementInfo = await _constructElementsGrain.GetElement(handle.ElementInfo.elementId);
+
+        var w = handle.Unit;
+        var mod = constructDefinition.DefinitionItem.Mods;
+        var cycleTime = w.baseCycleTime * mod.Weapon.CycleTime;
+
+        if (_totalDeltaTime < cycleTime)
+        {
+            return;
+        }
+
+        _totalDeltaTime = 0;
+
+        await context.NpcShotGrain.Fire(
+            w.displayName,
+            context.ConstructPosition,
+            constructId,
+            context.ConstructSize,
+            context.TargetConstructId,
+            context.TargetPosition,
+            new SentinelWeapon
+            {
+                aoe = true,
+                damage = w.baseDamage * mod.Weapon.Damage * context.QuantityModifier,
+                range = 100000,
+                aoeRange = 100000,
+                baseAccuracy = w.baseAccuracy * mod.Weapon.Accuracy,
+                effectDuration = 10,
+                effectStrength = 10,
+                falloffDistance = w.falloffDistance * mod.Weapon.FalloffDistance,
+                falloffTracking = w.falloffTracking * mod.Weapon.FalloffTracking,
+                fireCooldown = cycleTime,
+                baseOptimalDistance = w.baseOptimalDistance * mod.Weapon.OptimalDistance,
+                falloffAimingCone = w.falloffAimingCone * mod.Weapon.FalloffAimingCone,
+                baseOptimalTracking = w.baseOptimalTracking * mod.Weapon.OptimalTracking,
+                baseOptimalAimingCone = w.baseOptimalAimingCone * mod.Weapon.OptimalAimingCone,
+                optimalCrossSectionDiameter = w.optimalCrossSectionDiameter,
+                ammoItem = "AmmoMissileLarge4",
+                weaponItem = "WeaponMissileLargeAgile5"
+            },
+            5,
+            context.HitPosition
+        );
+    }
+}

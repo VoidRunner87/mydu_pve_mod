@@ -1,0 +1,103 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Dapper;
+using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Database.Interfaces;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Newtonsoft.Json;
+
+namespace Mod.DynamicEncounters.Features.Scripts.Actions.Repository;
+
+public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : IScriptActionItemRepository
+{
+    private readonly IPostgresConnectionFactory _factory = provider.GetRequiredService<IPostgresConnectionFactory>();
+
+    public async Task AddAsync(ScriptActionItem item)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            """
+            INSERT INTO public.mod_script (id, name, content) 
+            VALUES(@id, @content, @active)
+            """,
+            new
+            {
+                id = Guid.NewGuid(),
+                name = item.Name,
+                content = JsonConvert.SerializeObject(item)
+            }
+        );
+    }
+
+    public Task SetAsync(IEnumerable<ScriptActionItem> items)
+    {
+        throw new NotSupportedException();
+    }
+
+    public Task AddRangeAsync(IEnumerable<ScriptActionItem> items)
+    {
+        throw new NotImplementedException("TODO LATER");
+    }
+
+    public async Task<ScriptActionItem?> FindAsync(object key)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var rows = (await db.QueryAsync<DbRow>(
+                """SELECT * FROM public.mod_script WHERE name = @key""",
+                new { key })
+            ).ToList();
+
+        return MapToModel(rows[0]);
+    }
+
+    public async Task<IEnumerable<ScriptActionItem>> GetAllAsync()
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var rows = (await db.QueryAsync<DbRow>("""
+                                               SELECT * FROM public.mod_script
+                                               """)).ToList();
+
+        return rows.Select(MapToModel);
+    }
+
+    public async Task<long> GetCountAsync()
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        return await db.ExecuteScalarAsync<int>("""
+                                                SELECT COUNT(0) FROM public.mod_script
+                                                """);
+    }
+
+    public async Task DeleteAsync(object key)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync("DELETE FROM public.mod_script WHERE name = @key", new { key });
+    }
+
+    private ScriptActionItem MapToModel(DbRow row)
+    {
+        return JsonConvert.DeserializeObject<ScriptActionItem>(row.content);
+    }
+
+    private struct DbRow
+    {
+        public Guid id { get; set; }
+        public string name { get; set; }
+        public string content { get; set; }
+        public DateTime created_at { get; set; }
+        public DateTime updated_at { get; set; }
+    }
+}

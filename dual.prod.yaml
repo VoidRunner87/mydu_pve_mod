@@ -1,0 +1,361 @@
+postgres:
+   host:               postgres
+   port:               5432
+   database:           dual
+   user:               dual
+   password:           dual
+   max_connection:     20                  # max number of connections.  Only honored by go apps
+   player_workers:     4                   # number of workers for players (in Front and Node)
+   construct_workers:  4                   # number of workers for constructs (in Front, Node and LoadBalancer)
+   load_workers:       1                   # number of workers for load-balancing operations (in LoadBalancer)
+   log_threshold:      15ms                # slower requests will be logged
+   extra: "Include Error Detail=true"
+
+orleanspostgres:
+   host:               postgres
+   port:               5432
+   database:           orleans
+   user:               dual
+   password:           dual
+
+
+influxdb:
+   enabled:            false
+   http:               true                # use HTTP or UDP protocol?
+   host:               influxdb            # ip of the influx server
+   port:               8086                # port of the HTTP (or UDP) endpoint
+   db:                 dual                # (HTTP only)
+   user:               root                # (HTTP only)
+   password:           root                # (HTTP only)
+   log_threshold:      100ms               # (HTTP only) slower requests will be logged
+
+mongodb:
+   uri:                "mongodb://mongo:mongo@mongo:27017"
+   database:           dual
+
+log:
+   to_file_prod:         true          # write full logs to 'log.path'/server_name.log
+   to_file_dev:          true           # write readable logs to 'log.path'/server_name_dev.log
+   to_stdout_dev:        false         # write readable logs to stdout
+   enable_logging_actor: false  # write logs through an actor or directly.
+   path:                 /logs          # make sure the path exists and is writable
+   color:                false                 # color the logs on stdout; needs an ANSI compatible terminal
+   short_prefix_dev:     false      # use a short prefix (datetime and server name) for the dev outputs
+   level:                3                 # log level to file (0 -> TBC, 1 -> TRACE, 2 -> DEBUG, 3 -> INFO, 4 -> WARN, 5 -> ERROR, 6 -> TBC)
+   console_level:        5         # log level to console
+   network:              false                                # log every network packets
+   caf:                  0                                   # caf log level, -1 (none), 0 (error), ..., 4 (trace)
+   voxel_requests:       0        # log level for voxel get/sub/unsub (0 -> NONE, 1 -> TRACE, 2 -> DEBUG, 3 -> INFO)
+   dotnet_verbose:       false                                # do not filter .NET framework logs
+   server_py_log_commands: true
+   dotnet_roll_size_limit: 100000000000 # we logrotate which is better
+
+auth:
+   server_secret_file: "/config/server_secret" # location of the server secret file for public listing
+   allow_account_creation: false # Set to true to allow automatic account creation
+   strict_protocol:    false               # set to "false" to allow connection with non-strict protocol match
+   local: true
+   roles:
+     game_access: ["game"]
+     high_priority: ["vip"]
+     impersonation: ["staff"]
+     bypass_priority: ["staff"]
+
+bots:
+    magic_hash:        42424242             # magical value used to identify bots with multiple use:
+                                            # On bot's Player creations: identify a bot and create a custom account
+                                            # On bot's voxel operations: allow the voxel edition
+                                            # current load tester uses the value 42424242, 0 means it is deactivated
+
+pubsub:
+    broker: 'amqp://guest:guest@rabbitmq:5672'    # RabbitMQ broker url
+
+backoffice:                                # settings specific to the backoffice
+   clientapp_path:      "/Backoffice/ClientApp"        # Path to the frontend client app
+   public_url: "http://backoffice.dev.dual"
+   smtp_host: "smtp"
+   smtp_sender_email: "admin@dual.dev"
+
+http:
+   voxel_service: http://voxel:8081
+   voxel_service_editor: http://voxel:8081
+   voxel_public_url: http://localhost:8081
+   market_service: http://market:8080
+   orleans_public_url: http://127.0.0.1:10111  # SET ME
+   user_content_cdn: http://127.0.0.1:10000
+
+s3:
+    override_base_path: /data
+market:                                    # settings specific to the market service
+    port: 8080                             # listen port (default 8080)
+    s3_orders:                             # s3 keys to alows access on the bucket with the orders
+       override_path: market_orders
+
+voxel:
+    port: 8081                         # http listen port (default 8081)
+    editor_port: 8081           # http editor listen port (default 8091)
+    max_cells_cached: 10000 # number of Cells that we keep cached in memory. 0 to disable the cache.
+    metadata_tracing: false                             # write some debug info in the metadata
+    redis:
+           host: redis
+           port: 6379
+           db:   2
+    redis_cell_data:
+           # this is the redis for the cell data cache.
+           host:    redis
+           port:    6379
+           cluster: false
+           db:      4
+    ignore_default_db: true
+    db: [{"uri": "mongodb://mongo:mongo@mongo/dev_du?authSource=admin", "database": "dev_du"}]
+    stateless: true
+    publish_operation_in_visibility: true
+    temp_db:
+      uri: mongodb://mongo:mongo@mongo
+      database: dev_dualcache
+    cache_retention: 0s
+    purge_cache_on_startup: true
+    procgen_cache:
+      # configuration for the procedural generation cache
+      redis:
+         host:    redis
+         port:    6379
+         cluster: false
+         db:      5
+      ttl: 0s                             # time to keep an entry in the cache.  0s means infinite.
+    next_db: []
+
+queueing:                                  # settings specific to the queueing service
+    listen_urls:         ["http://::9630"]
+    players_per_batch:    50    # How many players will tried to be unqueued
+    delay_between_batch: 3s # At which frequency players will tried to be unqueued
+    front_ping_update:   1s                                      # QS will ping registered Front to retrieve info (like players count etc..)
+    allow_bypass:        True        # false disable bypass for high-priority accounts
+    jwt_issuer:          https://qs-dev.dev.novaquark.com          # expected issuer for the JWT
+    jwt_audience:        dual-universe-dev        # expected audience for the JWT
+    max_players_per_front:     300
+    start_maintenance: false
+    resets: []
+
+stats:
+   profile_player_update:    false      # do we log all PlayerUpdates?
+   profile_cell_requests:    false        # do we log cell requests for all players?
+   flush_tick:               10s           # how often do we flush the accumulated data to influx
+   db_tick:                  10s           # how often do we aggregate the DB stats
+   caf_instrumentation_tick: 10s           # how often do the CAF instrumentation thread log into influx
+   dispatcher_tick:          10s           # tick time for FrontADispatcher & LoadAPlayerConnectionManager
+   construct_tick:           10s           # tick time for NodeACellConstruct
+   cell_cache_tick:          10s           # tick time for CellCache
+   player_tick:              10s           # tick time for FrontAPlayer & NodeAPlayer
+   directory_tick:           10s           # tick time for ActorDirectory
+   proxy_tick:               10s           # tick time for ActorRegistry
+
+anticheat:
+   enable: false
+
+front:
+    host: 10.5.0.5
+    external_host: 10.5.0.5   # TOCHANGE
+#    external_host: 127.0.0.1   # TOCHANGE
+    max_clients:        8192                           # max number of raknet connections
+    queueing_url:       'http://queueing:9630' # queueing system url
+    item_bank_url:      'http://queueing:9630/public/itembank/serialized' # TOCHANGE
+    cached_player_info: 10000                          # number of cached PlayerInfo in each Front
+    orleans_bridge:     true   # Use orleans bridge or fallback to webservice
+    update_flow_control: "true"
+    raknet_encryption:
+        enforced: false
+
+node:
+   host: 10.5.0.6
+   check_timed_actions: true               # do we check for the minimum duration of timed actions (ex: voxel ops)
+   player_save_interval: 60s               # how often do we save the player position & construct in the DB?
+   empty_area_lifespan: 180s               # how long an empty area (PSA) will be kept
+   construct_update:                       # when to notify LoadBalancer that a construct has moved
+                                           # Note: Parenting change is immediately notified to LoadBalancer
+        enabled:       true
+        min_delay:     30s                 # wait *at least* min_delay between two notifications
+        min_distance:  100.0               # wait for construct to move *at least* min_distance (in meters) since the previous notification
+   pubsub:                                 # Functional PubSub (via RabbitMQ)
+        position_tick: 5s                  # Absolute position publication tick
+   orleans_bridge:     true # Use orleans bridge or fallback to webservice
+
+nodemanager:
+   base_url:            http://localhost:12005
+   listen_urls:         ['http://::12005']
+
+balancing:
+   interest_points:    [""]    # *list* of interest points (for balancing) as strings.
+                                                      # Format: constructId plus optional coordinates after colon (example '100000: 12.65, 0.47, 54.12')
+                                                      # ConstructId can be 0 for absolute positions (in universe) and if coordinates are omitted, center
+                                                      # of construct is used.
+                                                      # Notes: - No boundary check is done (coordinates may be outside of the construct)
+                                                      #        - Interest points are projected to absolute coordinates at startup time: an interest point
+                                                      #          on a dynamic construct will be fixed to initial position at startup and will not move
+   topology:           [{"points": [{"id": "ALIOTH_MOON_1", "constructId": 21}, {"id": "ALIOTH_MOON_4", "constructId": 22}]}, {"points": [{"id": "ALIOTH", "constructId": 2}]}, {"points": [{"id": "SANCTUARY", "constructId": 26}]}]  # full topology stored as list of InterestPointList (NQStruct)
+                                                      # expected values for each interest point are :
+                                                      # id : name of the interest point (only for manipulaiton purpose, no other impact) (default to 'default<n>')
+                                                      # constructId : construct used to calculate the position (defaults to 0 aka universe)
+                                                      # relativePos : relative position from the construct to calculate point position (default to center)
+                                                      # ** NB : all other values are ignored **
+   max_load_per_node:   1000                       # max number of players in a node
+   optimal_factor:      0.8                          # target load of each node (may require some adjustements for high number of nodes expected)
+   poportion_unclusterized_cell: 0.9   # proportion of cells moved autwside clustering authorized before we force reclustering
+                                                                                # higher value means less clustering
+   backup_nodes:       0                   # number of backup nodes at preloading. When a node is down, if a backup node is present, it will take
+                                           # all its PSAs.
+                                           # Notes: - Nodes started after preloading are de facto backup nodes.
+                                           #        - Number of backup nodes at preloading is capped at half the total number of connected nodes
+   preload_delay:      5s # delay between last node connection and pre-load start. Reset at each node connection
+   preload_timeout:    600s                # timeout when we consider the preload as failed
+   preload_batch_size: 5             # Size of batch for preload constructs
+   ## NodeManager
+   manager_tick:       40s       # time between each processing
+   manager_wait_run:   300s   # time to wait after starting the process until first run of the proces
+   max_migration_proportion: 0.1 # proportion of migrated load in one time (compared to max load)
+   hysteresis_factor: 0.05               # factor that manages the add/remove of nodes
+
+
+migration:
+   timeout:            10s                 # timeout to consider that a migration failed
+   delay:              5s                  # time to wait before migrating a remote player
+
+rest:
+    port_offset:       4000                # Each service including a REST server will use their own base_port + rest.port_offset
+    experimental_http_route: true
+
+gameplay:
+   base: http://orleans:10111
+   baseurl: http://orleans:10111
+
+loadbalancer:
+   ip: lb
+
+gameplayservices:
+    port:   10111                                   # Listen port for all GameplayServices
+    port_http2: 10112 # Listen port for all GameplayServices in http2
+    endpoint: orleans # XXX: legacy
+    grpc_endpoint: orleans:10112
+    autoheal: false  # Try to heal state inconsistencies (for dev only)
+
+orleans:
+    silo_port: 11111
+    gateway_port: 30000
+    dashboard_port: 8099
+    cluster_id: dev
+    service_id: dev
+    telemetry_key: 
+    interfaces: []
+    industry_init: true
+    local_silo: false
+    enable_reminders: true
+    auto_bootstrap: true
+    industry_min_recipe_time: 1
+    enable_community_rewards: false # Enable fetching rewards from community
+    reminder_parallelism: 60
+    grain_collection_age: 4000s
+    start_autocompaction: false # default beahvior is to continue as before
+    start_market_records: false # default beahvior is to continue as before
+
+svn:
+  environment: dev
+  username: USERNAME
+  password: PASSWORD
+
+visibility:             # settings related to the visibility (new implementation)
+   new_algo:         true                      # each node will fork a visibility process.
+   v2: false
+   auto_launch:         true                      # each node will fork a visibility process.
+   PublishOnRedis:    true
+   debug_log_frequency: 0 # very verbose
+   redis:
+     host: redis
+     port: 6379
+     db: 2
+   max_connection_idle: 1200s
+   max_idle_ping: 30s
+
+visibility_service:                                          # section dedicated for clients of the visibility service
+    grpc_address: node:9310  # address:port of the grpc service
+
+constructs:                                                 # settings specific to the C# construct micro service
+    base: http://constructs:12003
+    listen_urls: ["http://::12003"]
+
+mesh:
+   public_url:    "http://localhost:8081"       # prefix url of the mesh service, from the client point of view.
+   base:          ""             # when empty, `base` is used, prefix url for inter service communication when empty, use http.voxel_service
+   listen_port:   0        # port to bind.  When 0, don't start the service.
+   concurrency:  4
+   mongodb:                     # mongo db credentials
+      uri:                "mongodb://mongo:mongo@mongo/dev_du?authSource=admin"
+      database:           "dev_du"
+   kafka:
+      kafka_address: "kafka:9092"
+      address: "kafka:9092"
+      topic: nqmesh
+      consumer_group: nqmesh_consumer
+
+preload:
+    go_parallel: 10
+    cpp_parallel: 3
+    voxel_parallel: 100
+    min_size: 512
+    cpp_preload: all
+
+asteroids:
+   override_path: asteroids
+wrecks:
+   override_path: wrecks
+rewards:
+   override_path: rewards
+aliens:
+   override_path: aliens
+pools:
+   override_path: pools
+tutorials:
+   override_path: tutorials
+user_content:
+   s3:
+     override_path: user_content
+   catalog_mongo_connection: "mongodb://mongo:mongo@mongo/dev_du?authSource=admin"
+   catalog_mongo_database: "dev_du"
+   catalog_mongo_collection: s3catalog
+
+redis:
+   host:               redis
+   port:               6379
+   db:                 1  # redis DB to use for BO communications. Must match with BO environment variable
+   send_positions:     false
+   position_tick:      5s
+
+scenegraph_redis:
+   host:               redis
+   port:               6379
+   db:                 6                  # redis DB to use for BO communications. Must match with BO environment variable
+   cluster:            false              # when true, connect to a redis cluster.
+
+redis_orleans_session:
+   host:               redis
+   port:               6379
+   db:                 7  
+
+model_exporter:
+  listen_urls: ["http://::5142"]
+  s3:
+     override_path: "models"
+  quota_max_pending: 5
+  quota_max_daily: 50
+  log_path: '/tmp' # this is not the service logging but job logging
+  models_path: "/stlss2"
+  max_elements: 2000
+
+debug:
+   raknet_disconnection_timeout: 10s  # time in ms of timeout before raknet disconnect a player
+   enable_fetch:       true               # can the players fetch their constructs ?
+   directory_timeout:  8s                 # Actor Directory (proxy) default timeout for spawn/move actions
+   database_timeout:   30s                 # Database requests default timeout
+   registry_cache_cleanup : 60s            # Actor Registry periodic cache clean-up
+   visibility_distance_boost: 0
+   max_voxel_cells_per_operation: 64       # Max number of Cell that can be updated in one Voxel operation (keep in mind that to double the op size you need to x8 the number of Cells)
+   debug_error_messages: false
