@@ -47,8 +47,6 @@ public class StubDuClientFactory : IDuClientFactory
 #endif
         
         Console.WriteLine($"Connection: {queueingResponse.info.grpcInfo.address}");
-        Log.ForContext<DuClientFactory>()
-            .Information($"Connection: {queueingResponse.info.grpcInfo}");
         
         GrpcVisibility grpc = await GrpcVisibility.Make(queueingResponse.info.grpcInfo, queueingResponse.token,
             grpcVisibilityConfig);
