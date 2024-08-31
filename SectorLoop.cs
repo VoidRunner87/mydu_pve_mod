@@ -74,13 +74,9 @@ public class SectorLoop : ModBase
         };
 
         var sectorPoolManager = ServiceProvider.GetRequiredService<ISectorPoolManager>();
-        var constructHandleManager = ServiceProvider.GetRequiredService<IConstructHandleManager>();
 
         Console.WriteLine($"Loaded Sector Pool Manager {sw.ElapsedMilliseconds}");
-        await Task.WhenAll(
-            sectorPoolManager.ExecuteSectorCleanup(generationArgs),
-            constructHandleManager.CleanupExpiredConstructHandlesAsync()
-        );
+        await sectorPoolManager.ExecuteSectorCleanup(Bot, generationArgs);
         Console.WriteLine($"Executed Cleanup {sw.ElapsedMilliseconds}");
         await sectorPoolManager.GenerateSectorPool(generationArgs);
         Console.WriteLine($"Generated Sector Pool {sw.ElapsedMilliseconds}");

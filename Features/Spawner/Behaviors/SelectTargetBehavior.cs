@@ -60,7 +60,7 @@ public class SelectTargetBehavior(ulong constructId, IConstructDefinition constr
         var npcPos = npcConstructInfo.rData.position;
         var sectorPos = npcPos.GridSnap(SectorPoolManager.SectorGridSnap);
 
-        var constructsOnSector = await _spatialHashRepo.FindConstructsOnSector(sectorPos);
+        var constructsOnSector = await _spatialHashRepo.FindPlayerLiveConstructsOnSector(sectorPos);
         
         var result = await Task.WhenAll(
             constructsOnSector.Select(id => _orleans.GetConstructInfoGrain(id).Get())

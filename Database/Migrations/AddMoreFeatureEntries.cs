@@ -24,7 +24,7 @@ public class AddMoreFeatureEntries : Migration
             {
                 name = "ConstructHandleExpirationMinutes",
                 type = "int",
-                value = "30"
+                value = "360"
             });
         
         Insert.IntoTable(ModFeaturesTable)

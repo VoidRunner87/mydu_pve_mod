@@ -20,7 +20,7 @@ public class ConstructBehaviorLoop : ModBase
     public override async Task Loop()
     {
         var provider = ServiceProvider;
-        var logger = provider.CreateLogger<TaskQueueLoop>();
+        var logger = provider.CreateLogger<ConstructBehaviorLoop>();
 
         var constructHandleRepository = provider.GetRequiredService<IConstructHandleRepository>();
         var behaviorFactory = provider.GetRequiredService<IConstructBehaviorFactory>();

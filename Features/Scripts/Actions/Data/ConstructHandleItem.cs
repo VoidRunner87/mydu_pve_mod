@@ -11,5 +11,10 @@ public class ConstructHandleItem
     public Vec3 Sector { get; set; }
     public Guid ConstructDefinitionId { get; set; }
     
+    public ulong OriginalOwnerPlayerId { get; set; }
+    public ulong OriginalOrganizationId { get; set; }
+    
+    public string OnCleanupScript { get; set; }
+    
     public ConstructDefinitionItem? ConstructDefinitionItem { get; set; }
 }

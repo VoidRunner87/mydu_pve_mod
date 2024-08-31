@@ -10,7 +10,6 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Newtonsoft.Json;
 using NQ;
-using Serilog;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions.Repository;
 
@@ -27,8 +26,8 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
 
         await db.ExecuteAsync(
             $"""
-             INSERT INTO {NpcConstructHandleTable} (id, construct_id, sector_x, sector_y, sector_z, construct_def_id)
-             VALUES (@id, @construct_id, @sector_x, @sector_y, @sector_z, @construct_def_id)
+             INSERT INTO {NpcConstructHandleTable} (id, construct_id, sector_x, sector_y, sector_z, construct_def_id, original_owner_player_id, original_organization_id, on_cleanup_script)
+             VALUES (@id, @construct_id, @sector_x, @sector_y, @sector_z, @construct_def_id, @original_owner_player_id, @original_organization_id, @on_cleanup_script)
              """,
             new
             {
@@ -37,7 +36,10 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
                 sector_x = item.Sector.x,
                 sector_y = item.Sector.y,
                 sector_z = item.Sector.z,
-                construct_def_id = item.ConstructDefinitionId
+                construct_def_id = item.ConstructDefinitionId,
+                original_owner_player_id = (long)item.OriginalOwnerPlayerId,
+                original_organization_id = (long)item.OriginalOrganizationId,
+                on_cleanup_script = item.OnCleanupScript
             }
         );
     }
@@ -62,6 +64,26 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
            SELECT * FROM public.mod_npc_construct_handle WHERE id = @key
            """,
            new {key}
+        )).ToList();
+
+        if (result.Count == 0)
+        {
+            return null;
+        }
+
+        return MapToModel(result[0]);
+    }
+    
+    public async Task<ConstructHandleItem?> FindByConstructIdAsync(ulong constructId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var result = (await db.QueryAsync<DbRow>(
+            """
+            SELECT * FROM public.mod_npc_construct_handle WHERE construct_id = @constructId LIMIT 1
+            """,
+            new {constructId = (long)constructId}
         )).ToList();
 
         if (result.Count == 0)
@@ -116,7 +138,28 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         );
     }
 
-    public async Task<IEnumerable<ConstructHandleItem>> FindExpiredAsync(int minutes = 30)
+    public async Task<IEnumerable<ConstructHandleItem>> FindInSectorAsync(Vec3 sector)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var result = (await db.QueryAsync<DbRow>(
+            $"""
+             SELECT * FROM public.mod_npc_construct_handle WHERE
+             sector_x = @x AND sector_y = @y AND sector_z = @z
+             """,
+            new
+            {
+                sector.x,
+                sector.y,
+                sector.z,
+            }
+        )).ToList();
+
+        return result.Select(MapToModel);
+    }
+
+    public async Task<IEnumerable<ConstructHandleItem>> FindExpiredAsync(int minutes, Vec3 sector)
     {
         minutes = Math.Clamp(minutes, 5, 120);
         
@@ -126,8 +169,15 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         var result = (await db.QueryAsync<DbRow>(
             $"""
             SELECT * FROM public.mod_npc_construct_handle 
-            WHERE last_controlled_at + INTERVAL '{minutes} minutes' < NOW();
-            """
+            WHERE last_controlled_at + INTERVAL '{minutes} minutes' < NOW() AND
+            sector_x = @x AND sector_y = @y AND sector_z = @z
+            """,
+            new
+            {
+                sector.x,
+                sector.y,
+                sector.z,
+            }
         )).ToList();
 
         return result.Select(MapToModel);
@@ -146,7 +196,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             """,
             new
             {
-                ids = constructIds
+                ids = constructIds.Select(x => (long)x)
             }
         );
     }
@@ -171,6 +221,9 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             },
             ConstructId = (ulong)row.construct_id,
             ConstructDefinitionId = row.construct_def_id,
+            OriginalOwnerPlayerId = row.original_owner_player_id,
+            OriginalOrganizationId = row.original_organization_id,
+            OnCleanupScript = row.on_cleanup_script,
             ConstructDefinitionItem = constructDefinition
         };
     }
@@ -185,5 +238,8 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         public long sector_z { get; set; }
         public DateTime last_controlled_at { get; set; }
         public string? def_content { get; set; }
+        public ulong original_owner_player_id { get; set; }
+        public ulong original_organization_id { get; set; }
+        public string on_cleanup_script { get; set; }
     }
 }

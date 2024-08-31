@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using NQ;
@@ -14,13 +15,19 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
 {
     private readonly IPostgresConnectionFactory _factory = serviceProvider.GetRequiredService<IPostgresConnectionFactory>();
     
-    public async Task<IEnumerable<ulong>> FindConstructsOnSector(Vec3 sector)
+    public async Task<IEnumerable<ulong>> FindPlayerLiveConstructsOnSector(Vec3 sector)
     {
         using var db = _factory.Create();
         db.Open();
 
+        
         var result = (await db.QueryAsync<ulong>(
-            "SELECT id FROM public.construct WHERE sector_x = @x AND sector_y = @y AND sector_z = @z",
+            $"""
+            SELECT C.id FROM public.construct C
+            LEFT JOIN public.ownership O ON (C.owner_entity_id = O.id)
+            WHERE C.sector_x = @x AND C.sector_y = @y AND C.sector_z = @z AND
+                  C.owner_entity_id IS NOT NULL AND O.player_id NOT IN({StaticPlayerId.Unknown}, {StaticPlayerId.Aphelia})
+            """,
             new
             {
                 sector.x,

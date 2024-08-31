@@ -40,6 +40,10 @@ public class ScriptActionFactory : IScriptActionFactory
                 return new RunScriptAction(scriptActionItem.Script);
             case "delete-construct":
                 return new DeleteConstructAction(scriptActionItem.ConstructId);
+            case "despawn":
+                return new DespawnNpcConstructAction(scriptActionItem.ConstructId);
+            case "despawn-wreck":
+                return new DespawnWreckConstructAction(scriptActionItem.ConstructId);
             case "random":
                 var actions = scriptActionItem
                     .Actions

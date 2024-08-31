@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Interfaces;
@@ -8,8 +10,7 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Helpers;
-using NQ.Interfaces;
-using Orleans;
+using NQ;
 
 namespace Mod.DynamicEncounters.Features.Sector.Services;
 
@@ -25,24 +26,47 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
     private readonly ILogger<ConstructHandleManager> _logger =
         provider.CreateLogger<ConstructHandleManager>();
     
-    public async Task CleanupExpiredConstructHandlesAsync()
+    public async Task CleanupExpiredConstructHandlesAsync(Client client, Vec3 sector)
     {
         var expirationMinutes = await _featureReaderService
             .GetIntValueAsync(ConstructHandleExpirationMinutesFeatureName, 360);
 
-        var expiredHandles = await _repository.FindExpiredAsync(expirationMinutes);
-
-        var orleans = provider.GetOrleans();
-
+        var expiredHandles = await _repository.FindExpiredAsync(expirationMinutes, sector);
+        var scriptActionFactory = provider.GetRequiredService<IScriptActionFactory>();
+        
         var taskList = new List<Task>();
 
         foreach (var handle in expiredHandles)
         {
-            await RemoveConstructAsync(orleans, handle, taskList);
+            try
+            {
+                if (!string.IsNullOrEmpty(handle.OnCleanupScript))
+                {
+                    var scriptAction = scriptActionFactory.Create(
+                        new ScriptActionItem
+                        {
+                            ConstructId = handle.ConstructId,
+                            Type = handle.OnCleanupScript
+                        }
+                    );
+
+                    taskList.Add(scriptAction.ExecuteAsync(
+                        new ScriptContext(
+                            provider,
+                            new HashSet<ulong>(),
+                            handle.Sector,
+                            client
+                        )
+                    ));
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to delete construct {ConstructId} on Orleans. Ignoring it", handle.ConstructId);
+            }
             
             // Remove from tracking
             taskList.Add(_repository.DeleteAsync(handle.Id));
-            
             _logger.LogInformation("Construct {ConstructId} removed from tracking", handle.ConstructId);
         }
 
@@ -64,30 +88,62 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
         
     }
 
-    private async Task RemoveConstructAsync(IClusterClient orleans, ConstructHandleItem handle, List<Task> taskList)
+    public async Task CleanupConstructHandlesInSectorAsync(Client client, Vec3 sector)
     {
-        try
-        {
-            var constructInfoGrain = orleans.GetConstructInfoGrain(handle.ConstructId);
-            var constructInfo = await constructInfoGrain.Get();
-            var ownerId = constructInfo.mutableData.ownerId.playerId;
+        var expiredHandles = (await _repository.FindInSectorAsync(sector)).ToList();
+        var scriptActionFactory = provider.GetRequiredService<IScriptActionFactory>();
+        
+        var taskListActionExec = new List<Task>();
 
-            // Avoids deleting constructs that are tracked if someone captures it
-            // TODO #limitation Remove this hardcoded in favor of configuration
-            if (ownerId != 2 && ownerId != 4)
+        foreach (var handle in expiredHandles)
+        {
+            try
             {
-                var task = orleans.GetConstructParentingGrain()
-                    .DeleteConstruct(
-                        handle.ConstructId,
-                        hardDelete: true
+                if (!string.IsNullOrEmpty(handle.OnCleanupScript))
+                {
+                    var scriptAction = scriptActionFactory.Create(
+                        new ScriptActionItem
+                        {
+                            ConstructId = handle.ConstructId,
+                            Type = handle.OnCleanupScript
+                        }
                     );
 
-                taskList.Add(task);
+                    taskListActionExec.Add(scriptAction.ExecuteAsync(
+                        new ScriptContext(
+                            provider,
+                            new HashSet<ulong>(),
+                            handle.Sector,
+                            client
+                        )
+                    ));
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to delete construct {ConstructId} on Orleans. Ignoring it", handle.ConstructId);
+            }
+            
+            _logger.LogInformation("Construct {ConstructId} removed from tracking", handle.ConstructId);
+        }
+
+        try
+        {
+            await Task.WhenAll(taskListActionExec);
+            
+            // Remove from tracking
+            await Task.WhenAll(expiredHandles.Select(handle => _repository.DeleteAsync(handle.Id)));
+        }
+        catch (AggregateException ae)
+        {
+            foreach (var exception in ae.InnerExceptions)
+            {
+                _logger.LogError(exception, "Failed to perform Cleanup");
             }
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to delete construct {ConstructId} on Orleans", handle.ConstructId);            
+            _logger.LogError(e, "Failed to perform a series of cleanups on Construct Handle");
         }
     }
 }

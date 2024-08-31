@@ -8,6 +8,10 @@ using NQ.Interfaces;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
+/// <summary>
+/// No Validation Delete Construct
+/// </summary>
+/// <param name="constructId"></param>
 public class DeleteConstructAction(ulong constructId) : IScriptAction
 {
     public string GetKey() => Name;
@@ -23,19 +27,6 @@ public class DeleteConstructAction(ulong constructId) : IScriptAction
 
         try
         {
-            var constructInfoGrain = orleans.GetConstructInfoGrain(constructId);
-            var constructInfo = await constructInfoGrain.Get();
-
-            var ownerId = constructInfo.mutableData.ownerId.playerId;
-
-            // TODO remove hardcoded
-            if (ownerId is 2 or 4)
-            {
-                logger.LogInformation("Prevented delete construct {ConstructId} because it was captured by a player", constructId);
-            
-                return ScriptActionResult.Successful();
-            }
-        
             var parentingGrain = orleans.GetConstructParentingGrain();
             await parentingGrain.DeleteConstruct(constructId, hardDelete: true);
         

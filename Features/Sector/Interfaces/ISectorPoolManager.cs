@@ -11,7 +11,7 @@ public interface ISectorPoolManager
 
     Task LoadUnloadedSectors(Client client);
 
-    Task ExecuteSectorCleanup(SectorGenerationArgs args);
+    Task ExecuteSectorCleanup(Client client, SectorGenerationArgs args);
 
     Task ActivateEnteredSectors(Client client);
 }

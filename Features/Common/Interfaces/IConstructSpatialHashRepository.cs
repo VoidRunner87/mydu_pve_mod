@@ -6,5 +6,5 @@ namespace Mod.DynamicEncounters.Features.Common.Interfaces;
 
 public interface IConstructSpatialHashRepository
 {
-    Task<IEnumerable<ulong>> FindConstructsOnSector(Vec3 sector);
+    Task<IEnumerable<ulong>> FindPlayerLiveConstructsOnSector(Vec3 sector);
 }

@@ -9,11 +9,8 @@ using Backend.Fixture.Construct;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
-using Mod.DynamicEncounters.Common.Repository;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
-using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
-using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
@@ -21,7 +18,6 @@ using NQutils.Config;
 using NQutils.Def;
 using NQutils.Sql;
 using Orleans;
-using Orleans.Runtime;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
@@ -157,7 +153,12 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
                 ConstructId = constructId,
                 ConstructDefinitionId = constructDef.Id,
                 Id = Guid.NewGuid(),
-                Sector = context.Sector
+                Sector = context.Sector,
+                ConstructDefinitionItem = constructDef.DefinitionItem,
+                OriginalOwnerPlayerId = constructDef.DefinitionItem.OwnerId,
+                OriginalOrganizationId = 0,
+                OnCleanupScript = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck ?
+                    "despawn-wreck" : "despawn"
             }
         );
         

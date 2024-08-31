@@ -12,80 +12,6 @@ using NQutils.Sql;
 
 namespace Mod.DynamicEncounters.Features.Sector.Repository;
 
-public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncounterRepository
-{
-    private readonly IPostgresConnectionFactory _connectionFactory =
-        provider.GetRequiredService<IPostgresConnectionFactory>();
-
-    public Task AddAsync(SectorEncounterItem item)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task SetAsync(IEnumerable<SectorEncounterItem> items)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task AddRangeAsync(IEnumerable<SectorEncounterItem> items)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<SectorEncounterItem?> FindAsync(object key)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<IEnumerable<SectorEncounterItem>> GetAllAsync()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<long> GetCountAsync()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task DeleteAsync(object key)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task<IEnumerable<SectorEncounterItem>> FindActiveAsync()
-    {
-        using var db = _connectionFactory.Create();
-        db.Open();
-
-        var queryResult = await db.QueryAsync<DbRow>(
-            "SELECT * FROM public.mod_sector_encounter WHERE active = true"
-        );
-
-        return queryResult.Select(DbRowToModel);
-    }
-
-    private static SectorEncounterItem DbRowToModel(DbRow first)
-    {
-        return new SectorEncounterItem
-        {
-            Id = first.id,
-            Name = first.name,
-            OnLoadScript = first.on_sector_enter_script,
-            OnSectorEnterScript = first.on_load_script,
-            Active = first.active
-        };
-    }
-
-    private struct DbRow
-    {
-        public Guid id { get; set; }
-        public string name { get; set; }
-        public string on_load_script { get; set; }
-        public string on_sector_enter_script { get; set; }
-        public bool active { get; set; }
-    }
-}
-
 public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstanceRepository
 {
     private readonly IPostgresConnectionFactory _connectionFactory =
@@ -128,19 +54,19 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
 
     public async Task<SectorInstance?> FindAsync(object key)
     {
-        var result = await _sql.Query<DbRow>("SELECT * FROM public.mod_sector_instance WHERE id = @id", key);
+        var result = await _sql.Query<DbRow>("SELECT * FROM public.mod_sector_instance WHERE id = @id", (Guid)key);
 
         if (result.Count > 0)
         {
             var first = result.First();
 
-            return DbRowToModel(first);
+            return MapToModel(first);
         }
 
         return null;
     }
 
-    private static SectorInstance DbRowToModel(DbRow first)
+    private static SectorInstance MapToModel(DbRow first)
     {
         return new SectorInstance
         {
@@ -148,6 +74,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
             ExpiresAt = first.expires_at,
             OnLoadScript = first.on_sector_enter_script,
             OnSectorEnterScript = first.on_load_script,
+            StartedAt = first.started_at,
             Sector = new Vec3
             {
                 x = first.sector_x,
@@ -164,7 +91,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
 
         var queryResult = await db.QueryAsync<DbRow>("SELECT * FROM public.mod_sector_instance");
 
-        return queryResult.Select(DbRowToModel);
+        return queryResult.Select(MapToModel);
     }
 
     public async Task<long> GetCountAsync()
@@ -191,6 +118,31 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         );
     }
 
+    public async Task<SectorInstance?> FindBySector(Vec3 sector)
+    {
+        using var db = _connectionFactory.Create();
+        db.Open();
+
+        var result = (await db.QueryAsync<DbRow>(
+            """
+            SELECT * FROM public.mod_sector_instance WHERE sector_x = @x AND sector_y = @y AND sector_z = @z
+            """,
+            new
+            {
+                sector.x,
+                sector.y,
+                sector.z,
+            }
+        )).ToList();
+
+        if (!result.Any())
+        {
+            return null;
+        }
+
+        return MapToModel(result[0]);
+    }
+
     public async Task<IEnumerable<SectorInstance>> FindExpiredAsync()
     {
         using var db = _connectionFactory.Create();
@@ -199,7 +151,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         var queryResult =
             await db.QueryAsync<DbRow>("SELECT * FROM public.mod_sector_instance WHERE expires_at < NOW()");
 
-        return queryResult.Select(DbRowToModel);
+        return queryResult.Select(MapToModel);
     }
 
     public async Task DeleteExpiredAsync()
@@ -210,6 +162,23 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         await db.ExecuteScalarAsync("DELETE FROM public.mod_sector_instance WHERE expires_at < NOW()");
     }
 
+    public async Task ExtendExpirationAsync(Guid id, int minutes)
+    {
+        using var db = _connectionFactory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            $"""
+             UPDATE public.mod_sector_instance SET expires_at = NOW() + INTERVAL '{minutes} minutes'
+             WHERE id = @id
+             """,
+            new
+            {
+                id
+            }
+        );
+    }
+
     public async Task<IEnumerable<SectorInstance>> FindUnloadedAsync()
     {
         using var db = _connectionFactory.Create();
@@ -218,7 +187,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         var queryResult =
             await db.QueryAsync<DbRow>("SELECT * FROM public.mod_sector_instance WHERE loaded_at IS NULL");
 
-        return queryResult.Select(DbRowToModel);
+        return queryResult.Select(MapToModel);
     }
 
     public async Task SetLoadedAsync(Guid id, bool loaded)
@@ -258,7 +227,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
             """
         );
 
-        return queryResult.Select(DbRowToModel);
+        return queryResult.Select(MapToModel);
     }
 
     private struct DbRow
@@ -270,5 +239,6 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         public string on_load_script { get; set; }
         public string on_sector_enter_script { get; set; }
         public DateTime expires_at { get; set; }
+        public DateTime? started_at { get; set; }
     }
 }

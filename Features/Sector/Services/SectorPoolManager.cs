@@ -6,6 +6,7 @@ using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
@@ -23,6 +24,12 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
     private readonly ISectorInstanceRepository _sectorInstanceRepository =
         serviceProvider.GetRequiredService<ISectorInstanceRepository>();
+    
+    private readonly IConstructHandleManager _constructHandleManager = 
+        serviceProvider.GetRequiredService<IConstructHandleManager>();
+
+    private readonly IConstructSpatialHashRepository _constructSpatial =
+        serviceProvider.GetRequiredService<IConstructSpatialHashRepository>();
 
     private readonly ILogger<SectorPoolManager> _logger = serviceProvider.CreateLogger<SectorPoolManager>();
 
@@ -109,8 +116,23 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         }
     }
 
-    public async Task ExecuteSectorCleanup(SectorGenerationArgs args)
+    public async Task ExecuteSectorCleanup(Client client, SectorGenerationArgs args)
     {
+        var expiredSectors = await _sectorInstanceRepository.FindExpiredAsync();
+
+        foreach (var sector in expiredSectors)
+        {
+            var players = await _constructSpatial.FindPlayerLiveConstructsOnSector(sector.Sector);
+            if (players.Any())
+            {
+                _logger.LogInformation("Players Nearby - Extended Expiration of {Sector} {SectorGuid}", sector.Sector, sector.Id);
+                await _sectorInstanceRepository.ExtendExpirationAsync(sector.Id, 30);
+                continue;
+            }
+            
+            await _constructHandleManager.CleanupConstructHandlesInSectorAsync(client, sector.Sector);
+        }
+        
         await _sectorInstanceRepository.DeleteExpiredAsync();
         
         _logger.LogDebug("Executed Sector Cleanup");
