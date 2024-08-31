@@ -6,6 +6,11 @@ Before starting, know this:
 * After the basic functionality I envision for this mod is done, I'll start looking into optimizing the cycles "loops" that run and the code to make it cleaner and faster.
 * There is a cost of CPU to running this mod. You need a decent setup or scale down the sectors generated.
 
+# Advantages of Running the mod on a separate container
+
+* No need to restart the server, just the mod container
+* The way the mod import is done is via assembly load and reflection. There are LOTS of conflicts with assemblies if you need anything extra like I do on this mode (see the code). Easier to have it as a separate container
+
 # Quick Start
 
 * Pull the docker container: [Docker Container](https://hub.docker.com/repository/docker/voidrunner7891/dynamic_encounters/general)
