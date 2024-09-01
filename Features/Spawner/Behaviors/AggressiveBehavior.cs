@@ -2,7 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Backend;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
@@ -189,6 +191,9 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
 
     private async Task ShootAndCycleAsync(ShotContext context)
     {
+        var random = context.BehaviorContext.ServiceProvider.GetRequiredService<IRandomProvider>()
+            .GetRandom();
+        
         var totalDeltaTime = GetShootTotalDeltaTime(context.BehaviorContext);
         totalDeltaTime += context.BehaviorContext.DeltaTime;
         
@@ -210,6 +215,19 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
 
         SetShootTotalDeltaTime(context.BehaviorContext, 0);
 
+        if (constructDefinition.DefinitionItem.AmmoItems.Count == 0)
+        {
+            constructDefinition.DefinitionItem.AmmoItems = ["AmmoMissileLarge4"];
+        }
+
+        if (constructDefinition.DefinitionItem.WeaponItems.Count == 0)
+        {
+            constructDefinition.DefinitionItem.WeaponItems = ["WeaponMissileLargeAgile5"];
+        }
+
+        var ammoItem = random.PickOneAtRandom(constructDefinition.DefinitionItem.AmmoItems);
+        var weaponItem = random.PickOneAtRandom(constructDefinition.DefinitionItem.WeaponItems);
+        
         await context.NpcShotGrain.Fire(
             w.displayName,
             context.ConstructPosition,
@@ -221,7 +239,7 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
             {
                 aoe = true,
                 damage = w.baseDamage * mod.Weapon.Damage * context.QuantityModifier,
-                range = 100000,
+                range = 400000,
                 aoeRange = 100000,
                 baseAccuracy = w.baseAccuracy * mod.Weapon.Accuracy,
                 effectDuration = 10,
@@ -234,8 +252,8 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
                 baseOptimalTracking = w.baseOptimalTracking * mod.Weapon.OptimalTracking,
                 baseOptimalAimingCone = w.baseOptimalAimingCone * mod.Weapon.OptimalAimingCone,
                 optimalCrossSectionDiameter = w.optimalCrossSectionDiameter,
-                ammoItem = "AmmoMissileLarge4",
-                weaponItem = "WeaponMissileLargeAgile5"
+                ammoItem = ammoItem,
+                weaponItem = weaponItem
             },
             5,
             context.HitPosition

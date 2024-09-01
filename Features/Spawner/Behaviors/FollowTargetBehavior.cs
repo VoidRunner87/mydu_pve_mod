@@ -7,15 +7,12 @@ using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
-using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
 public class FollowTargetBehavior(ulong constructId, IConstructDefinition constructDefinition) : IConstructBehavior
 {
     private TimePoint _timePoint = new();
-    private IClusterClient _orleans;
-    private readonly IConstructDefinition _constructDefinition = constructDefinition;
 
     private bool _active = true;
 
@@ -23,9 +20,6 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
 
     public Task InitializeAsync(BehaviorContext context)
     {
-        var provider = context.ServiceProvider;
-        _orleans = provider.GetOrleans();
-
         return Task.CompletedTask;
     }
 
@@ -58,9 +52,9 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
         var npcConstructInfoGrain = orleans.GetConstructInfoGrain(constructId);
         var npcConstructInfo = await npcConstructInfoGrain.Get();
 
-        var direction = (targetConstructInfo.rData.position - npcConstructInfo.rData.position + new Vec3 { y = 20000 })
+        var direction = (targetConstructInfo.rData.position - npcConstructInfo.rData.position + new Vec3 { y = constructDefinition.DefinitionItem.TargetDistance })
             .Normalized();
-        var velocity = direction * 15 * 9.81f;
+        var velocity = direction * constructDefinition.DefinitionItem.AccelerationG * 9.81f;
 
         var rotation = VectorMathHelper.CalculateRotationToPoint(
             npcConstructInfo.rData.position,
@@ -68,7 +62,7 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
         );
 
         context.Velocity += velocity;
-        context.Velocity = context.Velocity.ClampToSize(20000 / 3.6d);
+        context.Velocity = context.Velocity.ClampToSize(constructDefinition.DefinitionItem.MaxSpeedKph / 3.6d);
 
         var finalVelocity = context.Velocity * Math.Clamp(context.DeltaTime, 1/60f, 1/15f);
 
