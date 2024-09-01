@@ -21,6 +21,7 @@ public class ConstructBehaviorLoop : ModBase
     {
         var provider = ServiceProvider;
         var logger = provider.CreateLogger<ConstructBehaviorLoop>();
+        var inMemoryContextRepo = provider.GetRequiredService<IConstructInMemoryBehaviorContextRepository>();
 
         var constructHandleRepository = provider.GetRequiredService<IConstructHandleRepository>();
         var behaviorFactory = provider.GetRequiredService<IConstructBehaviorFactory>();
@@ -49,7 +50,7 @@ public class ConstructBehaviorLoop : ModBase
                 var sw = new Stopwatch();
                 sw.Start();
                 
-                await Task.Delay(1/15 * 1000);
+                await Task.Delay(1/30 * 1000);
 
                 var now = DateTime.UtcNow;
                 var deltaTime = (now - previousTime).TotalSeconds;
@@ -67,7 +68,7 @@ public class ConstructBehaviorLoop : ModBase
                 
                 if (totalHandleItemsDeltaTime > 2)
                 {
-                    constructHandleItems = (await constructHandleRepository.GetAllAsync()).ToList();
+                    constructHandleItems = (await constructHandleRepository.FindActiveHandlesAsync()).ToList();
                     totalHandleItemsDeltaTime = 0;
                     logger.LogInformation("Fetched '{Count}' Construct Handles with Behavior", constructHandleItems.Count());
                 }
@@ -83,8 +84,10 @@ public class ConstructBehaviorLoop : ModBase
 
                     var finalBehaviors = new List<IConstructBehavior>
                     {
-                        new AliveCheckBehavior(handleItem.ConstructId, constructDef),
+                        new AliveCheckBehavior(handleItem.ConstructId, constructDef)
+                            .WithErrorHandler(),
                         new SelectTargetBehavior(handleItem.ConstructId, constructDef)
+                            .WithErrorHandler()
                     };
                     
                     var behaviors = handleItem.ConstructDefinitionItem
@@ -92,12 +95,15 @@ public class ConstructBehaviorLoop : ModBase
                         .ToList();
                     
                     finalBehaviors.AddRange(behaviors);
-                    finalBehaviors.Add(new UpdateLastControlledDateBehavior(handleItem.ConstructId));
+                    finalBehaviors.Add(new UpdateLastControlledDateBehavior(handleItem.ConstructId).WithErrorHandler());
 
                     var context = new BehaviorContext(Bot, provider)
                     {
-                        DeltaTime = deltaTime
+                        Client = Bot
                     };
+
+                    context = inMemoryContextRepo.GetOrDefault(handleItem.ConstructId, context);
+                    context.DeltaTime = deltaTime;
                     
                     foreach (var behavior in finalBehaviors)
                     {
@@ -113,6 +119,8 @@ public class ConstructBehaviorLoop : ModBase
 
                         await behavior.TickAsync(context);
                     }
+                    
+                    inMemoryContextRepo.Set(handleItem.ConstructId, context);
                 }
                 
                 // logger.LogInformation("Tick Time: {Time}ms", sw.ElapsedMilliseconds);

@@ -24,7 +24,6 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
     private ILogger<AggressiveBehavior> _logger;
     private IConstructElementsGrain _constructElementsGrain;
 
-    private double _totalDeltaTime;
     private ElementId _coreUnitElementId;
     
     private bool _active = true;
@@ -55,15 +54,15 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
             .Where(w => w.Unit is not StasisWeaponUnit) // TODO Implement Stasis later
             .ToList();
 
-        _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).Single();
+        _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
+        context.IsAlive = _coreUnitElementId.elementId > 0;
+        _active = context.IsAlive;
         
         _logger = provider.CreateLogger<AggressiveBehavior>();
     }
 
     public async Task TickAsync(BehaviorContext context)
     {
-        var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
-
         if (!context.IsAlive)
         {
             _active = false;
@@ -75,6 +74,8 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
         {
             return;
         }
+        
+        var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
 
         if (coreUnit.IsCoreStressHigh())
         {
@@ -88,9 +89,20 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
 
         var constructInfo = await constructInfoGrain.Get();
         var constructPos = constructInfo.rData.position;
+
+        if (context.TargetConstructId is null or 0)
+        {
+            return;
+        }
+        
         var targetInfoGrain = _orleans.GetConstructInfoGrain(new ConstructId{constructId = context.TargetConstructId.Value});
         var targetInfo = await targetInfoGrain.Get();
         var targetSize = targetInfo.rData.geometry.size;
+        
+        if (targetInfo.mutableData.pilot.HasValue)
+        {
+            context.PlayerIds.Add(targetInfo.mutableData.pilot.Value);
+        }
 
         if (constructInfo.IsShieldLowerThanHalf())
         {
@@ -155,9 +167,32 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
         public int QuantityModifier { get; } = quantityModifier;
     }
 
+    private const string ShotTotalDeltaTimePropName = $"{nameof(AggressiveBehavior)}_ShotTotalDeltaTime";
+    
+    private double GetShootTotalDeltaTime(BehaviorContext context)
+    {
+        if (context.ExtraProperties.TryGetValue(ShotTotalDeltaTimePropName, out var value))
+        {
+            return (double)value;
+        }
+
+        return 0;
+    }
+
+    private void SetShootTotalDeltaTime(BehaviorContext context, double value)
+    {
+        if (!context.ExtraProperties.TryAdd(ShotTotalDeltaTimePropName, value))
+        {
+            context.ExtraProperties[ShotTotalDeltaTimePropName] = value;
+        }
+    }
+
     private async Task ShootAndCycleAsync(ShotContext context)
     {
-        _totalDeltaTime += context.BehaviorContext.DeltaTime;
+        var totalDeltaTime = GetShootTotalDeltaTime(context.BehaviorContext);
+        totalDeltaTime += context.BehaviorContext.DeltaTime;
+        
+        SetShootTotalDeltaTime(context.BehaviorContext, totalDeltaTime);
         
         var handle = context.WeaponHandle;
 
@@ -168,12 +203,12 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
         var mod = constructDefinition.DefinitionItem.Mods;
         var cycleTime = w.baseCycleTime * mod.Weapon.CycleTime;
 
-        if (_totalDeltaTime < cycleTime)
+        if (totalDeltaTime < cycleTime)
         {
             return;
         }
 
-        _totalDeltaTime = 0;
+        SetShootTotalDeltaTime(context.BehaviorContext, 0);
 
         await context.NpcShotGrain.Fire(
             w.displayName,

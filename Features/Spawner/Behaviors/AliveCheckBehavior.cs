@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
@@ -20,6 +21,7 @@ public class AliveCheckBehavior(ulong constructId, IConstructDefinition construc
     private ElementId _coreUnitElementId;
     
     private bool _active = true;
+    private IConstructHandleRepository _handleRepository;
 
     public bool IsActive() => _active;
 
@@ -28,13 +30,26 @@ public class AliveCheckBehavior(ulong constructId, IConstructDefinition construc
         var provider = context.ServiceProvider;
         _orleans = provider.GetOrleans();
 
+        _handleRepository = provider.GetRequiredService<IConstructHandleRepository>();
         _constructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
         _constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
-        _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).Single();
+        _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
+        
+        context.IsAlive = _coreUnitElementId.elementId > 0;
+        _active = context.IsAlive;
     }
 
     public async Task TickAsync(BehaviorContext context)
     {
+        if (!context.IsAlive)
+        {
+            _active = false;
+
+            await _handleRepository.RemoveHandleAsync(constructId);
+            
+            return;
+        }
+        
         var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
         var constructInfo = await _constructInfoGrain.Get();
 
@@ -44,7 +59,7 @@ public class AliveCheckBehavior(ulong constructId, IConstructDefinition construc
             _active = false;
             context.IsAlive = false;
             
-            return;
+            await _handleRepository.RemoveHandleAsync(constructId);
         }
     }
 }

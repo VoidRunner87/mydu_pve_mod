@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using BotLib.Generated;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
@@ -24,7 +25,7 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
     {
         var provider = context.ServiceProvider;
         _orleans = provider.GetOrleans();
-        
+
         return Task.CompletedTask;
     }
 
@@ -33,7 +34,7 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
         if (!context.IsAlive)
         {
             _active = false;
-            
+
             return;
         }
 
@@ -41,10 +42,15 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
         {
             return;
         }
-        
+
         var provider = context.ServiceProvider;
         var orleans = provider.GetOrleans();
         var client = context.Client;
+
+        if (context.TargetConstructId is null or 0)
+        {
+            return;
+        }
 
         var targetConstructInfoGrain = orleans.GetConstructInfoGrain(context.TargetConstructId.Value);
         var targetConstructInfo = await targetConstructInfoGrain.Get();
@@ -52,7 +58,8 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
         var npcConstructInfoGrain = orleans.GetConstructInfoGrain(constructId);
         var npcConstructInfo = await npcConstructInfoGrain.Get();
 
-        var direction = (targetConstructInfo.rData.position - npcConstructInfo.rData.position + new Vec3{y = 20000}).Normalized();
+        var direction = (targetConstructInfo.rData.position - npcConstructInfo.rData.position + new Vec3 { y = 20000 })
+            .Normalized();
         var velocity = direction * 15 * 9.81f;
 
         var rotation = VectorMathHelper.CalculateRotationToPoint(
@@ -63,10 +70,10 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
         context.Velocity += velocity;
         context.Velocity = context.Velocity.ClampToSize(20000 / 3.6d);
 
-        var finalVelocity = context.Velocity * context.DeltaTime;
-        
-        _timePoint.networkTime++;
-        
+        var finalVelocity = context.Velocity * Math.Clamp(context.DeltaTime, 1/60f, 1/15f);
+
+        _timePoint = TimePoint.Now();
+
         await client.Req.ConstructUpdate(
             new ConstructUpdate
             {

@@ -61,15 +61,14 @@ public class SelectTargetBehavior(ulong constructId, IConstructDefinition constr
         var sectorPos = npcPos.GridSnap(SectorPoolManager.SectorGridSnap);
 
         var constructsOnSector = await _spatialHashRepo.FindPlayerLiveConstructsOnSector(sectorPos);
-        
+
         var result = await Task.WhenAll(
             constructsOnSector.Select(id => _orleans.GetConstructInfoGrain(id).Get())
         );
 
         // TODO remove hardcoded
         var playerConstructs = result
-            .Where(r => r.mutableData.ownerId.playerId is not 2 and 4)
-            .Where(r => r.mutableData.ownerId.playerId != 0);
+            .Where(r => r.mutableData.ownerId.IsPlayer() || r.mutableData.ownerId.IsOrg());
 
         ulong targetId = 0;
         var distance = double.MaxValue;
@@ -95,7 +94,7 @@ public class SelectTargetBehavior(ulong constructId, IConstructDefinition constr
             counter++;
         }
 
-        context.TargetConstructId = targetId;
+        context.TargetConstructId = targetId == 0 ? null : targetId;
         context.TargetSelectedTime = DateTime.UtcNow;
         
         _logger.LogInformation("Selected a new Target: {Target}; {Time}ms", targetId, sw.ElapsedMilliseconds);

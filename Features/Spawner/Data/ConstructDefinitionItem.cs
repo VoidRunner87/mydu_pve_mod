@@ -16,7 +16,7 @@ public class ConstructDefinitionItem
     public bool IsNpc { get; set; }
     public ServerPropertiesItem ServerProperties { get; set; }
     public BehaviorModifiers Mods { get; set; } = new();
-    public List<string> InitialBehaviors { get; set; } = ["wreck"];
+    public List<string> InitialBehaviors { get; set; } = [];
 
     public ConstructDefinitionEvents Events { get; set; } = new();
 

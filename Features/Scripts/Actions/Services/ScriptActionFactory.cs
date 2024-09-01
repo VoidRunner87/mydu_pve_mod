@@ -44,6 +44,19 @@ public class ScriptActionFactory : IScriptActionFactory
                 return new DespawnNpcConstructAction(scriptActionItem.ConstructId);
             case "despawn-wreck":
                 return new DespawnWreckConstructAction(scriptActionItem.ConstructId);
+            case "test-combat":
+                return new SpawnScriptAction(
+                    new ScriptActionItem
+                    {
+                        Name = "spawn-test-encounter",
+                        Area = new ScriptActionAreaItem(),
+                        Type = "spawn",
+                        Prefab = "test-enemy",
+                        Position = scriptActionItem.Position,
+                        MinQuantity = 1,
+                        MaxQuantity = 1
+                    }
+                );
             case "random":
                 var actions = scriptActionItem
                     .Actions

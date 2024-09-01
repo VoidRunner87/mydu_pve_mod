@@ -34,7 +34,7 @@ public class FeatureReaderService(IServiceProvider provider) : IFeatureReaderSer
 
         var result = await GetBoolValueAsync(featureName, defaultValue);
         
-        _logger.LogInformation("{Feature} is {State}", name, result ? "Enabled" : "Disabled");
+        _logger.LogDebug("{Feature} is {State}", name, result ? "Enabled" : "Disabled");
 
         return result;
     }

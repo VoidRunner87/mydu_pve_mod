@@ -4,6 +4,7 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Repository;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
+using Mod.DynamicEncounters.Features.Spawner.Behaviors.Repository;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Services;
 
 namespace Mod.DynamicEncounters.Features.Spawner;
@@ -17,6 +18,7 @@ public static class SpawnerRegistration
         services.AddSingleton<IConstructDefinitionFactory, ConstructDefinitionFactory>();
         services.AddSingleton<IPointGeneratorFactory, PointGeneratorFactory>();
         services.AddSingleton<IConstructBehaviorFactory, ConstructBehaviorFactory>();
+        services.AddSingleton<IConstructInMemoryBehaviorContextRepository, ConstructInMemoryBehaviorContextRepository>();
         
         services.AddSingleton<IRepository<IScriptAction>, ScriptActionMemoryRepository>();
         services.AddSingleton<IScriptActionItemRepository, ScriptActionItemDatabaseRepository>();

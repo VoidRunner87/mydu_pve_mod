@@ -46,7 +46,7 @@ public class TaskQueueService(IServiceProvider provider) : ITaskQueueService
                         new ScriptContext(
                             provider,
                             new HashSet<ulong>(),
-                            new Vec3(),
+                            scriptActionItem.Sector ?? new Vec3(),
                             client
                         )
                     ));

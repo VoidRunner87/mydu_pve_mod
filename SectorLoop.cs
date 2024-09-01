@@ -20,10 +20,6 @@ public class SectorLoop : ModBase
         var provider = ServiceProvider;
         var logger = provider.CreateLogger<SectorLoop>();
 
-        Console.WriteLine("Creating BOT User");
-        Bot = await CreateUser(Environment.GetEnvironmentVariable("BOT_PREFIX")!, true, false);
-        Console.WriteLine("BOT User Created");
-
         var featureService = provider.GetRequiredService<IFeatureReaderService>();
         
         Console.WriteLine("Loading Script Service");

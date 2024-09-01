@@ -40,7 +40,7 @@ public class ModBase
     protected static IDataAccessor DataAccessor;
 
     /// Conveniance field for mods who need a single bot
-    protected Client Bot;
+    public static Client Bot;
 
     public static IUserContent UserContent;
     public static IVoxelService VoxelService;
@@ -144,7 +144,9 @@ public class ModBase
         await ServiceProvider.StartServicesV2();
         Console.WriteLine("Services Started");
         
-        
+        Console.WriteLine("Creating BOT User");
+        Bot = await CreateUser(Environment.GetEnvironmentVariable("BOT_PREFIX")!, true, false);
+        Console.WriteLine("BOT User Created");
     }
 
     public async Task Start()

@@ -94,6 +94,26 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         return MapToModel(result[0]);
     }
 
+    public async Task<IEnumerable<ConstructHandleItem>> FindActiveHandlesAsync()
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var result = (await db.QueryAsync<DbRow>(
+            """
+            SELECT 
+                CH.*,
+                CD.name as def_name,
+                CD.content as def_content
+            FROM public.mod_npc_construct_handle CH
+            INNER JOIN public.mod_construct_def CD ON (CD.id = CH.construct_def_id)
+            WHERE NOT (CD.content->'InitialBehaviors' @> '"wreck"');
+            """
+        )).ToList();
+
+        return result.Select(MapToModel);
+    }
+
     public async Task<IEnumerable<ConstructHandleItem>> GetAllAsync()
     {
         using var db = _factory.Create();
@@ -196,8 +216,19 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             """,
             new
             {
-                ids = constructIds.Select(x => (long)x)
+                ids = constructIds.Select(x => (long)x).ToList()
             }
+        );
+    }
+
+    public async Task RemoveHandleAsync(ulong constructId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            "DELETE FROM public.mod_npc_construct_handle WHERE construct_id = @constructId",
+            new { constructId = (long)constructId }
         );
     }
 

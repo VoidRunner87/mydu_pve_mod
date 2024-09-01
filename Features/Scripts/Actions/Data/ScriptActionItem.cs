@@ -14,6 +14,7 @@ public class ScriptActionItem
     public string Script { get; set; }
     public ulong ConstructId { get; set; }
     public Vec3? Position { get; set; } = new();
+    public Vec3? Sector { get; set; } = new();
 
     public ScriptActionAreaItem Area { get; set; } = new() { Type = "sphere", Radius = 1 };
     public List<ScriptActionItem> Actions { get; set; } = new();

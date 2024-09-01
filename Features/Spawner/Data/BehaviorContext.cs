@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using BotLib.BotClient;
 using NQ;
+using ZstdSharp.Unsafe;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Data;
 
@@ -20,9 +21,19 @@ public class BehaviorContext(Client client, IServiceProvider serviceProvider)
     public event ShieldHpDownEvent OnShieldHpDown;
     
     public ulong? TargetConstructId { get; set; }
-    public double DeltaTime { get; set; }
+    private double _deltaTime;
+
+    public double DeltaTime
+    {
+        get => _deltaTime;
+        set => _deltaTime = Math.Clamp(value, 1/60f, 1/30f);
+    }
+
+    public Dictionary<string, object> ExtraProperties = new();
+
     public Vec3 Velocity { get; set; }
-    public HashSet<ulong> PlayerIds { get; set; }
+    public Vec3 Position { get; set; }
+    public HashSet<ulong> PlayerIds { get; set; } = new();
     public IServiceProvider ServiceProvider { get; init; } = serviceProvider;
     public Client Client { get; set; } = client;
 
