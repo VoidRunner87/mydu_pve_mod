@@ -65,11 +65,19 @@ public class SelectTargetBehavior(ulong constructId, IConstructDefinition constr
         var result = await Task.WhenAll(
             constructsOnSector.Select(id => _orleans.GetConstructInfoGrain(id).Get())
         );
+        
+        _logger.LogInformation("Found {Count} constructs around", result.Length);
 
         // TODO remove hardcoded
         var playerConstructs = result
-            .Where(r => r.mutableData.ownerId.IsPlayer() || r.mutableData.ownerId.IsOrg());
+            .Where(r => r.mutableData.ownerId.IsPlayer() || r.mutableData.ownerId.IsOrg())
+            .ToList();
 
+        _logger.LogInformation("Found {Count} PLAYER constructs around {List}", 
+            playerConstructs.Count, 
+            string.Join(", ", playerConstructs.Select(x => x.rData.constructId))
+        );
+        
         ulong targetId = 0;
         var distance = double.MaxValue;
         int maxIterations = 10;
