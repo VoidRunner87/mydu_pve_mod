@@ -72,8 +72,8 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         {
             Id = first.id,
             ExpiresAt = first.expires_at,
-            OnLoadScript = first.on_sector_enter_script,
-            OnSectorEnterScript = first.on_load_script,
+            OnLoadScript = first.on_load_script,
+            OnSectorEnterScript = first.on_sector_enter_script,
             StartedAt = first.started_at,
             Sector = new Vec3
             {
