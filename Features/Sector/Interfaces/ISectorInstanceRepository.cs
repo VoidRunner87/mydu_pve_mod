@@ -12,7 +12,7 @@ public interface ISectorInstanceRepository : IRepository<SectorInstance>
     public Task<SectorInstance?> FindBySector(Vec3 sector);
     public Task<IEnumerable<SectorInstance>> FindExpiredAsync();
     public Task DeleteExpiredAsync();
-    public Task ExtendExpirationAsync(Guid id, int minutes);
+    public Task SetExpirationFromNowAsync(Guid id, TimeSpan span);
     public Task<IEnumerable<SectorInstance>> FindUnloadedAsync();
     public Task SetLoadedAsync(Guid id, bool loaded);
     public Task TagAsStartedAsync(Guid id);

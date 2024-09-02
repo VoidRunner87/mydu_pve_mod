@@ -126,7 +126,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             if (players.Any())
             {
                 _logger.LogInformation("Players Nearby - Extended Expiration of {Sector} {SectorGuid}", sector.Sector, sector.Id);
-                await _sectorInstanceRepository.ExtendExpirationAsync(sector.Id, 30);
+                await _sectorInstanceRepository.SetExpirationFromNowAsync(sector.Id, TimeSpan.FromMinutes(30));
                 continue;
             }
             
@@ -136,6 +136,25 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         await _sectorInstanceRepository.DeleteExpiredAsync();
         
         _logger.LogDebug("Executed Sector Cleanup");
+    }
+
+    public async Task SetExpirationFromNow(Vec3 sector, TimeSpan span)
+    {
+        var instance = await _sectorInstanceRepository.FindBySector(sector);
+
+        if (instance == null)
+        {
+            return;
+        }
+        
+        await _sectorInstanceRepository.SetExpirationFromNowAsync(instance.Id, span);
+        
+        _logger.LogInformation(
+            "Set Sector expiration for {Sector}({Id}) to {Minutes} from now", 
+            instance.Sector, 
+            instance.Id, 
+            span
+        );
     }
 
     public async Task ActivateEnteredSectors(Client client)

@@ -8,6 +8,7 @@ using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
+using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQutils.Sql;
 
@@ -163,14 +164,16 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         await db.ExecuteScalarAsync("DELETE FROM public.mod_sector_instance WHERE expires_at < NOW()");
     }
 
-    public async Task ExtendExpirationAsync(Guid id, int minutes)
+    public async Task SetExpirationFromNowAsync(Guid id, TimeSpan span)
     {
         using var db = _connectionFactory.Create();
         db.Open();
 
+        var interval = span.ToPostgresInterval();
+        
         await db.ExecuteAsync(
             $"""
-             UPDATE public.mod_sector_instance SET expires_at = NOW() + INTERVAL '{minutes} minutes'
+             UPDATE public.mod_sector_instance SET expires_at = NOW() + INTERVAL '{interval}'
              WHERE id = @id
              """,
             new

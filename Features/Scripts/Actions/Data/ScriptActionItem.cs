@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NQ;
 
@@ -27,9 +28,10 @@ public class ScriptActionItem
     public ulong ConstructId { get; set; }
     public Vec3? Position { get; set; } = new();
     public Vec3? Sector { get; set; } = new();
+    public TimeSpan TimeSpan { get; set; } = TimeSpan.Zero;
     
     /// <summary>
-    /// Use this to tag constructs that are spawned to control their behaviors later using the tags
+    /// Use this to tag constructs that are spawned to control their behaviors later using the tags.
     /// The tags are going to be persisted on the construct handle table.
     /// later on you can raise scripts that use the tags to affect one or more constructs. Ie: Despawn all tagged "poi"
     /// </summary>

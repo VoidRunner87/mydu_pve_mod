@@ -27,7 +27,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         await db.ExecuteAsync(
             $"""
              INSERT INTO {NpcConstructHandleTable} (id, construct_id, sector_x, sector_y, sector_z, construct_def_id, original_owner_player_id, original_organization_id, on_cleanup_script, json_properties)
-             VALUES (@id, @construct_id, @sector_x, @sector_y, @sector_z, @construct_def_id, @original_owner_player_id, @original_organization_id, @on_cleanup_script, @json_properties)
+             VALUES (@id, @construct_id, @sector_x, @sector_y, @sector_z, @construct_def_id, @original_owner_player_id, @original_organization_id, @on_cleanup_script, @json_properties::jsonb)
              """,
             new
             {
@@ -157,6 +157,29 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             """,
             new { key }
         );
+    }
+
+    public async Task<IEnumerable<ConstructHandleItem>> FindTagInSectorAsync(Vec3 sector, string tag)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var result = (await db.QueryAsync<DbRow>(
+            $"""
+             SELECT * FROM public.mod_npc_construct_handle 
+                WHERE sector_x = @x AND sector_y = @y AND sector_z = @z AND
+                json_properties->'Tags' @> @tag::jsonb 
+             """,
+            new
+            {
+                sector.x,
+                sector.y,
+                sector.z,
+                tag = $"\"{tag}\""
+            }
+        )).ToList();
+
+        return result.Select(MapToModel);
     }
 
     public async Task<IEnumerable<ConstructHandleItem>> FindInSectorAsync(Vec3 sector)

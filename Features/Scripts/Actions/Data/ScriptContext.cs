@@ -16,4 +16,5 @@ public class ScriptContext(
     public IServiceProvider ServiceProvider { get; set; } = serviceProvider;
     public ISet<ulong> PlayerIds { get; set; } = playerIds;
     public Vec3 Sector { get; set; } = sector;
+    public ulong? ConstructId { get; set; }
 }

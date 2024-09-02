@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
-using Mod.DynamicEncounters.Features.Spawner.Data;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 
@@ -24,7 +23,7 @@ public class ScriptActionFactory : IScriptActionFactory
     {
         var actions = scriptActionItem
             .Select(a => CreateInternalOrDefault(a, new NullScriptAction()));
-        
+
         return new CompositeScriptAction(Guid.NewGuid().ToString(), actions);
     }
 
@@ -57,13 +56,32 @@ public class ScriptActionFactory : IScriptActionFactory
                         MaxQuantity = 1
                     }
                 );
+            case "remove-poi":
+            case "deactivate-dynamic-wreck":
+                return new DeactivateDynamicWreckAction();
+            case "for-each-handle-with-tag":
+                return new CompositeScriptAction(
+                    Guid.NewGuid().ToString(),
+                    scriptActionItem.Tags
+                        .Select(tag => new ForEachConstructHandleTaggedOnSectorAction(
+                            tag,
+                            Create(scriptActionItem.Actions)
+                        ))
+                );
+            case "expire-sector":
+                return new ExpireSectorAction(scriptActionItem.TimeSpan);
             case "random":
                 var actions = scriptActionItem
                     .Actions
                     .Select(a => CreateInternalOrDefault(a, new NullScriptAction()));
-                
+
                 return new RandomScriptAction(actions);
             default:
+                if (string.IsNullOrEmpty(action.Name))
+                {
+                    throw new InvalidOperationException("A composite action (action with multiple actions) need a name if the are root on the script");
+                }
+                
                 return action;
         }
     }

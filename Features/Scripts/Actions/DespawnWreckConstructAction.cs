@@ -14,7 +14,7 @@ public class DespawnWreckConstructAction(ulong constructId) : IScriptAction
 {
     public string GetKey() => Name;
 
-    public string Name => Guid.NewGuid().ToString();
+    public string Name { get; } = Guid.NewGuid().ToString();
     
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {
