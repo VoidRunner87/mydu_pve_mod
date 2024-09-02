@@ -18,7 +18,7 @@ Before starting, know this:
 * Add it to the docker-compose of myDU:
 ```
   mod_dynamic_encounters:
-    image: dynamic_encounters
+    image: voidrunner7891/dynamic_encounters:latest
     environment:
       BOT_LOGIN: ${PVE_BOT_USERNAME}
       BOT_PASSWORD: ${PVE_BOT_PASSWORD}
