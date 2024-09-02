@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
@@ -219,11 +220,11 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         db.Open();
 
         var queryResult = await db.QueryAsync<DbRow>(
-            """
-            SELECT si.* FROM public.mod_sector_instance AS si
-                     INNER JOIN public.construct AS c ON (c.sector_x = si.sector_x AND c.sector_y = si.sector_y AND c.sector_z = si.sector_z)
-                     WHERE si.started_at IS NULL AND 
-                           c.owner_entity_id IS NOT NULL
+            $"""
+            SELECT Si.* FROM public.construct C
+            INNER JOIN public.mod_sector_instance SI ON (C.sector_x = SI.sector_x AND C.sector_y = SI.sector_y AND C.sector_z = SI.sector_z)
+            LEFT JOIN public.ownership O ON (C.owner_entity_id = O.id)
+            WHERE C.owner_entity_id IS NOT NULL AND (O.player_id NOT IN({StaticPlayerId.Aphelia}, {StaticPlayerId.Unknown}) OR (O.player_id IS NULL AND O.organization_id IS NOT NULL))
             """
         );
 
