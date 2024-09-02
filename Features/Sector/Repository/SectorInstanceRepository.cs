@@ -28,8 +28,8 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
 
         await db.ExecuteAsync(
             """
-            INSERT INTO public.mod_sector_instance (id, sector_x, sector_y, sector_z, expires_at, on_load_script, on_sector_enter_script)
-            VALUES (@Id, @PosX, @PosY, @PosZ, @ExpiresAt, @OnLoadScript, @OnSectorEnterScript);
+            INSERT INTO public.mod_sector_instance (id, sector_x, sector_y, sector_z, expires_at, on_load_script, on_sector_enter_script, force_expire_at)
+            VALUES (@Id, @PosX, @PosY, @PosZ, @ExpiresAt, @OnLoadScript, @OnSectorEnterScript, NOW() + INTERVAL '6 hours');
             """,
             new
             {
@@ -74,6 +74,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         {
             Id = first.id,
             ExpiresAt = first.expires_at,
+            ForceExpiresAt = first.force_expire_at,
             OnLoadScript = first.on_load_script,
             OnSectorEnterScript = first.on_sector_enter_script,
             StartedAt = first.started_at,
@@ -151,7 +152,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         db.Open();
 
         var queryResult =
-            await db.QueryAsync<DbRow>("SELECT * FROM public.mod_sector_instance WHERE expires_at < NOW()");
+            await db.QueryAsync<DbRow>("SELECT * FROM public.mod_sector_instance WHERE expires_at < NOW() OR (force_expire_at IS NOT NULL AND force_expire_at < NOW())");
 
         return queryResult.Select(MapToModel);
     }
@@ -161,7 +162,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         using var db = _connectionFactory.Create();
         db.Open();
 
-        await db.ExecuteScalarAsync("DELETE FROM public.mod_sector_instance WHERE expires_at < NOW()");
+        await db.ExecuteScalarAsync("DELETE FROM public.mod_sector_instance WHERE expires_at < NOW() OR (force_expire_at IS NOT NULL AND force_expire_at < NOW())");
     }
 
     public async Task SetExpirationFromNowAsync(Guid id, TimeSpan span)
@@ -243,6 +244,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         public string on_load_script { get; set; }
         public string on_sector_enter_script { get; set; }
         public DateTime expires_at { get; set; }
+        public DateTime? force_expire_at { get; set; }
         public DateTime? started_at { get; set; }
     }
 }

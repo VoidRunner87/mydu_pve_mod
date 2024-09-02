@@ -123,7 +123,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         foreach (var sector in expiredSectors)
         {
             var players = await _constructSpatial.FindPlayerLiveConstructsOnSector(sector.Sector);
-            if (players.Any())
+            if (!sector.IsForceExpired(DateTime.UtcNow) && players.Any())
             {
                 _logger.LogInformation("Players Nearby - Extended Expiration of {Sector} {SectorGuid}", sector.Sector, sector.Id);
                 await _sectorInstanceRepository.SetExpirationFromNowAsync(sector.Id, TimeSpan.FromMinutes(30));
