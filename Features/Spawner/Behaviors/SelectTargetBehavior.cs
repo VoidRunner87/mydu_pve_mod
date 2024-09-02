@@ -89,7 +89,13 @@ public class SelectTargetBehavior(ulong constructId, IConstructDefinition constr
             {
                 break;
             }
-            
+
+            // Adds to the list of players involved
+            if (construct.mutableData.pilot.HasValue)
+            {
+                context.PlayerIds.Add(construct.mutableData.pilot.Value.id);
+            }
+
             var pos = construct.rData.position;
 
             var delta = pos.Distance(npcPos);

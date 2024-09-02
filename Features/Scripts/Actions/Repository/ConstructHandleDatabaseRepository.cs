@@ -39,7 +39,8 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
                 construct_def_id = item.ConstructDefinitionId,
                 original_owner_player_id = (long)item.OriginalOwnerPlayerId,
                 original_organization_id = (long)item.OriginalOrganizationId,
-                on_cleanup_script = item.OnCleanupScript
+                on_cleanup_script = item.OnCleanupScript,
+                json_properties = JsonConvert.SerializeObject(item.JsonProperties)
             }
         );
     }
@@ -241,6 +242,12 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             constructDefinition = JsonConvert.DeserializeObject<ConstructDefinitionItem>(row.def_content);
         }
 
+        var properties = new ConstructHandleProperties();
+        if (row.json_properties != null)
+        {
+            properties = JsonConvert.DeserializeObject<ConstructHandleProperties>(row.json_properties);
+        }
+        
         return new ConstructHandleItem
         {
             Id = row.id,
@@ -255,6 +262,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             OriginalOwnerPlayerId = row.original_owner_player_id,
             OriginalOrganizationId = row.original_organization_id,
             OnCleanupScript = row.on_cleanup_script,
+            JsonProperties = properties,
             ConstructDefinitionItem = constructDefinition
         };
     }
@@ -272,5 +280,6 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         public ulong original_owner_player_id { get; set; }
         public ulong original_organization_id { get; set; }
         public string on_cleanup_script { get; set; }
+        public string? json_properties { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Database.Services;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Repository;
+using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Services;
@@ -23,6 +24,7 @@ public static class FeaturesRegistration
         services.AddSingleton<IFeatureReaderService, FeatureReaderService>();
         services.AddSingleton<IScriptLoaderService, FileSystemScriptLoaderService>();
         services.AddSingleton<IConstructSpatialHashRepository, ConstructSpatialHashRepository>();
+        services.AddSingleton<IConstructService, ConstructService>();
             
         services.RegisterSectorGeneration();
         services.RegisterSpawnerScripts();

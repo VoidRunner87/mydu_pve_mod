@@ -33,30 +33,30 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
         _logger = provider.GetRequiredService<ILoggerFactory>()
             .CreateLogger<SpawnScriptAction>();
-        
+
         _pointGenerator = provider
             .GetRequiredService<IPointGeneratorFactory>()
             .Create(actionItem.Area);
-        
+
         var random = provider
             .GetRequiredService<IRandomProvider>()
             .GetRandom();
-        
+
         var spawnCount = random.Next(actionItem.MinQuantity, actionItem.MaxQuantity);
-        
+
         _logger.LogInformation("Generated {SpawnCount} Spawn Items", spawnCount);
 
         var tasks = Enumerable.Repeat(
             () => SpawnOneAsync(context),
             spawnCount
         );
-        
+
         foreach (var t in tasks)
         {
             // TODO Has to be in sequence because of file read issues with the S3 class
             await t();
         }
-        
+
         return ScriptActionResult.Successful();
     }
 
@@ -65,13 +65,13 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
         var provider = context.ServiceProvider;
         var orleans = provider.GetOrleans();
         var constructHandleRepo = provider.GetRequiredService<IConstructHandleRepository>();
-        
+
         var random = provider.GetRequiredService<IRandomProvider>()
             .GetRandom();
-        
+
         var constructDefinitionRepo = provider.GetRequiredService<IConstructDefinitionItemRepository>();
         var constructDefItem = await constructDefinitionRepo.FindAsync(actionItem.Prefab);
-        
+
         if (constructDefItem == null)
         {
             return ScriptActionResult.Failed();
@@ -79,17 +79,17 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
         var constructDefinitionFactory = provider.GetRequiredService<IConstructDefinitionFactory>();
         var constructDef = constructDefinitionFactory.Create(constructDefItem);
-        
+
         var s3 = provider.GetRequiredService<IS3>();
 
         var settings = Config.Instance.wrecks;
         settings.override_path = constructDef.DefinitionItem.Folder;
-        
+
         var constructJson = await s3.Get(
             settings,
             constructDef.DefinitionItem.Path
         );
-        
+
         using var source = FixtureSource.FromStringContent(
             constructJson,
             FixtureKind.Construct
@@ -99,31 +99,31 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
         var actionPosition = actionItem.Position ?? new Vec3();
         var spawnPosition = context.Sector + spawnPoint + actionPosition;
-        
+
         var fixture = ConstructFixture.FromSource(source);
         fixture.parentId = null;
         fixture.header.prettyName = constructDef.DefinitionItem.ServerProperties.Header.PrettyName;
-        fixture.ownerId = new EntityId{playerId = constructDef.DefinitionItem.OwnerId};
+        fixture.ownerId = new EntityId { playerId = constructDef.DefinitionItem.OwnerId };
         fixture.position = spawnPosition;
         fixture.isUntargetable = constructDef.DefinitionItem.IsUntargetable;
         fixture.isNPC = constructDef.DefinitionItem.IsNpc;
         fixture.serverProperties.dynamicFixture = true;
         fixture.serverProperties.isDynamicWreck = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck;
         fixture.header.constructIdHint = null;
-        
+
         var constructId = (await ConstructFixtureImport.Import(
-            fixture, 
-            provider.GetRequiredService<IUserContent>(), 
+            fixture,
+            provider.GetRequiredService<IUserContent>(),
             provider.GetRequiredService<ISql>(),
             provider.GetRequiredService<IVoxelImporter>(),
             provider.GetRequiredService<IGameplayBank>(),
             provider.GetRequiredService<IRDMSStorage>(),
             provider.GetRequiredService<IPlanetList>()
         ))[0];
-        
+
         _logger.LogInformation("Spawned Construct({Id}) at ::pos{{0,0,{Pos}}}", constructId, spawnPosition);
 
-        var clusterClient = provider.GetRequiredService<IClusterClient>(); 
+        var clusterClient = provider.GetRequiredService<IClusterClient>();
         await clusterClient.GetConstructParentingGrain().ReloadConstruct(constructId);
 
         var constructElementsGrain = orleans.GetConstructElementsGrain(constructId);
@@ -157,11 +157,16 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
                 ConstructDefinitionItem = constructDef.DefinitionItem,
                 OriginalOwnerPlayerId = constructDef.DefinitionItem.OwnerId,
                 OriginalOrganizationId = 0,
-                OnCleanupScript = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck ?
-                    "despawn-wreck" : "despawn"
+                JsonProperties = new ConstructHandleProperties
+                {
+                    Tags = actionItem.Tags
+                },
+                OnCleanupScript = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck
+                    ? "despawn-wreck"
+                    : "despawn"
             }
         );
-        
+
         _logger.LogInformation("Created Handle for {ConstructId} on {Sector}", constructId, context.Sector);
 
         return ScriptActionResult.Successful();

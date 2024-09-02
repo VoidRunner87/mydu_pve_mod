@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using BotLib.Generated;
+using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
@@ -15,11 +17,14 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
     private TimePoint _timePoint = new();
 
     private bool _active = true;
+    private IConstructService _constructService;
 
     public bool IsActive() => _active;
 
     public Task InitializeAsync(BehaviorContext context)
     {
+        _constructService = context.ServiceProvider.GetRequiredService<IConstructService>();
+        
         return Task.CompletedTask;
     }
 
@@ -37,8 +42,6 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
             return;
         }
 
-        var provider = context.ServiceProvider;
-        var orleans = provider.GetOrleans();
         var client = context.Client;
 
         if (context.TargetConstructId is null or 0)
@@ -46,13 +49,20 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
             return;
         }
 
-        var targetConstructInfoGrain = orleans.GetConstructInfoGrain(context.TargetConstructId.Value);
-        var targetConstructInfo = await targetConstructInfoGrain.Get();
+        var targetConstructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
+        var npcConstructInfo = await _constructService.GetConstructInfoAsync(constructId);
 
-        var npcConstructInfoGrain = orleans.GetConstructInfoGrain(constructId);
-        var npcConstructInfo = await npcConstructInfoGrain.Get();
+        if (targetConstructInfo == null || npcConstructInfo == null)
+        {
+            return;
+        }
 
-        var direction = (targetConstructInfo.rData.position - npcConstructInfo.rData.position + new Vec3 { y = constructDefinition.DefinitionItem.TargetDistance })
+        var targetPos = targetConstructInfo.rData.position;
+        var npcPos = npcConstructInfo.rData.position;
+
+        var distance = targetPos.Distance(npcPos);
+
+        var direction = (targetPos - npcPos + new Vec3 { y = constructDefinition.DefinitionItem.TargetDistance })
             .Normalized();
         var velocity = direction * constructDefinition.DefinitionItem.AccelerationG * 9.81f;
 
@@ -61,7 +71,13 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
             direction
         );
 
-        context.Velocity += velocity;
+        // Add acceleration to get close.
+        // Otherwise coast 
+        if (distance > constructDefinition.DefinitionItem.TargetDistance)
+        {
+            context.Velocity += velocity;
+        }
+
         context.Velocity = context.Velocity.ClampToSize(constructDefinition.DefinitionItem.MaxSpeedKph / 3.6d);
 
         var finalVelocity = context.Velocity * Math.Clamp(context.DeltaTime, 1/60f, 1/15f);
