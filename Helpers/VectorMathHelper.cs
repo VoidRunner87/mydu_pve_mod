@@ -58,6 +58,25 @@ public static class VectorMathHelper
     {
         return new Vector3((float)v.x, (float)v.y, (float)v.z);
     }
+    
+    public static Vec3 NormalizeSafe(this Vec3 v)
+    {
+        var magnitude = v.Size();
+        const double threshold = 1e-6; // A small value to avoid division by zero
+
+        if (magnitude > threshold)
+        {
+            return new Vec3
+            {
+                x = v.x / magnitude,
+                y = v.y / magnitude,
+                z = v.z / magnitude
+            };
+        }
+
+        // Return zero vector if magnitude is too small
+        return new Vec3 { x = 0, y = 0, z = 0 };
+    }
 
     public static Quat CalculateRotationToPoint(Vec3 currentPosition, Vec3 targetPosition)
     {
@@ -102,5 +121,38 @@ public static class VectorMathHelper
     public static Quat FromQuaternion(this Quaternion q)
     {
         return Quat.FromComponents(q.W, new Vec3 { x = q.X, y = q.Y, z = q.Z });
+    }
+    
+    public static double Dot(this Vec3 v1, Vec3 v2)
+    {
+        return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
+    }
+    
+    public static Vec3 Lerp(Vec3 start, Vec3 end, double speed, double deltaTime)
+    {
+        // Calculate the maximum amount to move in this frame
+        var moveAmount = speed * deltaTime;
+
+        // Calculate the direction vector from start to end
+        var direction = new Vec3
+        {
+            x = end.x - start.x,
+            y = end.y - start.y,
+            z = end.z - start.z
+        };
+        var distance = Math.Sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
+
+        // Clamp the move amount to the distance to avoid overshooting
+        moveAmount = Math.Min(moveAmount, distance);
+
+        // Calculate the new position
+        var result = new Vec3
+        {
+            x = start.x + direction.x * moveAmount / distance,
+            y = start.y + direction.y * moveAmount / distance,
+            z = start.z + direction.z * moveAmount / distance
+        };
+
+        return result;
     }
 }

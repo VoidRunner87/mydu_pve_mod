@@ -12,7 +12,7 @@ public class ConstructBehaviorFactory : IConstructBehaviorFactory
             case "aggressive":
                 return new AggressiveBehavior(constructId, constructDefinition).WithErrorHandler();
             case "follow-target":
-                return new FollowTargetBehavior(constructId, constructDefinition).WithErrorHandler();
+                return new FollowTargetBehaviorV2(constructId, constructDefinition).WithErrorHandler();
             default:
                 return new WreckBehavior().WithErrorHandler();
         }
