@@ -224,7 +224,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
             SELECT Si.* FROM public.construct C
             INNER JOIN public.mod_sector_instance SI ON (C.sector_x = SI.sector_x AND C.sector_y = SI.sector_y AND C.sector_z = SI.sector_z)
             LEFT JOIN public.ownership O ON (C.owner_entity_id = O.id)
-            WHERE C.owner_entity_id IS NOT NULL AND (O.player_id NOT IN({StaticPlayerId.Aphelia}, {StaticPlayerId.Unknown}) OR (O.player_id IS NULL AND O.organization_id IS NOT NULL))
+            WHERE Si.started_at IS NULL AND C.owner_entity_id IS NOT NULL AND (O.player_id NOT IN({StaticPlayerId.Aphelia}, {StaticPlayerId.Unknown}) OR (O.player_id IS NULL AND O.organization_id IS NOT NULL))
             """
         );
 
