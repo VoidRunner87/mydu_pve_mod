@@ -68,8 +68,8 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         {
             Id = first.id,
             Name = first.name,
-            OnLoadScript = first.on_sector_enter_script,
-            OnSectorEnterScript = first.on_load_script,
+            OnLoadScript = first.on_load_script,
+            OnSectorEnterScript = first.on_sector_enter_script,
             Active = first.active
         };
     }
