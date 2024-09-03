@@ -55,7 +55,7 @@ public class AliveCheckBehavior(ulong constructId, IConstructDefinition construc
 
         if (coreUnit.IsCoreDestroyed() || constructInfo.IsAbandoned())
         {
-            context.NotifyConstructDestroyed(new BehaviorEventArgs(constructId, constructDefinition));
+            await context.NotifyConstructDestroyedAsync(new BehaviorEventArgs(constructId, constructDefinition, context));
             _active = false;
             context.IsAlive = false;
             

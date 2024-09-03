@@ -81,7 +81,7 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
 
         if (coreUnit.IsCoreStressHigh())
         {
-            context.NotifyCoreStressHigh(new BehaviorEventArgs(constructId, constructDefinition));
+            await context.NotifyCoreStressHighAsync(new BehaviorEventArgs(constructId, constructDefinition, context));
         }
         
         var provider = context.ServiceProvider;
@@ -108,17 +108,17 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
 
         if (constructInfo.IsShieldLowerThanHalf())
         {
-            context.NotifyShieldHpHalf(new BehaviorEventArgs(constructId, constructDefinition));
+            await context.NotifyShieldHpHalfAsync(new BehaviorEventArgs(constructId, constructDefinition, context));
         }
         
         if (constructInfo.IsShieldLowerThan25())
         {
-            context.NotifyShieldHpLow(new BehaviorEventArgs(constructId, constructDefinition));
+            await context.NotifyShieldHpLowAsync(new BehaviorEventArgs(constructId, constructDefinition, context));
         }
         
         if (constructInfo.IsShieldDown())
         {
-            context.NotifyShieldHpDown(new BehaviorEventArgs(constructId, constructDefinition));
+            await context.NotifyShieldHpDownAsync(new BehaviorEventArgs(constructId, constructDefinition, context));
         }
         
         var random = provider.GetRandomProvider()

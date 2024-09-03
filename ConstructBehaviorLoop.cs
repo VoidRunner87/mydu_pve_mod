@@ -35,6 +35,8 @@ public class ConstructBehaviorLoop : ModBase
         var previousTime = DateTime.UtcNow;
         
         var isEnabled = await featureService.GetEnabledValue<ConstructBehaviorLoop>(false);
+
+        var taskList = new List<Task>();
         
         try
         {
@@ -102,10 +104,7 @@ public class ConstructBehaviorLoop : ModBase
                     finalBehaviors.AddRange(behaviors);
                     finalBehaviors.Add(new UpdateLastControlledDateBehavior(handleItem.ConstructId).WithErrorHandler());
 
-                    var context = new BehaviorContext(Bot, provider)
-                    {
-                        Client = Bot
-                    };
+                    var context = new BehaviorContext(handleItem.Sector, Bot, provider, constructDef);
 
                     context = inMemoryContextRepo.GetOrDefault(handleItem.ConstructId, context);
                     context.DeltaTime = deltaTime;
@@ -130,6 +129,8 @@ public class ConstructBehaviorLoop : ModBase
                 
                 // logger.LogInformation("Tick Time: {Time}ms", sw.ElapsedMilliseconds);
                 previousTime = now;
+
+                await Task.WhenAll(taskList);
             }
         }
         catch (Exception e)

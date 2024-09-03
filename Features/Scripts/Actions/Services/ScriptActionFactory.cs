@@ -31,6 +31,7 @@ public class ScriptActionFactory : IScriptActionFactory
     {
         switch (scriptActionItem.Type)
         {
+            case "message":
             case "chat-dm":
                 return new ChatDmScriptAction(scriptActionItem.Message);
             case "spawn":

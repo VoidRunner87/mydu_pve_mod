@@ -1,32 +1,27 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using BotLib.BotClient;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using NQ;
-using ZstdSharp.Unsafe;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Data;
 
-public class BehaviorContext(Client client, IServiceProvider serviceProvider)
+public class BehaviorContext(
+    Vec3 sector,
+    Client client,
+    IServiceProvider serviceProvider,
+    IConstructDefinition constructDefinition
+)
 {
-    public delegate void CoreStressHighEvent(object sender, BehaviorEventArgs eventArgs);
-    public delegate void ConstructDestroyedEvent(object sender, BehaviorEventArgs eventArgs);
-    public delegate void ShieldHpHalfEvent(object sender, BehaviorEventArgs eventArgs);
-    public delegate void ShieldHpLowEvent(object sender, BehaviorEventArgs eventArgs);
-    public delegate void ShieldHpDownEvent(object sender, BehaviorEventArgs eventArgs);
-
-    public event CoreStressHighEvent OnCoreStressHigh;
-    public event ConstructDestroyedEvent OnConstructDestroyed;
-    public event ShieldHpHalfEvent OnShieldHpHalf;
-    public event ShieldHpLowEvent OnShieldHpLow;
-    public event ShieldHpDownEvent OnShieldHpDown;
-    
     public ulong? TargetConstructId { get; set; }
     private double _deltaTime;
 
     public double DeltaTime
     {
         get => _deltaTime;
-        set => _deltaTime = Math.Clamp(value, 1/60f, 1/30f);
+        set => _deltaTime = Math.Clamp(value, 1 / 60f, 1 / 30f);
     }
 
     public Dictionary<string, object> ExtraProperties = new();
@@ -34,69 +29,132 @@ public class BehaviorContext(Client client, IServiceProvider serviceProvider)
     public Vec3 Velocity { get; set; }
     public Vec3 Position { get; set; }
     public HashSet<ulong> PlayerIds { get; set; } = new();
+    public Vec3 Sector { get; } = sector;
     public IServiceProvider ServiceProvider { get; init; } = serviceProvider;
     public Client Client { get; set; } = client;
 
     public HashSet<string> PublishedEvents = [];
-    
+    public IConstructDefinition ConstructDefinition { get; set; } = constructDefinition;
+
     public DateTime? TargetSelectedTime { get; set; }
-    
+
     public bool IsAlive { get; set; }
-    
+
     public bool IsActiveWreck { get; set; }
 
-    public virtual void NotifyCoreStressHigh(BehaviorEventArgs eventArgs)
+    public virtual Task NotifyEvent(string @event, BehaviorEventArgs eventArgs)
     {
-        if (PublishedEvents.Contains(nameof(OnCoreStressHigh)))
+        // TODO for custom events
+        return Task.CompletedTask;
+    }
+    
+    public virtual async Task NotifyCoreStressHighAsync(BehaviorEventArgs eventArgs)
+    {
+        if (PublishedEvents.Contains(nameof(NotifyCoreStressHighAsync)))
         {
             return;
         }
-            
-        OnCoreStressHigh?.Invoke(this, eventArgs);
-        PublishedEvents.Add(nameof(OnCoreStressHigh));
+
+        await ConstructDefinition.Events.OnCoreStressHigh.ExecuteAsync(
+            new ScriptContext(
+                eventArgs.Context.ServiceProvider,
+                eventArgs.Context.PlayerIds,
+                eventArgs.Context.Sector,
+                eventArgs.Context.Client
+            )
+            {
+                ConstructId = eventArgs.ConstructId
+            }
+        );
+
+        PublishedEvents.Add(nameof(NotifyCoreStressHighAsync));
     }
 
-    public virtual void NotifyConstructDestroyed(BehaviorEventArgs eventArgs)
+    public virtual async Task NotifyConstructDestroyedAsync(BehaviorEventArgs eventArgs)
     {
-        if (PublishedEvents.Contains(nameof(OnConstructDestroyed)))
+        if (PublishedEvents.Contains(nameof(NotifyConstructDestroyedAsync)))
         {
             return;
         }
-        
-        OnConstructDestroyed?.Invoke(this, eventArgs);
-        PublishedEvents.Add(nameof(OnConstructDestroyed));
+
+        await ConstructDefinition.Events.OnDestruction.ExecuteAsync(
+            new ScriptContext(
+                eventArgs.Context.ServiceProvider,
+                eventArgs.Context.PlayerIds,
+                eventArgs.Context.Sector,
+                eventArgs.Context.Client
+            )
+            {
+                ConstructId = eventArgs.ConstructId
+            }
+        );
+
+        PublishedEvents.Add(nameof(NotifyConstructDestroyedAsync));
     }
-    
-    public virtual void NotifyShieldHpHalf(BehaviorEventArgs eventArgs)
+
+    public virtual async Task NotifyShieldHpHalfAsync(BehaviorEventArgs eventArgs)
     {
-        if (PublishedEvents.Contains(nameof(OnShieldHpHalf)))
+        if (PublishedEvents.Contains(nameof(NotifyShieldHpHalfAsync)))
         {
             return;
         }
-        
-        OnShieldHpHalf?.Invoke(this, eventArgs);
-        PublishedEvents.Add(nameof(OnShieldHpHalf));
+
+        await ConstructDefinition.Events.OnShieldHalfAction.ExecuteAsync(
+            new ScriptContext(
+                eventArgs.Context.ServiceProvider,
+                eventArgs.Context.PlayerIds,
+                eventArgs.Context.Sector,
+                eventArgs.Context.Client
+            )
+            {
+                ConstructId = eventArgs.ConstructId
+            }
+        );
+
+        PublishedEvents.Add(nameof(NotifyShieldHpHalfAsync));
     }
-    
-    public virtual void NotifyShieldHpLow(BehaviorEventArgs eventArgs)
+
+    public virtual async Task NotifyShieldHpLowAsync(BehaviorEventArgs eventArgs)
     {
-        if (PublishedEvents.Contains(nameof(OnShieldHpLow)))
+        if (PublishedEvents.Contains(nameof(NotifyShieldHpLowAsync)))
         {
             return;
         }
-        
-        OnShieldHpLow?.Invoke(this, eventArgs);
-        PublishedEvents.Add(nameof(OnShieldHpLow));
+
+        await ConstructDefinition.Events.OnShieldLowAction.ExecuteAsync(
+            new ScriptContext(
+                eventArgs.Context.ServiceProvider,
+                eventArgs.Context.PlayerIds,
+                eventArgs.Context.Sector,
+                eventArgs.Context.Client
+            )
+            {
+                ConstructId = eventArgs.ConstructId
+            }
+        );
+
+        PublishedEvents.Add(nameof(NotifyShieldHpLowAsync));
     }
-    
-    public virtual void NotifyShieldHpDown(BehaviorEventArgs eventArgs)
+
+    public virtual async Task NotifyShieldHpDownAsync(BehaviorEventArgs eventArgs)
     {
-        if (PublishedEvents.Contains(nameof(OnShieldHpDown)))
+        if (PublishedEvents.Contains(nameof(NotifyShieldHpDownAsync)))
         {
             return;
         }
-        
-        OnShieldHpDown?.Invoke(this, eventArgs);
-        PublishedEvents.Add(nameof(OnShieldHpDown));
+
+        await ConstructDefinition.Events.OnShieldDownAction.ExecuteAsync(
+            new ScriptContext(
+                eventArgs.Context.ServiceProvider,
+                eventArgs.Context.PlayerIds,
+                eventArgs.Context.Sector,
+                eventArgs.Context.Client
+            )
+            {
+                ConstructId = eventArgs.ConstructId
+            }
+        );
+
+        PublishedEvents.Add(nameof(NotifyShieldHpDownAsync));
     }
 }

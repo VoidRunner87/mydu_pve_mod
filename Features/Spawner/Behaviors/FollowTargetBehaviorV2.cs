@@ -68,7 +68,6 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         var direction = (targetPos - npcPos + offset).NormalizeSafe();
         var pointDirection = (targetPos - npcPos).NormalizeSafe();
         
-        Console.WriteLine(pointDirection);
         var velocityDirection = context.Velocity.NormalizeSafe();
         var velToTargetDot = velocityDirection.Dot(direction);
 
@@ -86,7 +85,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
             accelV = new Vec3();
         }
 
-        context.Velocity += accelV;
+        context.Velocity += accelV * context.DeltaTime;
         context.Velocity = context.Velocity.ClampToSize(constructDefinition.DefinitionItem.MaxSpeedKph / 3.6d);
         var velocity = context.Velocity;
 
