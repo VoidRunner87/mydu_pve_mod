@@ -306,7 +306,8 @@ Once the container is restarted, the NPC continues the fight where it stopped.
 ## What happens next
 
 * The PVE mod is going to check the sector_instance table and see if there are any sectors to expire - then it will expire and delete them.
-* The PVE mod is going to randomly pick encounters to spawn and add entries to tables: `mod_sector_instance` and `mod_npc_construct_handle` to track things it creates and execute `on_loaded_script` on each sector added
+* The PVE mod is going to randomly pick encounters to spawn and add entries to tables: `mod_sector_instance` and `mod_npc_construct_handle` to track things it creates.
+  * The sector manager is going to execute the `on_loaded_script` on each sector added
 * The PVE mod is going to query the spatial hash (sort of) of constructs until it finds a match in a sector instance and execute the script `on_sector_entered_script`
 * Any aggressive ships spawned will hunt the player
 * Every 2 seconds or so the ship looks for targets and shoots, moves and tracks players
