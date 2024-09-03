@@ -292,6 +292,11 @@ Insert `one` record on the table `mod_sector_encounter` for `easy-pirate-rogue-1
 * on_sector_enter_script = 1easy-pirate-rogue-1`
 * active = `true`
 
+## Restart the Container
+
+There's no consequence to restarting the container, except that if someone is fighting something the NPC will stop.
+Once the container is restarted, the NPC continues the fight where it stopped.
+
 ## What we've done
 
 * Created construct definitions for POI and a Pirate Ship
