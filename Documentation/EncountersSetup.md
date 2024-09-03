@@ -3,6 +3,16 @@
 The use case this document covers is a POI showing on Points of Interest with a `[1] Pirate Attack` marker.
 When a player enters the sector area (10su radius - currently hardcoded in the code - may change in the future) it spawns a pirate ship to attack the player.
 
+# Recommendations
+
+I recommend you DISABLE the Vanilla Wreck system.
+
+Reasons:
+
+* The ships available are bugged (Specially the Unknown Origins L Core)
+* This mod leverages the POI list for people to find encounters. Having a TONS of wrecks is going to make that more difficult.
+* You can spawn a wreck pool instead of constantly spawning wrecks using this mod.
+
 # Enable Spawner Features
 
 In the `mod_features` table, enable (set to "true"):
