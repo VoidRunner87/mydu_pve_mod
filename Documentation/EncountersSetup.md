@@ -255,10 +255,10 @@ Below we are spawning that Prefab. The script does:
       "MinQuantity": 1
     },
     {
+      "Type": "for-each-handle-with-tag",
       "Tags": [
         "poi"
       ],
-      "Type": "for-each-handle-with-tag",
       "Actions": [
         {
           "Type": "remove-poi"
