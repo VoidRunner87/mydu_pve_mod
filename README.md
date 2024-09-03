@@ -57,6 +57,9 @@ docker-compose up -d mod_dynamic_encounters
 * Run the up script or `docker-compose up -d mod_dynamic_encounters` directly
 * For debugging, tail the logs with `tail -f logs/Mod.log` or similar.
 
+# Setting up Encounters
+[Encounters Setup](Documentation/EncountersSetup.md)
+
 # Roadmap - Not in Order
 
 * Enhanced/Scriptable Wreck Experience
