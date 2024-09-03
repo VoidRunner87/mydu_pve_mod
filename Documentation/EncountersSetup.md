@@ -205,7 +205,7 @@ It does nothing else than spawning a wreck. Type=spawn, Prefab=wreck-medium-pira
 
 ### Pirate Ship
 
-As seens before in this document, it spawns a pirate ship:
+As seen before in this document, it spawns a pirate ship:
 * The pirate ship has Advanced Cannons Small Agile and fires T3 Ammo for Cannons
 * The ship has twice the distance of the weapon setup - to make it more effective against a player
 * The ship sends chat DM to players when Shields are down, half, low and CCS is high and finally when they get cored - notice the Type="message" on the script for the events
