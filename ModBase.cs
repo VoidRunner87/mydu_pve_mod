@@ -145,7 +145,7 @@ public class ModBase
         Console.WriteLine("Services Started");
         
         Console.WriteLine("Creating BOT User");
-        Bot = await CreateUser(Environment.GetEnvironmentVariable("BOT_PREFIX")!, true, false);
+        Bot = await RefreshClient();
         Console.WriteLine("BOT User Created");
     }
 
@@ -160,6 +160,11 @@ public class ModBase
             Console.WriteLine($"{e}");
             throw;
         }
+    }
+    
+    public static async Task<Client> RefreshClient()
+    {
+        return await CreateUser(Environment.GetEnvironmentVariable("BOT_PREFIX")!, true, false);
     }
 
     public static void UpdateDatabase(IServiceScope scope)

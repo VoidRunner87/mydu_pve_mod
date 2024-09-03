@@ -2,12 +2,14 @@
 using System.Threading.Tasks;
 using BotLib.Generated;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
+using NQutils.Exceptions;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
@@ -17,11 +19,15 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
 
     private bool _active = true;
     private IConstructService _constructService;
+    private ILogger<FollowTargetBehavior> _logger;
 
     public bool IsActive() => _active;
 
     public Task InitializeAsync(BehaviorContext context)
     {
+        var provider = context.ServiceProvider;
+
+        _logger = provider.CreateLogger<FollowTargetBehavior>();
         _constructService = context.ServiceProvider.GetRequiredService<IConstructService>();
 
         return Task.CompletedTask;
@@ -104,26 +110,32 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
             targetPos
         );
 
-        // context.Velocity = velocity;
-        
-        // var finalVelocity = context.Velocity * Math.Clamp(context.DeltaTime, 1/60f, 1/15f);
-
         _timePoint = TimePoint.Now();
 
-        await client.Req.ConstructUpdate(
-            new ConstructUpdate
-            {
-                constructId = constructId,
-                rotation = rotation,
-                position = position,
-                worldAbsoluteVelocity = context.Velocity,
-                worldAbsoluteAngVelocity = new Vec3(),
-                worldRelativeAngVelocity = new Vec3(),
-                worldRelativeVelocity = context.Velocity,
-                time = _timePoint,
-                grounded = false,
-            }
-        );
+        try
+        {
+            await client.Req.ConstructUpdate(
+                new ConstructUpdate
+                {
+                    constructId = constructId,
+                    rotation = rotation,
+                    position = position,
+                    worldAbsoluteVelocity = context.Velocity,
+                    worldAbsoluteAngVelocity = new Vec3(),
+                    worldRelativeAngVelocity = new Vec3(),
+                    worldRelativeVelocity = context.Velocity,
+                    time = _timePoint,
+                    grounded = false,
+                }
+            );
+        }
+        catch (BusinessException be)
+        {
+            _logger.LogError(be, "Failed to update construct transform. Attempting a restart of the bot connection.");
+
+            ModBase.Bot = await ModBase.RefreshClient();
+            client = ModBase.Bot;
+        }
     }
 
     public static Vec3 LerpWithVelocity(Vec3 start, Vec3 end, ref Vec3 velocity, Vec3 acceleration, double deltaTime)
