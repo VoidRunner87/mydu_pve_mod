@@ -47,8 +47,6 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
             return;
         }
 
-        var client = context.Client;
-
         if (context.TargetConstructId is null or 0)
         {
             return;
@@ -114,7 +112,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
 
         try
         {
-            await client.Req.ConstructUpdate(
+            await ModBase.Bot.Req.ConstructUpdate(
                 new ConstructUpdate
                 {
                     constructId = constructId,
@@ -133,8 +131,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         {
             _logger.LogError(be, "Failed to update construct transform. Attempting a restart of the bot connection.");
 
-            ModBase.Bot = await ModBase.RefreshClient();
-            client = ModBase.Bot;
+            await ModBase.Bot.Reconnect();
         }
     }
 

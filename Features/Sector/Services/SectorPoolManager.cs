@@ -97,8 +97,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     new ScriptContext(
                         serviceProvider,
                         new HashSet<ulong>(),
-                        sector.Sector,
-                        client
+                        sector.Sector
                     )
                 );
 
@@ -126,7 +125,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             if (!sector.IsForceExpired(DateTime.UtcNow) && players.Any())
             {
                 _logger.LogInformation("Players Nearby - Extended Expiration of {Sector} {SectorGuid}", sector.Sector, sector.Id);
-                await _sectorInstanceRepository.SetExpirationFromNowAsync(sector.Id, TimeSpan.FromMinutes(30));
+                await _sectorInstanceRepository.SetExpirationFromNowAsync(sector.Id, TimeSpan.FromMinutes(60));
                 continue;
             }
             
@@ -184,8 +183,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     new ScriptContext(
                         serviceProvider,
                         new HashSet<ulong>(),
-                        sector.Sector,
-                        client
+                        sector.Sector
                     )
                 );
 

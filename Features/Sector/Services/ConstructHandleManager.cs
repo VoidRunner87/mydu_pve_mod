@@ -54,8 +54,7 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
                         new ScriptContext(
                             provider,
                             new HashSet<ulong>(),
-                            handle.Sector,
-                            client
+                            handle.Sector
                         )
                     ));
                 }
@@ -113,8 +112,7 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
                         new ScriptContext(
                             provider,
                             new HashSet<ulong>(),
-                            handle.Sector,
-                            client
+                            handle.Sector
                         )
                     ));
                 }

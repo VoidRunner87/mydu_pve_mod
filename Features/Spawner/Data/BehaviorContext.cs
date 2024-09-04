@@ -59,8 +59,7 @@ public class BehaviorContext(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.PlayerIds,
-                eventArgs.Context.Sector,
-                eventArgs.Context.Client
+                eventArgs.Context.Sector
             )
             {
                 ConstructId = eventArgs.ConstructId
@@ -81,8 +80,7 @@ public class BehaviorContext(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.PlayerIds,
-                eventArgs.Context.Sector,
-                eventArgs.Context.Client
+                eventArgs.Context.Sector
             )
             {
                 ConstructId = eventArgs.ConstructId
@@ -103,8 +101,7 @@ public class BehaviorContext(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.PlayerIds,
-                eventArgs.Context.Sector,
-                eventArgs.Context.Client
+                eventArgs.Context.Sector
             )
             {
                 ConstructId = eventArgs.ConstructId
@@ -125,8 +122,7 @@ public class BehaviorContext(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.PlayerIds,
-                eventArgs.Context.Sector,
-                eventArgs.Context.Client
+                eventArgs.Context.Sector
             )
             {
                 ConstructId = eventArgs.ConstructId
@@ -147,8 +143,7 @@ public class BehaviorContext(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.PlayerIds,
-                eventArgs.Context.Sector,
-                eventArgs.Context.Client
+                eventArgs.Context.Sector
             )
             {
                 ConstructId = eventArgs.ConstructId

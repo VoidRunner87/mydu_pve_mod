@@ -26,6 +26,7 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
             SELECT C.id FROM public.construct C
             LEFT JOIN public.ownership O ON (C.owner_entity_id = O.id)
             WHERE C.sector_x = @x AND C.sector_y = @y AND C.sector_z = @z AND
+                  C.deleted_at IS NULL AND
                   C.owner_entity_id IS NOT NULL AND (O.player_id NOT IN({StaticPlayerId.Aphelia}, {StaticPlayerId.Unknown}) OR (O.player_id IS NULL AND O.organization_id IS NOT NULL))
             """,
             new

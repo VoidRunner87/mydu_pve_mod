@@ -54,7 +54,7 @@ public class ModBase
     public static IScriptService SpawnerScripts;
 
     /// Create or login a user, return bot client instance
-    public static async Task<Client> CreateUser(string prefix, bool allowExisting = false, bool randomize = true)
+    public static async Task<Client> CreateUser(string prefix, bool allowExisting = false, bool randomize = false)
     {
         var username = prefix;
         if (randomize)
@@ -164,7 +164,7 @@ public class ModBase
     
     public static async Task<Client> RefreshClient()
     {
-        return await CreateUser(Environment.GetEnvironmentVariable("BOT_PREFIX")!, true, false);
+        return await CreateUser(Environment.GetEnvironmentVariable("BOT_PREFIX")!, true);
     }
 
     public static void UpdateDatabase(IServiceScope scope)

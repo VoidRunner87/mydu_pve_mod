@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Mod.DynamicEncounters.Features.Sector.Services;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
+using NQ;
 using NQ.Interfaces;
 using Orleans;
 
@@ -62,11 +64,20 @@ public class SelectTargetBehavior(ulong constructId, IConstructDefinition constr
 
         var constructsOnSector = await _spatialHashRepo.FindPlayerLiveConstructsOnSector(sectorPos);
 
-        var result = await Task.WhenAll(
-            constructsOnSector.Select(id => _orleans.GetConstructInfoGrain(id).Get())
-        );
+        var result = new List<ConstructInfo>();
+        foreach (var id in constructsOnSector)
+        {
+            try
+            {
+                result.Add(await _orleans.GetConstructInfoGrain(id).Get());
+            }
+            catch (Exception)
+            {
+                _logger.LogError("Failed to fetch construct info for {Construct}", id);
+            }
+        }
         
-        _logger.LogInformation("Found {Count} constructs around", result.Length);
+        _logger.LogInformation("Found {Count} constructs around", result.Count);
 
         // TODO remove hardcoded
         var playerConstructs = result

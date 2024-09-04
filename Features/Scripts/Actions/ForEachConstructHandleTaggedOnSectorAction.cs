@@ -40,8 +40,7 @@ public class ForEachConstructHandleTaggedOnSectorAction(
             var itemContext = new ScriptContext(
                 context.ServiceProvider,
                 context.PlayerIds,
-                context.Sector,
-                context.Client
+                context.Sector
             )
             {
                 ConstructId = handleItem.ConstructId

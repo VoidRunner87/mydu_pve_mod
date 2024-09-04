@@ -21,7 +21,7 @@ public class ChatDmScriptAction(string message) : IScriptAction
 
         foreach (var playerId in context.PlayerIds)
         {
-            await context.Client.Req.ChatMessageSend(
+            await ModBase.Bot.Req.ChatMessageSend(
                 new MessageContent
                 {
                     channel = new MessageChannel
