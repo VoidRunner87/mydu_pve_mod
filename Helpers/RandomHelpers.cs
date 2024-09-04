@@ -11,9 +11,9 @@ public static class RandomHelpers
     {
         return new Vec3
         {
-            x = random.NextDouble(),
-            y = random.NextDouble(),
-            z = random.NextDouble(),
+            x = random.Next(-1, 1),
+            y = random.Next(-1, 1),
+            z = random.Next(-1, 1),
         }.Normalized();
     }
 

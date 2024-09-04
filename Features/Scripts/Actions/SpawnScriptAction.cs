@@ -131,7 +131,7 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
             provider.GetRequiredService<IPlanetList>()
         ))[0];
 
-        _logger.LogInformation("Spawned Construct({Id}) at ::pos{{0,0,{Pos}}}", constructId, spawnPosition);
+        _logger.LogInformation("Spawned Construct [{Name}]({Id}) at ::pos{{0,0,{Pos}}}", resultName, constructId, spawnPosition);
 
         var clusterClient = provider.GetRequiredService<IClusterClient>();
         await clusterClient.GetConstructParentingGrain().ReloadConstruct(constructId);
