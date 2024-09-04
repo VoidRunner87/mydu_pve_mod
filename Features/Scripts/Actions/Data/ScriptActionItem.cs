@@ -29,6 +29,7 @@ public class ScriptActionItem
     public Vec3? Position { get; set; } = new();
     public Vec3? Sector { get; set; } = new();
     public TimeSpan TimeSpan { get; set; } = TimeSpan.Zero;
+    public ScriptActionOverrides Override { get; set; } = new();
     
     /// <summary>
     /// Use this to tag constructs that are spawned to control their behaviors later using the tags.
@@ -41,4 +42,9 @@ public class ScriptActionItem
     public List<ScriptActionItem> Actions { get; set; } = new();
 
     public ScriptActionEvents Events { get; set; } = new();
+}
+
+public class ScriptActionOverrides
+{
+    public string? ConstructName { get; set; }
 }

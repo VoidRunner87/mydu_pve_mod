@@ -11,7 +11,7 @@ using NQ.Interfaces;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
-public class DespawnNpcConstructAction(ulong constructId) : IScriptAction
+public class DespawnNpcConstructAction : IScriptAction
 {
     public string GetKey() => Name;
 
@@ -22,18 +22,25 @@ public class DespawnNpcConstructAction(ulong constructId) : IScriptAction
         var provider = context.ServiceProvider;
 
         var logger = provider.CreateLogger<DespawnNpcConstructAction>();
+        
+        if (!context.ConstructId.HasValue)
+        {
+            logger.LogError("No construct id on context to execute this action");
+            return ScriptActionResult.Failed();
+        }
+        
         var orleans = provider.GetOrleans();
 
         var spatialHashRepository = provider.GetRequiredService<IConstructSpatialHashRepository>();
         var constructHandleRepository = provider.GetRequiredService<IConstructHandleRepository>();
 
-        var constructInfoGrain = orleans.GetConstructInfoGrain(constructId);
+        var constructInfoGrain = orleans.GetConstructInfoGrain(context.ConstructId.Value);
         var constructInfo = await constructInfoGrain.Get();
         
-        var handleItem = await constructHandleRepository.FindByConstructIdAsync(constructId);
+        var handleItem = await constructHandleRepository.FindByConstructIdAsync(context.ConstructId.Value);
         if (handleItem == null)
         {
-            logger.LogWarning("No handle found for Construct {Construct}. Aborting", constructId);
+            logger.LogWarning("No handle found for Construct {Construct}. Aborting", context.ConstructId.Value);
             return ScriptActionResult.Failed();
         }
         
@@ -55,13 +62,13 @@ public class DespawnNpcConstructAction(ulong constructId) : IScriptAction
         try
         {
             var parentingGrain = orleans.GetConstructParentingGrain();
-            await parentingGrain.DeleteConstruct(constructId, hardDelete: true);
+            await parentingGrain.DeleteConstruct(context.ConstructId.Value, hardDelete: true);
         
-            logger.LogInformation("Deleted NPC construct {ConstructId}", constructId);
+            logger.LogInformation("Deleted NPC construct {ConstructId}", context.ConstructId.Value);
         }
         catch (Exception e)
         {
-            logger.LogInformation(e, "Failed to delete NPC construct {Construct}", constructId);
+            logger.LogInformation(e, "Failed to delete NPC construct {Construct}", context.ConstructId.Value);
             return ScriptActionResult.Failed();
         }
         

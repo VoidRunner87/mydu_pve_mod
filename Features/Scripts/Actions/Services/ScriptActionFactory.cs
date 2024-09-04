@@ -38,12 +38,13 @@ public class ScriptActionFactory : IScriptActionFactory
                 return new SpawnScriptAction(scriptActionItem);
             case "run":
                 return new RunScriptAction(scriptActionItem.Script);
+            case "delete":
             case "delete-construct":
-                return new DeleteConstructAction(scriptActionItem.ConstructId);
+                return new DeleteConstructAction();
             case "despawn":
-                return new DespawnNpcConstructAction(scriptActionItem.ConstructId);
+                return new DespawnNpcConstructAction();
             case "despawn-wreck":
-                return new DespawnWreckConstructAction(scriptActionItem.ConstructId);
+                return new DespawnWreckConstructAction();
             case "test-combat":
                 return new SpawnScriptAction(
                     new ScriptActionItem

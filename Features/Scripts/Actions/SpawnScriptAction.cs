@@ -100,9 +100,19 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
         var actionPosition = actionItem.Position ?? new Vec3();
         var spawnPosition = context.Sector + spawnPoint + actionPosition;
 
+        var prefabConstructName = constructDef.DefinitionItem.ServerProperties.Header.PrettyName;
+        var overrideName = actionItem.Override.ConstructName;
+
+        var resultName = string.IsNullOrEmpty(overrideName) ? prefabConstructName : overrideName;
+
+        if (string.IsNullOrEmpty(resultName))
+        {
+            resultName = $"E-{random.Next(1000, 9999)}";
+        }
+        
         var fixture = ConstructFixture.FromSource(source);
         fixture.parentId = null;
-        fixture.header.prettyName = constructDef.DefinitionItem.ServerProperties.Header.PrettyName;
+        fixture.header.prettyName = resultName;
         fixture.ownerId = new EntityId { playerId = constructDef.DefinitionItem.OwnerId };
         fixture.position = spawnPosition;
         fixture.isUntargetable = constructDef.DefinitionItem.IsUntargetable;

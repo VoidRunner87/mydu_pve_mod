@@ -114,6 +114,9 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
                             new HashSet<ulong>(),
                             handle.Sector
                         )
+                        {
+                            ConstructId = handle.ConstructId
+                        }
                     ));
                 }
             }

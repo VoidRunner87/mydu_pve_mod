@@ -11,8 +11,7 @@ namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 /// <summary>
 /// No Validation Delete Construct
 /// </summary>
-/// <param name="constructId"></param>
-public class DeleteConstructAction(ulong constructId) : IScriptAction
+public class DeleteConstructAction : IScriptAction
 {
     public string GetKey() => Name;
 
@@ -23,18 +22,25 @@ public class DeleteConstructAction(ulong constructId) : IScriptAction
         var provider = context.ServiceProvider;
 
         var logger = provider.CreateLogger<DeleteConstructAction>();
+        
+        if (!context.ConstructId.HasValue)
+        {
+            logger.LogError("No construct id on context to execute this action");
+            return ScriptActionResult.Failed();
+        }
+        
         var orleans = provider.GetOrleans();
 
         try
         {
             var parentingGrain = orleans.GetConstructParentingGrain();
-            await parentingGrain.DeleteConstruct(constructId, hardDelete: true);
+            await parentingGrain.DeleteConstruct(context.ConstructId.Value, hardDelete: true);
         
-            logger.LogInformation("Deleted construct {ConstructId}", constructId);
+            logger.LogInformation("Deleted construct {ConstructId}", context.ConstructId.Value);
         }
         catch (Exception e)
         {
-            logger.LogInformation(e, "Failed to delete construct {Construct}", constructId);
+            logger.LogInformation(e, "Failed to delete construct {Construct}", context.ConstructId.Value);
             return ScriptActionResult.Failed();
         }
         
