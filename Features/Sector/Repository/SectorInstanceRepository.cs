@@ -34,9 +34,9 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
             new
             {
                 item.Id,
-                PosX = (long)item.Sector.x,
-                PosY = (long)item.Sector.y,
-                PosZ = (long)item.Sector.z,
+                PosX = item.Sector.x,
+                PosY = item.Sector.y,
+                PosZ = item.Sector.z,
                 item.ExpiresAt,
                 item.OnLoadScript,
                 item.OnSectorEnterScript
@@ -238,9 +238,9 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
     private struct DbRow
     {
         public Guid id { get; set; }
-        public long sector_x { get; set; }
-        public long sector_y { get; set; }
-        public long sector_z { get; set; }
+        public double sector_x { get; set; }
+        public double sector_y { get; set; }
+        public double sector_z { get; set; }
         public string on_load_script { get; set; }
         public string on_sector_enter_script { get; set; }
         public DateTime expires_at { get; set; }

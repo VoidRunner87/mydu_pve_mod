@@ -68,9 +68,9 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         var targetFiringPos = targetPos + offset;
 
         var distance = targetPos.Distance(npcPos);
-        
+
         var direction = (targetPos - npcPos + offset).NormalizeSafe();
-        
+
         var velocityDirection = context.Velocity.NormalizeSafe();
         var velToTargetDot = velocityDirection.Dot(direction);
 
@@ -80,7 +80,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         {
             acceleration *= 1 + Math.Abs(velToTargetDot);
         }
-        
+
         var accelV = direction * acceleration;
 
         if (distance <= distanceGoal * 2)
@@ -104,11 +104,15 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
 
         // Make the ship point to where it's accelerating
         var accelerationFuturePos = npcPos + direction * 200000;
-        
+
         var rotation = VectorMathHelper.CalculateRotationToPoint(
             npcPos,
             accelerationFuturePos
         );
+
+        var relativeAngularVel = CalculateAngularVelocity(context.Rotation, rotation, context.DeltaTime);
+
+        context.Rotation = rotation;
 
         _timePoint = TimePoint.Now();
 
@@ -120,9 +124,9 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
                     constructId = constructId,
                     rotation = rotation,
                     position = position,
-                    worldAbsoluteVelocity = new Vec3(),//context.Velocity,
-                    worldAbsoluteAngVelocity = new Vec3(),
-                    worldRelativeAngVelocity = new Vec3(),
+                    // worldAbsoluteVelocity = new Vec3(), //context.Velocity,
+                    // worldAbsoluteAngVelocity = new Vec3(),
+                    worldRelativeAngVelocity = relativeAngularVel,
                     worldRelativeVelocity = context.Velocity,
                     time = _timePoint,
                     grounded = false,
@@ -137,17 +141,52 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         }
     }
 
+    public static Vec3 CalculateAngularVelocity(Quat q1, Quat q2, double deltaTime)
+    {
+        // Step 1: Compute relative rotation
+        var deltaQ = QuatHelpers.Multiply(q2, QuatHelpers.Inverse(q1));
+
+        // Step 2: Calculate the angle of rotation (theta)
+        var theta = 2 * Math.Acos(deltaQ.w);
+
+        // Step 3: Calculate the rotation axis
+        var sinHalfTheta = Math.Sqrt(1 - deltaQ.w * deltaQ.w);
+        var rotationAxis = new Vec3 { x = deltaQ.x, y = deltaQ.y, z = deltaQ.z };
+
+        if (sinHalfTheta > 0.001)
+        {
+            rotationAxis = new Vec3
+            {
+                x = deltaQ.x / sinHalfTheta, 
+                y = deltaQ.y / sinHalfTheta, 
+                z = deltaQ.z / sinHalfTheta
+            };
+        }
+        else
+        {
+            rotationAxis = new Vec3 { x = 1, y = 0, z = 0 }; // Arbitrary direction
+        }
+
+        // Step 4: Compute angular velocity
+        return new Vec3
+        {
+            x = rotationAxis.x * theta / deltaTime, 
+            y = rotationAxis.y * theta / deltaTime,
+            z = rotationAxis.z * theta / deltaTime
+        };
+    }
+
     public static Vec3 LerpWithVelocity(Vec3 start, Vec3 end, ref Vec3 velocity, Vec3 acceleration, double deltaTime)
     {
         // Calculate direction and distance to the end
-        Vec3 direction = new Vec3
+        var direction = new Vec3
         {
             x = end.x - start.x,
             y = end.y - start.y,
             z = end.z - start.z
         };
 
-        double distance = direction.Size();
+        var distance = direction.Size();
 
         // Check if distance is very small (to avoid division by zero)
         if (distance < 0.001)
@@ -165,7 +204,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         };
 
         // Calculate the new position based on the updated velocity
-        Vec3 newPosition = new Vec3
+        var newPosition = new Vec3
         {
             x = start.x + velocity.x * deltaTime,
             y = start.y + velocity.y * deltaTime,
@@ -173,14 +212,14 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         };
 
         // Calculate the new distance to the end
-        Vec3 newDirection = new Vec3
+        var newDirection = new Vec3
         {
             x = end.x - newPosition.x,
             y = end.y - newPosition.y,
             z = end.z - newPosition.z
         };
 
-        double newDistance = newDirection.Size();
+        var newDistance = newDirection.Size();
 
         // Check if the object is close to the target and the distance change is smaller than acceleration
         if (newDistance < 0.001 || newDistance < acceleration.Size() * deltaTime)

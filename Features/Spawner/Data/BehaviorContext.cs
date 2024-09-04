@@ -28,6 +28,7 @@ public class BehaviorContext(
 
     public Vec3 Velocity { get; set; }
     public Vec3 Position { get; set; }
+    public Quat Rotation { get; set; }
     public HashSet<ulong> PlayerIds { get; set; } = new();
     public Vec3 Sector { get; } = sector;
     public IServiceProvider ServiceProvider { get; init; } = serviceProvider;

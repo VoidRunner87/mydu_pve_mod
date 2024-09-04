@@ -33,9 +33,9 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             {
                 id = Guid.NewGuid(),
                 construct_id = (long)item.ConstructId,
-                sector_x = (long)item.Sector.x,
-                sector_y = (long)item.Sector.y,
-                sector_z = (long)item.Sector.z,
+                sector_x = item.Sector.x,
+                sector_y = item.Sector.y,
+                sector_z = item.Sector.z,
                 construct_def_id = item.ConstructDefinitionId,
                 original_owner_player_id = (long)item.OriginalOwnerPlayerId,
                 original_organization_id = (long)item.OriginalOrganizationId,
@@ -295,9 +295,9 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         public Guid id { get; set; }
         public long construct_id { get; set; }
         public Guid construct_def_id { get; set; }
-        public long sector_x { get; set; }
-        public long sector_y { get; set; }
-        public long sector_z { get; set; }
+        public double sector_x { get; set; }
+        public double sector_y { get; set; }
+        public double sector_z { get; set; }
         public DateTime last_controlled_at { get; set; }
         public string? def_content { get; set; }
         public ulong original_owner_player_id { get; set; }

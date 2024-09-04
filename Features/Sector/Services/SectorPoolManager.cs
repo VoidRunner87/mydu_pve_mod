@@ -209,9 +209,9 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
     private struct ConstructSectorRow
     {
         public ulong id { get; set; }
-        public long sector_x { get; set; }
-        public long sector_y { get; set; }
-        public long sector_z { get; set; }
+        public double sector_x { get; set; }
+        public double sector_y { get; set; }
+        public double sector_z { get; set; }
 
         public Vec3 SectorToVec3() => new() { x = sector_x, y = sector_y, z = sector_z };
     }
