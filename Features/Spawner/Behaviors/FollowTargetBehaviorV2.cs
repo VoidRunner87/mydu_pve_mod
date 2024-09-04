@@ -70,7 +70,6 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         var distance = targetPos.Distance(npcPos);
         
         var direction = (targetPos - npcPos + offset).NormalizeSafe();
-        var pointDirection = (targetPos - npcPos).NormalizeSafe();
         
         var velocityDirection = context.Velocity.NormalizeSafe();
         var velToTargetDot = velocityDirection.Dot(direction);
@@ -102,10 +101,13 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         );
 
         context.Velocity = velocity;
+
+        // Make the ship point to where it's accelerating
+        var accelerationFuturePos = npcPos + direction * 200000;
         
         var rotation = VectorMathHelper.CalculateRotationToPoint(
             npcPos,
-            targetPos
+            accelerationFuturePos
         );
 
         _timePoint = TimePoint.Now();
@@ -118,7 +120,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
                     constructId = constructId,
                     rotation = rotation,
                     position = position,
-                    worldAbsoluteVelocity = context.Velocity,
+                    worldAbsoluteVelocity = new Vec3(),//context.Velocity,
                     worldAbsoluteAngVelocity = new Vec3(),
                     worldRelativeAngVelocity = new Vec3(),
                     worldRelativeVelocity = context.Velocity,
