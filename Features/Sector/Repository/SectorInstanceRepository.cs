@@ -34,9 +34,9 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
             new
             {
                 item.Id,
-                PosX = item.Sector.x,
-                PosY = item.Sector.y,
-                PosZ = item.Sector.z,
+                PosX = (long)item.Sector.x,
+                PosY = (long)item.Sector.y,
+                PosZ = (long)item.Sector.z,
                 item.ExpiresAt,
                 item.OnLoadScript,
                 item.OnSectorEnterScript

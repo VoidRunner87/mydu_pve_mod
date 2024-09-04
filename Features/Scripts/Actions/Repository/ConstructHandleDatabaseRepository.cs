@@ -33,9 +33,9 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             {
                 id = Guid.NewGuid(),
                 construct_id = (long)item.ConstructId,
-                sector_x = item.Sector.x,
-                sector_y = item.Sector.y,
-                sector_z = item.Sector.z,
+                sector_x = (long)item.Sector.x,
+                sector_y = (long)item.Sector.y,
+                sector_z = (long)item.Sector.z,
                 construct_def_id = item.ConstructDefinitionId,
                 original_owner_player_id = (long)item.OriginalOwnerPlayerId,
                 original_organization_id = (long)item.OriginalOrganizationId,
