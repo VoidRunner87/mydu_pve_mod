@@ -9,6 +9,6 @@ public interface IScriptLoaderService
 {
     Task<IScriptAction> LoadScriptAction(string filePath);
     IScriptAction LoadScript(ScriptActionItem item);
-    IConstructDefinition LoadScript(PrefabItem item);
-    Task<IConstructDefinition> LoadConstructDefinition(string filePath);
+    IPrefab LoadScript(PrefabItem item);
+    Task<IPrefab> LoadConstructDefinition(string filePath);
 }

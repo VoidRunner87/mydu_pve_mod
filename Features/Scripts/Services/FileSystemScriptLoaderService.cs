@@ -42,12 +42,12 @@ public class FileSystemScriptLoaderService(IServiceProvider serviceProvider) : I
         return _scriptActionFactory.Create(item);
     }
 
-    public IConstructDefinition LoadScript(PrefabItem item)
+    public IPrefab LoadScript(PrefabItem item)
     {
         return _constructDefinitionFactory.Create(item);
     }
 
-    public async Task<IConstructDefinition> LoadConstructDefinition(string filePath)
+    public async Task<IPrefab> LoadConstructDefinition(string filePath)
     {
         try
         {

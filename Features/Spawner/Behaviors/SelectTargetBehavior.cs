@@ -17,9 +17,9 @@ using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
-public class SelectTargetBehavior(ulong constructId, IConstructDefinition constructDefinition) : IConstructBehavior
+public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstructBehavior
 {
-    private readonly IConstructDefinition _constructDefinition = constructDefinition;
+    private readonly IPrefab _prefab = prefab;
     private bool _active = true;
     private IConstructSpatialHashRepository _spatialHashRepo;
     private IClusterClient _orleans;

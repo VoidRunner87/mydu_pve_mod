@@ -13,7 +13,7 @@ using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
-public class AliveCheckBehavior(ulong constructId, IConstructDefinition constructDefinition) : IConstructBehavior
+public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructBehavior
 {
     private IClusterClient _orleans;
     private IConstructElementsGrain _constructElementsGrain;
@@ -55,7 +55,7 @@ public class AliveCheckBehavior(ulong constructId, IConstructDefinition construc
 
         if (coreUnit.IsCoreDestroyed() || constructInfo.IsAbandoned())
         {
-            await context.NotifyConstructDestroyedAsync(new BehaviorEventArgs(constructId, constructDefinition, context));
+            await context.NotifyConstructDestroyedAsync(new BehaviorEventArgs(constructId, prefab, context));
             _active = false;
             context.IsAlive = false;
             

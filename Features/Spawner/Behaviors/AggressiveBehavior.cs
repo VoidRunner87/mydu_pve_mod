@@ -17,7 +17,7 @@ using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
-public class AggressiveBehavior(ulong constructId, IConstructDefinition constructDefinition) : IConstructBehavior
+public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructBehavior
 {
     private List<ElementId> _weaponsElements;
     private List<WeaponHandle> _weaponUnits;
@@ -81,7 +81,7 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
 
         if (coreUnit.IsCoreStressHigh())
         {
-            await context.NotifyCoreStressHighAsync(new BehaviorEventArgs(constructId, constructDefinition, context));
+            await context.NotifyCoreStressHighAsync(new BehaviorEventArgs(constructId, prefab, context));
         }
         
         var provider = context.ServiceProvider;
@@ -108,17 +108,17 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
 
         if (constructInfo.IsShieldLowerThanHalf())
         {
-            await context.NotifyShieldHpHalfAsync(new BehaviorEventArgs(constructId, constructDefinition, context));
+            await context.NotifyShieldHpHalfAsync(new BehaviorEventArgs(constructId, prefab, context));
         }
         
         if (constructInfo.IsShieldLowerThan25())
         {
-            await context.NotifyShieldHpLowAsync(new BehaviorEventArgs(constructId, constructDefinition, context));
+            await context.NotifyShieldHpLowAsync(new BehaviorEventArgs(constructId, prefab, context));
         }
         
         if (constructInfo.IsShieldDown())
         {
-            await context.NotifyShieldHpDownAsync(new BehaviorEventArgs(constructId, constructDefinition, context));
+            await context.NotifyShieldHpDownAsync(new BehaviorEventArgs(constructId, prefab, context));
         }
         
         var random = provider.GetRandomProvider()
@@ -205,7 +205,7 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
         var elementInfo = await _constructElementsGrain.GetElement(handle.ElementInfo.elementId);
 
         var w = handle.Unit;
-        var mod = constructDefinition.DefinitionItem.Mods;
+        var mod = prefab.DefinitionItem.Mods;
         var cycleTime = w.baseCycleTime * mod.Weapon.CycleTime;
 
         if (totalDeltaTime < cycleTime)
@@ -215,18 +215,18 @@ public class AggressiveBehavior(ulong constructId, IConstructDefinition construc
 
         SetShootTotalDeltaTime(context.BehaviorContext, 0);
 
-        if (constructDefinition.DefinitionItem.AmmoItems.Count == 0)
+        if (prefab.DefinitionItem.AmmoItems.Count == 0)
         {
-            constructDefinition.DefinitionItem.AmmoItems = ["AmmoMissileLarge4"];
+            prefab.DefinitionItem.AmmoItems = ["AmmoMissileLarge4"];
         }
 
-        if (constructDefinition.DefinitionItem.WeaponItems.Count == 0)
+        if (prefab.DefinitionItem.WeaponItems.Count == 0)
         {
-            constructDefinition.DefinitionItem.WeaponItems = ["WeaponMissileLargeAgile5"];
+            prefab.DefinitionItem.WeaponItems = ["WeaponMissileLargeAgile5"];
         }
 
-        var ammoItem = random.PickOneAtRandom(constructDefinition.DefinitionItem.AmmoItems);
-        var weaponItem = random.PickOneAtRandom(constructDefinition.DefinitionItem.WeaponItems);
+        var ammoItem = random.PickOneAtRandom(prefab.DefinitionItem.AmmoItems);
+        var weaponItem = random.PickOneAtRandom(prefab.DefinitionItem.WeaponItems);
         
         await context.NpcShotGrain.Fire(
             w.displayName,

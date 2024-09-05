@@ -7,12 +7,12 @@ namespace Mod.DynamicEncounters.Features.Spawner.Data;
 
 public class SpawnedConstructHandle(
     ulong constructId,
-    IConstructDefinition constructDef,
+    IPrefab prefab,
     IEnumerable<IConstructBehavior> behaviors
 ) : IConstructHandle
 {
     public ulong ConstructId { get; set; } = constructId;
-    public Guid ConstructDefinitionId => constructDef.Id;
+    public Guid ConstructDefinitionId => prefab.Id;
     public IEnumerable<IConstructBehavior> Behaviors { get; set; } = behaviors;
 
     public ulong GetKey() => ConstructId;

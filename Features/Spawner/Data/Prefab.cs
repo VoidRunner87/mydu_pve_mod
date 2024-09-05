@@ -3,9 +3,9 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Data;
 
-public class ConstructDefinition(
+public class Prefab(
     PrefabItem definitionItem
-) : IConstructDefinition
+) : IPrefab
 {
     public Guid Id => DefinitionItem.Id;
     public PrefabItem DefinitionItem { get; } = definitionItem;

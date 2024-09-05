@@ -4,4 +4,4 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions.Repository;
 
-public class ConstructDefinitionMemoryRepository(IServiceProvider provider) : BaseMemoryRepository<string, IConstructDefinition>(provider);
+public class ConstructDefinitionMemoryRepository(IServiceProvider provider) : BaseMemoryRepository<string, IPrefab>(provider);

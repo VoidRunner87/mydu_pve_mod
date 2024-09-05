@@ -13,7 +13,7 @@ using NQutils.Exceptions;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
-public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition constructDefinition) : IConstructBehavior
+public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstructBehavior
 {
     private TimePoint _timePoint = new();
 
@@ -63,7 +63,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         var targetPos = targetConstructInfo.rData.position;
         var npcPos = npcConstructInfo.rData.position;
 
-        var distanceGoal = constructDefinition.DefinitionItem.TargetDistance;
+        var distanceGoal = prefab.DefinitionItem.TargetDistance;
         var offset = new Vec3 { y = distanceGoal };
         var targetFiringPos = targetPos + offset;
 
@@ -74,7 +74,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         var velocityDirection = context.Velocity.NormalizeSafe();
         var velToTargetDot = velocityDirection.Dot(direction);
 
-        double acceleration = constructDefinition.DefinitionItem.AccelerationG * 9.81f;
+        double acceleration = prefab.DefinitionItem.AccelerationG * 9.81f;
 
         if (velToTargetDot < 0)
         {
@@ -89,7 +89,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IConstructDefinition cons
         }
 
         context.Velocity += accelV * context.DeltaTime;
-        context.Velocity = context.Velocity.ClampToSize(constructDefinition.DefinitionItem.MaxSpeedKph / 3.6d);
+        context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);
         var velocity = context.Velocity;
 
         var position = LerpWithVelocity(

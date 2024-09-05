@@ -27,7 +27,7 @@ public class ScriptService(IServiceProvider serviceProvider) : IScriptService
     public async Task LoadAllFromDatabase()
     {
         var scriptActionRepo = serviceProvider.GetRequiredService<IRepository<IScriptAction>>();
-        var constructDefRepo = serviceProvider.GetRequiredService<IRepository<IConstructDefinition>>();
+        var constructDefRepo = serviceProvider.GetRequiredService<IRepository<IPrefab>>();
         var scriptsTask = _scriptActionItemActionRepository.GetAllAsync();
         var constructDefsTask = _prefabItemRepository.GetAllAsync();
 
@@ -108,7 +108,7 @@ public class ScriptService(IServiceProvider serviceProvider) : IScriptService
 
     private async Task LoadAllConstructDefinitionsAsync(string basePath, string folderPath)
     {
-        var repository = serviceProvider.GetRequiredService<IRepository<IConstructDefinition>>();
+        var repository = serviceProvider.GetRequiredService<IRepository<IPrefab>>();
 
         var assembly = Assembly.GetExecutingAssembly();
         var location = Path.GetDirectoryName(assembly.Location)!;

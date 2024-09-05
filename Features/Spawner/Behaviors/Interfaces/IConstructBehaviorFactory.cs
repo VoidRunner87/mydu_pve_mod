@@ -6,7 +6,7 @@ public interface IConstructBehaviorFactory
 {
     IConstructBehavior Create(
         ulong constructId, 
-        IConstructDefinition constructDefinition, 
+        IPrefab prefab, 
         string behavior
     );
 }

@@ -16,7 +16,7 @@ public class BehaviorContext(
     Vec3 sector,
     Client client,
     IServiceProvider serviceProvider,
-    IConstructDefinition constructDefinition
+    IPrefab prefab
 )
 {
     public ulong? TargetConstructId { get; set; }
@@ -39,7 +39,7 @@ public class BehaviorContext(
     public Client Client { get; set; } = client;
 
     public HashSet<string> PublishedEvents = [];
-    public IConstructDefinition ConstructDefinition { get; set; } = constructDefinition;
+    public IPrefab Prefab { get; set; } = prefab;
 
     public DateTime? TargetSelectedTime { get; set; }
 
@@ -60,7 +60,7 @@ public class BehaviorContext(
             return;
         }
 
-        await ConstructDefinition.Events.OnCoreStressHigh.ExecuteAsync(
+        await Prefab.Events.OnCoreStressHigh.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.PlayerIds,
@@ -99,7 +99,7 @@ public class BehaviorContext(
         
         taskList.AddRange(tasks);
 
-        var scriptExecutionTask = ConstructDefinition.Events.OnDestruction.ExecuteAsync(
+        var scriptExecutionTask = Prefab.Events.OnDestruction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.PlayerIds,
@@ -124,7 +124,7 @@ public class BehaviorContext(
             return;
         }
 
-        await ConstructDefinition.Events.OnShieldHalfAction.ExecuteAsync(
+        await Prefab.Events.OnShieldHalfAction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.PlayerIds,
@@ -145,7 +145,7 @@ public class BehaviorContext(
             return;
         }
 
-        await ConstructDefinition.Events.OnShieldLowAction.ExecuteAsync(
+        await Prefab.Events.OnShieldLowAction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.PlayerIds,
@@ -166,7 +166,7 @@ public class BehaviorContext(
             return;
         }
 
-        await ConstructDefinition.Events.OnShieldDownAction.ExecuteAsync(
+        await Prefab.Events.OnShieldDownAction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.PlayerIds,

@@ -13,7 +13,7 @@ using NQutils.Exceptions;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
-public class FollowTargetBehavior(ulong constructId, IConstructDefinition constructDefinition) : IConstructBehavior
+public class FollowTargetBehavior(ulong constructId, IPrefab prefab) : IConstructBehavior
 {
     private TimePoint _timePoint = new();
 
@@ -67,9 +67,9 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
 
         var distance = targetPos.Distance(npcPos);
 
-        var direction = (targetPos - npcPos + new Vec3 { y = constructDefinition.DefinitionItem.TargetDistance })
+        var direction = (targetPos - npcPos + new Vec3 { y = prefab.DefinitionItem.TargetDistance })
             .Normalized();
-        var velocity = direction * constructDefinition.DefinitionItem.AccelerationG * 9.81f;
+        var velocity = direction * prefab.DefinitionItem.AccelerationG * 9.81f;
 
         var rotation = VectorMathHelper.CalculateRotationToPoint(
             npcConstructInfo.rData.position,
@@ -78,12 +78,12 @@ public class FollowTargetBehavior(ulong constructId, IConstructDefinition constr
 
         // Add acceleration to get close.
         // Otherwise coast 
-        if (distance > constructDefinition.DefinitionItem.TargetDistance)
+        if (distance > prefab.DefinitionItem.TargetDistance)
         {
             context.Velocity += velocity;
         }
 
-        context.Velocity = context.Velocity.ClampToSize(constructDefinition.DefinitionItem.MaxSpeedKph / 3.6d);
+        context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);
 
         var finalVelocity = context.Velocity * Math.Clamp(context.DeltaTime, 1/60f, 1/15f);
 
