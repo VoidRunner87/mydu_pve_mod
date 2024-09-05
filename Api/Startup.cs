@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Mod.DynamicEncounters.Api.Config;
 using Mod.DynamicEncounters.Features;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace Mod.DynamicEncounters.Api;
 
@@ -26,8 +29,19 @@ public class Startup
         });
         
         services.RegisterModFeatures();
-        
-        services.AddControllers();
+        services.AddControllers(options =>
+        {
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
+            var serializer = new SerializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
+            
+            options.InputFormatters.Add(new YamlInputFormatter(deserializer));  
+            options.OutputFormatters.Add(new YamlOutputFormatter(serializer));  
+            options.FormatterMappings.SetMediaTypeMappingForFormat("yaml", MediaTypeHeaderValues.ApplicationYaml); 
+        });
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

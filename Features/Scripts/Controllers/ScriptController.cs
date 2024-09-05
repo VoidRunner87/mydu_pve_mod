@@ -18,7 +18,7 @@ public class ScriptController(IServiceProvider provider) : Controller
     [Route("")]
     public async Task<IActionResult> GetAll()
     {
-        return Json(await _repository.GetAllAsync());
+        return Ok(await _repository.GetAllAsync());
     }
 
     [HttpPut]
