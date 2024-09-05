@@ -23,7 +23,7 @@ public class PrefabItem
     public float MaxSpeedKph { get; set; } = 20000;
     public float TargetDistance { get; set; } = 20000;
 
-    public ConstructDefinitionEvents Events { get; set; } = new();
+    public PrefabEvents Events { get; set; } = new();
 
     public class ServerPropertiesItem
     {

@@ -15,7 +15,7 @@ public class ScriptActionItem
     /// <summary>
     /// Type of script action
     /// </summary>
-    public string Type { get; set; }
+    public string? Type { get; set; }
     
     /// <summary>
     /// A ConstructDefinition

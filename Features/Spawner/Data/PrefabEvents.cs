@@ -3,7 +3,7 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Data;
 
-public class ConstructDefinitionEvents
+public class PrefabEvents
 {
     public List<ScriptActionItem> OnShieldHalf { get; set; } = [];
     public List<ScriptActionItem> OnShieldLow { get; set; } = [];

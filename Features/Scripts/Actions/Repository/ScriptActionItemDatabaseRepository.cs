@@ -23,7 +23,7 @@ public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : ISc
         await db.ExecuteAsync(
             """
             INSERT INTO public.mod_script (id, name, content) 
-            VALUES(@id, @content, @active)
+            VALUES(@id, @name, @content::jsonb)
             """,
             new
             {
@@ -58,7 +58,7 @@ public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : ISc
         {
             return null;
         }
-        
+
         return MapToModel(rows[0]);
     }
 
@@ -90,6 +90,17 @@ public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : ISc
         db.Open();
 
         await db.ExecuteAsync("DELETE FROM public.mod_script WHERE name = @key", new { key });
+    }
+
+    public async Task<bool> ActionExistAsync(string actionName)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        return await db.ExecuteScalarAsync<long>(
+            "SELECT COUNT(0) FROM public.mod_script WHERE name = @actionName",
+            new { actionName }
+        ) > 0;
     }
 
     private ScriptActionItem MapToModel(DbRow row)

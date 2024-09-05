@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Common.Repository;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Repository;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
+using Mod.DynamicEncounters.Features.Scripts.Validators;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Repository;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Services;
@@ -13,6 +16,7 @@ public static class SpawnerRegistration
 {
     public static void RegisterSpawnerScripts(this IServiceCollection services)
     {
+        services.AddSingleton<IValidator<ScriptActionItem>, ScriptActionItemValidator>();
         services.AddSingleton<IScriptService, ScriptService>();
         services.AddSingleton<IScriptActionFactory, ScriptActionFactory>();
         services.AddSingleton<IConstructDefinitionFactory, ConstructDefinitionFactory>();

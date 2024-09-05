@@ -3,11 +3,15 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
-public class RunScriptAction(string script) : IScriptAction
+[ScriptActionName(ActionName)]
+public class RunScriptAction(ScriptActionItem actionItem) : IScriptAction
 {
+    public const string ActionName = "script";
+    
     public string Name { get; } = Guid.NewGuid().ToString();
 
     public Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
@@ -15,7 +19,7 @@ public class RunScriptAction(string script) : IScriptAction
         var provider = context.ServiceProvider;
         var scriptService = provider.GetRequiredService<IScriptService>();
 
-        return scriptService.ExecuteScriptAsync(script, context);
+        return scriptService.ExecuteScriptAsync(actionItem.Script, context);
     }
 
     public string GetKey() => Name;

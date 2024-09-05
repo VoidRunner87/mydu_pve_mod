@@ -6,13 +6,16 @@ using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.NQ.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Helpers;
-using NQ.Interfaces;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
+[ScriptActionName(ActionName)]
 public class GiveTitleToPlayerAction(ScriptActionItem actionItem) : IScriptAction
 {
+    public const string ActionName = "give-title";
+    
     public string Name { get; } = Guid.NewGuid().ToString();
 
     public string GetKey() => Name;

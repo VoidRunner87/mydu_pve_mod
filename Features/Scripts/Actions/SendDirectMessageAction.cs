@@ -3,21 +3,24 @@ using System.Threading.Tasks;
 using BotLib.Generated;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
-using Mod.DynamicEncounters.Features.Spawner.Data;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using Orleans.Runtime;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
-public class ChatDmScriptAction(string message) : IScriptAction
+[ScriptActionName(ActionName)]
+public class SendDirectMessageAction(ScriptActionItem actionItem) : IScriptAction
 {
+    public const string ActionName = "message";
+    
     public string Name { get; } = Guid.NewGuid().ToString();
 
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {
         var logger = context.ServiceProvider
-            .CreateLogger<ChatDmScriptAction>();
+            .CreateLogger<SendDirectMessageAction>();
 
         foreach (var playerId in context.PlayerIds)
         {
@@ -29,7 +32,7 @@ public class ChatDmScriptAction(string message) : IScriptAction
                         channel = MessageChannelType.PRIVATE,
                         targetId = playerId
                     },
-                    message = message
+                    message = actionItem.Message
                 }
             );
         }

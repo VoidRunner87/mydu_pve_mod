@@ -4,14 +4,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using NQ.Interfaces;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
+[ScriptActionName(ActionName)]
 public class DespawnWreckConstructAction : IScriptAction
 {
+    public const string ActionName = "despawn-wreck";
+    
     public string GetKey() => Name;
 
     public string Name { get; } = Guid.NewGuid().ToString();

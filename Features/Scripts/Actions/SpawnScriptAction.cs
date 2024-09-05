@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
@@ -21,8 +22,11 @@ using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
+[ScriptActionName(ActionName)]
 public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 {
+    public const string ActionName = "spawn";
+    
     private IPointGenerator _pointGenerator;
     private ILogger<SpawnScriptAction> _logger;
     public string Name { get; } = Guid.NewGuid().ToString();

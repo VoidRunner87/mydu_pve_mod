@@ -5,12 +5,16 @@ using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Helpers;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
+[ScriptActionName(ActionName)]
 public class DeactivateDynamicWreckAction : IScriptAction
 {
+    public const string ActionName = "remove-poi";
+
     public string GetKey() => Name;
 
     public string Name { get; } = Guid.NewGuid().ToString();
