@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BotLib.BotClient;
+using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Features.Events.Data;
+using Mod.DynamicEncounters.Features.Events.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using NQ;
@@ -77,7 +81,25 @@ public class BehaviorContext(
             return;
         }
 
-        await ConstructDefinition.Events.OnDestruction.ExecuteAsync(
+        var eventService = ServiceProvider.GetRequiredService<IEventService>();
+
+        var taskList = new List<Task>();
+
+        // send event for all players piloting constructs
+        // TODO #limitation = not considering gunners and boarders
+        var tasks = eventArgs.Context.PlayerIds.Select(id =>
+            eventService.PublishAsync(
+                new PlayerDefeatedNpcEvent(
+                    id,
+                    eventArgs.Context.Sector,
+                    eventArgs.ConstructId
+                )
+            )
+        );
+        
+        taskList.AddRange(tasks);
+
+        var scriptExecutionTask = ConstructDefinition.Events.OnDestruction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.PlayerIds,
@@ -88,6 +110,10 @@ public class BehaviorContext(
             }
         );
 
+        taskList.Add(scriptExecutionTask);
+
+        await Task.WhenAll(taskList);
+        
         PublishedEvents.Add(nameof(NotifyConstructDestroyedAsync));
     }
 
