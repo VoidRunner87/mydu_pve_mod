@@ -23,7 +23,7 @@ public class EventTriggerRepository(IServiceProvider provider) : IEventTriggerRe
             """
             SELECT ET.* FROM public.mod_event_trigger AS ET 
             LEFT JOIN public.mod_event_trigger_tracker AS TT ON (TT.event_trigger_id = ET.id)
-            WHERE ((@playerId = 0 AND ET.player_id IS NULL) OR ET.player_id = @playerId) AND ET.event_name = @eventName
+            WHERE ((@playerId = 0 AND TT.player_id IS NULL) OR TT.player_id = @playerId) AND ET.event_name = @eventName
                 AND TT.id IS NULL
             """,
             new
@@ -36,16 +36,20 @@ public class EventTriggerRepository(IServiceProvider provider) : IEventTriggerRe
         return result.Select(MapToItem);
     }
 
-    public async Task AddTriggerTrackingAsync(Guid eventTriggerId)
+    public async Task AddTriggerTrackingAsync(ulong playerId, Guid eventTriggerId)
     {
         using var db = _factory.Create();
         db.Open();
 
         await db.ExecuteAsync(
             """
-            INSERT INTO public.mod_event_trigger_tracker (event_trigger_id) VALUES (@eventTriggerId)
+            INSERT INTO public.mod_event_trigger_tracker (player_id, event_trigger_id) VALUES (@playerId, @eventTriggerId)
             """,
-            new {eventTriggerId}
+            new
+            {
+                playerId = (long)playerId,
+                eventTriggerId
+            }
         );
     }
 
@@ -54,7 +58,6 @@ public class EventTriggerRepository(IServiceProvider provider) : IEventTriggerRe
         return new EventTriggerItem(row.event_name, row.on_trigger_script)
         {
             Id = row.id,
-            PlayerId = (ulong)row.player_id,
             MinTriggerValue = row.min_trigger_value,
             OnTriggerScript = row.on_trigger_script
         };

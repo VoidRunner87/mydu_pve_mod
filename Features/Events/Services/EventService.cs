@@ -89,7 +89,11 @@ public class EventService(IServiceProvider provider) : IEventService
                 }
             );
 
-            await _triggerRepository.AddTriggerTrackingAsync(triggerItem.Id);
+            foreach (var playerId in playerIds)
+            {
+                await _triggerRepository.AddTriggerTrackingAsync(playerId, triggerItem.Id);
+            }
+            
         }
         catch (Exception e)
         {

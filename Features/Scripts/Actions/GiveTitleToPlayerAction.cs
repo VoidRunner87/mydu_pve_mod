@@ -7,6 +7,7 @@ using Mod.DynamicEncounters.Features.NQ.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Helpers;
+using NQ.Interfaces;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 

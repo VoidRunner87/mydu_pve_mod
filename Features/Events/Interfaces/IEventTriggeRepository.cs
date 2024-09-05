@@ -9,5 +9,5 @@ public interface IEventTriggerRepository
 {
     Task<IEnumerable<EventTriggerItem>> FindPendingByEventNameAndPlayerIdAsync(string eventName, ulong? playerId);
 
-    Task AddTriggerTrackingAsync(Guid eventTriggerId);
+    Task AddTriggerTrackingAsync(ulong playerId, Guid eventTriggerId);
 }
