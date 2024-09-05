@@ -9,12 +9,14 @@ namespace Mod.DynamicEncounters.Features.Sector.Interfaces;
 
 public interface ISectorInstanceRepository : IRepository<SectorInstance>
 {
-    public Task<SectorInstance?> FindBySector(Vec3 sector);
-    public Task<IEnumerable<SectorInstance>> FindExpiredAsync();
-    public Task DeleteExpiredAsync();
-    public Task SetExpirationFromNowAsync(Guid id, TimeSpan span);
-    public Task<IEnumerable<SectorInstance>> FindUnloadedAsync();
-    public Task SetLoadedAsync(Guid id, bool loaded);
-    public Task TagAsStartedAsync(Guid id);
-    public Task<IEnumerable<SectorInstance>> FindSectorsRequiringStartupAsync();
+    Task<SectorInstance?> FindBySector(Vec3 sector);
+    Task<IEnumerable<SectorInstance>> FindExpiredAsync();
+    Task DeleteExpiredAsync();
+    Task SetExpirationFromNowAsync(Guid id, TimeSpan span);
+    Task<IEnumerable<SectorInstance>> FindUnloadedAsync();
+    Task SetLoadedAsync(Guid id, bool loaded);
+    Task TagAsStartedAsync(Guid id);
+    Task<IEnumerable<SectorInstance>> FindSectorsRequiringStartupAsync();
+    Task ExpireAllAsync();
+    Task ForceExpireAllAsync();
 }

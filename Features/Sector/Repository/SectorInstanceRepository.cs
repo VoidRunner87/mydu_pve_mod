@@ -10,7 +10,6 @@ using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
-using NQutils.Sql;
 
 namespace Mod.DynamicEncounters.Features.Sector.Repository;
 
@@ -18,8 +17,6 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
 {
     private readonly IPostgresConnectionFactory _connectionFactory =
         provider.GetRequiredService<IPostgresConnectionFactory>();
-
-    private readonly ISql _sql = provider.GetRequiredService<ISql>();
 
     public async Task AddAsync(SectorInstance item)
     {
@@ -56,7 +53,10 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
 
     public async Task<SectorInstance?> FindAsync(object key)
     {
-        var result = await _sql.Query<DbRow>("SELECT * FROM public.mod_sector_instance WHERE id = @id", (Guid)key);
+        using var db = _connectionFactory.Create();
+        db.Open();
+        
+        var result = (await db.QueryAsync<DbRow>("SELECT * FROM public.mod_sector_instance WHERE id = @id", (Guid)key)).ToList();
 
         if (result.Count > 0)
         {
@@ -165,6 +165,30 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         await db.ExecuteScalarAsync("DELETE FROM public.mod_sector_instance WHERE expires_at < NOW() OR (force_expire_at IS NOT NULL AND force_expire_at < NOW())");
     }
 
+    public async Task ExpireAllAsync()
+    {
+        using var db = _connectionFactory.Create();
+        db.Open();
+        
+        await db.ExecuteAsync(
+            """
+             UPDATE public.mod_sector_instance SET expires_at = NOW()
+             """
+        );
+    }
+    
+    public async Task ForceExpireAllAsync()
+    {
+        using var db = _connectionFactory.Create();
+        db.Open();
+        
+        await db.ExecuteAsync(
+            """
+             UPDATE public.mod_sector_instance SET force_expire_at = NOW()
+             """
+        );
+    }
+    
     public async Task SetExpirationFromNowAsync(Guid id, TimeSpan span)
     {
         using var db = _connectionFactory.Create();
