@@ -7,7 +7,8 @@ namespace Mod.DynamicEncounters.Features.Events.Interfaces;
 
 public interface IEventTriggerRepository
 {
-    Task<IEnumerable<EventTriggerItem>> FindPendingByEventNameAndPlayerIdAsync(string eventName, ulong? playerId);
+    Task<IEnumerable<EventTriggerItem>> FindByEventNameAsync(string eventName);
+    Task<HashSet<Guid>> GetTrackedEventTriggers(IEnumerable<Guid> eventTriggerIds, ulong playerId);
 
     Task AddTriggerTrackingAsync(ulong playerId, Guid eventTriggerId);
 }

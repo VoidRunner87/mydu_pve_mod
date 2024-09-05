@@ -54,6 +54,11 @@ public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : ISc
                 new { key })
             ).ToList();
 
+        if (rows.Count == 0)
+        {
+            return null;
+        }
+        
         return MapToModel(rows[0]);
     }
 

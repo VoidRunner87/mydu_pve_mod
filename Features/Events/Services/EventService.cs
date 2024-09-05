@@ -28,6 +28,12 @@ public class EventService(IServiceProvider provider) : IEventService
     {
         try
         {
+            var playerIds = new HashSet<ulong>();
+            if (!@event.PlayerId.HasValue)
+            {
+                return;
+            }
+            
             var data = @event.GetData<EventData>();
             
             var sector = data.Sector;
@@ -37,20 +43,35 @@ public class EventService(IServiceProvider provider) : IEventService
 
             var sum = await _repository.GetSumAsync(@event.Name, @event.PlayerId);
 
-            // TODO FIX - it should return zero if there aren't any tackers.. this code here is incorrect
-            var triggers = (await _triggerRepository.FindPendingByEventNameAndPlayerIdAsync(@event.Name, @event.PlayerId))
-                .Where(t => t.ShouldTrigger(sum));
+            var triggers = (await _triggerRepository
+                .FindByEventNameAsync(@event.Name))
+                .ToList();
+            var triggerIds = triggers.Select(x => x.Id);
 
-            var playerIds = new HashSet<ulong>();
-            if (@event.PlayerId.HasValue)
+            if (!triggers.Any())
             {
-                playerIds.Add(@event.PlayerId.Value);
+                return;
             }
+            
+            playerIds.Add(@event.PlayerId.Value);
 
+            var alreadyDoneTriggers = await _triggerRepository
+                .GetTrackedEventTriggers(triggerIds, @event.PlayerId.Value);
+            
             var taskList = new List<Task>();
 
             foreach (var trigger in triggers)
             {
+                if (alreadyDoneTriggers.Contains(trigger.Id))
+                {
+                    continue;
+                }
+
+                if (!trigger.ShouldTrigger(sum))
+                {
+                    continue;
+                }
+                
                 var task = RunTriggerAsync(trigger, playerIds, sector, constructId);
 
                 taskList.Add(task);

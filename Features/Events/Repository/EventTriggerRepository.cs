@@ -14,26 +14,46 @@ public class EventTriggerRepository(IServiceProvider provider) : IEventTriggerRe
 {
     private readonly IPostgresConnectionFactory _factory = provider.GetRequiredService<IPostgresConnectionFactory>();
     
-    public async Task<IEnumerable<EventTriggerItem>> FindPendingByEventNameAndPlayerIdAsync(string eventName, ulong? playerId)
+    public async Task<IEnumerable<EventTriggerItem>> FindByEventNameAsync(string eventName)
     {
         using var db = _factory.Create();
         db.Open();
 
         var result = (await db.QueryAsync<DbRow>(
             """
-            SELECT ET.* FROM public.mod_event_trigger AS ET 
-            LEFT JOIN public.mod_event_trigger_tracker AS TT ON (TT.event_trigger_id = ET.id)
-            WHERE ((@playerId = 0 AND TT.player_id IS NULL) OR TT.player_id = @playerId) AND ET.event_name = @eventName
-                AND TT.id IS NULL
+            SELECT * FROM public.mod_event_trigger 
+            WHERE event_name = @eventName
             """,
             new
             {
-                eventName,
-                playerId = (long)(playerId ?? 0)
+                eventName
             }
         )).ToList();
 
         return result.Select(MapToItem);
+    }
+    
+    public async Task<HashSet<Guid>> GetTrackedEventTriggers(IEnumerable<Guid> eventTriggerIds, ulong playerId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var quidsInQuery = string.Join(",", eventTriggerIds.Select(x => $"'{x}'")); 
+        
+        var result = (await db.QueryAsync<DbGroupByCountById>(
+            $"""
+            SELECT COUNT(0) as count, ET.id FROM public.mod_event_trigger_tracker AS TT
+            LEFT JOIN public.mod_event_trigger AS ET ON (TT.event_trigger_id = ET.id)
+            WHERE TT.player_id = @playerId AND ET.id IN ({quidsInQuery})
+            GROUP BY ET.id
+            """,
+            new
+            {
+                playerId = (long)playerId
+            }
+        )).ToList();
+
+        return result.Select(x => x.id).ToHashSet();
     }
 
     public async Task AddTriggerTrackingAsync(ulong playerId, Guid eventTriggerId)
@@ -43,10 +63,11 @@ public class EventTriggerRepository(IServiceProvider provider) : IEventTriggerRe
 
         await db.ExecuteAsync(
             """
-            INSERT INTO public.mod_event_trigger_tracker (player_id, event_trigger_id) VALUES (@playerId, @eventTriggerId)
+            INSERT INTO public.mod_event_trigger_tracker (id, player_id, event_trigger_id) VALUES (@id, @playerId, @eventTriggerId)
             """,
             new
             {
+                id = Guid.NewGuid(),
                 playerId = (long)playerId,
                 eventTriggerId
             }
@@ -70,5 +91,11 @@ public class EventTriggerRepository(IServiceProvider provider) : IEventTriggerRe
         public double min_trigger_value { get; set; }
         public long player_id { get; set; }
         public string on_trigger_script { get; set; }
+    }
+
+    public struct DbGroupByCountById
+    {
+        public long count { get; set; }
+        public Guid id { get; set; }
     }
 }
