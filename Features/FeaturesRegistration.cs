@@ -7,6 +7,7 @@ using Mod.DynamicEncounters.Features.Common.Repository;
 using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Features.Events;
 using Mod.DynamicEncounters.Features.Interfaces;
+using Mod.DynamicEncounters.Features.NQ;
 using Mod.DynamicEncounters.Features.Scripts.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Services;
 using Mod.DynamicEncounters.Features.Sector;
@@ -31,5 +32,6 @@ public static class FeaturesRegistration
         services.RegisterSpawnerScripts();
         services.RegisterTaskQueue();
         services.RegisterEvents();
+        services.RegisterNQServices();
     }
 }

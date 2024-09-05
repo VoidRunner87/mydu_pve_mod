@@ -43,6 +43,8 @@ public class ScriptActionFactory : IScriptActionFactory
                 return new DeleteConstructAction();
             case "despawn":
                 return new DespawnNpcConstructAction();
+            case "give-title":
+                return new GiveTitleToPlayerAction(scriptActionItem);
             case "despawn-wreck":
                 return new DespawnWreckConstructAction();
             case "test-combat":

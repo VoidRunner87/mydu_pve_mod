@@ -9,7 +9,7 @@ namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 public class RunScriptAction(string script) : IScriptAction
 {
     public string Name { get; } = Guid.NewGuid().ToString();
-    
+
     public Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {
         var provider = context.ServiceProvider;
