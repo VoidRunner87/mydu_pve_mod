@@ -26,44 +26,42 @@ public class EventService(IServiceProvider provider) : IEventService
 
     public async Task PublishAsync(IEvent @event)
     {
-        var sector = new Vec3();
-        ulong? constructId = null; 
-
-        if (@event.Data != null)
+        try
         {
-            var data = @event.DataAsJToken();
-            var sectorVal = data.Value<Vec3?>("Sector");
-            if (sectorVal.HasValue)
+            var data = @event.GetData<EventData>();
+            
+            var sector = data.Sector;
+            var constructId = data.ConstructId; 
+
+            await _repository.AddAsync(@event);
+
+            var sum = await _repository.GetSumAsync(@event.Name, @event.PlayerId);
+
+            // TODO FIX - it should return zero if there aren't any tackers.. this code here is incorrect
+            var triggers = (await _triggerRepository.FindPendingByEventNameAndPlayerIdAsync(@event.Name, @event.PlayerId))
+                .Where(t => t.ShouldTrigger(sum));
+
+            var playerIds = new HashSet<ulong>();
+            if (@event.PlayerId.HasValue)
             {
-                sector = sectorVal.Value;
+                playerIds.Add(@event.PlayerId.Value);
             }
 
-            constructId = data.Value<ulong?>("ConstructId");
+            var taskList = new List<Task>();
+
+            foreach (var trigger in triggers)
+            {
+                var task = RunTriggerAsync(trigger, playerIds, sector, constructId);
+
+                taskList.Add(task);
+            }
+
+            await Task.WhenAll(taskList);
         }
-
-        await _repository.AddAsync(@event);
-
-        var sum = await _repository.GetSumAsync(@event.Name, @event.PlayerId);
-
-        var triggers = (await _triggerRepository.FindPendingByEventNameAndPlayerIdAsync(@event.Name, @event.PlayerId))
-            .Where(t => t.ShouldTrigger(sum));
-
-        var playerIds = new HashSet<ulong>();
-        if (@event.PlayerId.HasValue)
+        catch (Exception e)
         {
-            playerIds.Add(@event.PlayerId.Value);
+            _logger.LogError(e, "Failed to publish Event {Event}", @event.Name);
         }
-
-        var taskList = new List<Task>();
-
-        foreach (var trigger in triggers)
-        {
-            var task = RunTriggerAsync(trigger, playerIds, sector, constructId);
-
-            taskList.Add(task);
-        }
-
-        await Task.WhenAll(taskList);
     }
 
     private async Task RunTriggerAsync(EventTriggerItem triggerItem, HashSet<ulong> playerIds, Vec3 sector, ulong? constructId)

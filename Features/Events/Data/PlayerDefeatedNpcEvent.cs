@@ -12,8 +12,10 @@ public class PlayerDefeatedNpcEvent(ulong playerId, Vec3 sector, ulong? construc
     public object Data { get; } = new { Sector = sector, ConstructId = constructId };
     public int Value { get; } = 1;
     public ulong? PlayerId { get; } = playerId;
-    public JToken DataAsJToken()
+    public T GetData<T>()
     {
-        return JToken.FromObject(Data);
+        var jObj = JObject.FromObject(Data);
+
+        return jObj.ToObject<T>();
     }
 }

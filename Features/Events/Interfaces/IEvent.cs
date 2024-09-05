@@ -1,5 +1,4 @@
 ﻿using System;
-using Newtonsoft.Json.Linq;
 
 namespace Mod.DynamicEncounters.Features.Events.Interfaces;
 
@@ -11,5 +10,5 @@ public interface IEvent
     int Value { get; }
     ulong? PlayerId { get; }
 
-    JToken DataAsJToken();
+    T GetData<T>();
 }

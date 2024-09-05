@@ -20,7 +20,7 @@ public class EventRepository(IServiceProvider provider) : IEventRepository
         await db.ExecuteAsync(
             """
             INSERT INTO public.mod_event (id, event_name, event_data, value, player_id)
-            VALUES (@id, @event_name, @event_data::jsonb, value, player_id)
+            VALUES (@id, @event_name, @event_data::jsonb, @value, @player_id)
             """,
             new
             {
@@ -28,7 +28,7 @@ public class EventRepository(IServiceProvider provider) : IEventRepository
                 event_name = @event.Name,
                 event_data = JsonConvert.SerializeObject(@event.Data),
                 value = @event.Value,
-                player_id = @event.PlayerId
+                player_id = (long?)@event.PlayerId
             }
         );
     }
@@ -40,7 +40,7 @@ public class EventRepository(IServiceProvider provider) : IEventRepository
 
         return await db.ExecuteScalarAsync<double>(
             """
-            SELECT SUM(value) FROM public.mod_event WHERE ((@playerId = 0 AND player_id IS NULL) OR (player_id = @playerId)) AND eventName = @eventName
+            SELECT SUM(value) FROM public.mod_event WHERE ((@playerId = 0 AND player_id IS NULL) OR (player_id = @playerId)) AND event_name = @eventName
             """,
             new
             {
