@@ -7,7 +7,7 @@ namespace Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 
 public class ConstructDefinitionFactory(IServiceProvider provider) : IConstructDefinitionFactory
 {
-    public IConstructDefinition Create(ConstructDefinitionItem definitionItem)
+    public IConstructDefinition Create(PrefabItem definitionItem)
     {
         var scriptActionFactory = provider.GetRequiredService<IScriptActionFactory>();
 

@@ -42,7 +42,7 @@ public class FileSystemScriptLoaderService(IServiceProvider serviceProvider) : I
         return _scriptActionFactory.Create(item);
     }
 
-    public IConstructDefinition LoadScript(ConstructDefinitionItem item)
+    public IConstructDefinition LoadScript(PrefabItem item)
     {
         return _constructDefinitionFactory.Create(item);
     }
@@ -53,7 +53,7 @@ public class FileSystemScriptLoaderService(IServiceProvider serviceProvider) : I
         {
             var deserializer = serviceProvider.GetRequiredService<IYamlDeserializer>();
 
-            var action = deserializer.Deserialize<ConstructDefinitionItem>(await File.ReadAllTextAsync(filePath));
+            var action = deserializer.Deserialize<PrefabItem>(await File.ReadAllTextAsync(filePath));
 
             var factory = serviceProvider.GetRequiredService<IConstructDefinitionFactory>();
 

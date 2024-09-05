@@ -102,16 +102,16 @@ public class AddWreckScripts : Migration
             id = Guid.NewGuid(),
             name,
             content = JsonConvert.SerializeObject(
-                new ConstructDefinitionItem
+                new PrefabItem
                 {
                     Name = name,
                     Folder = folder,
                     Path = file,
                     OwnerId = 0,
-                    ServerProperties = new ConstructDefinitionItem.ServerPropertiesItem
+                    ServerProperties = new PrefabItem.ServerPropertiesItem
                     {
                         IsDynamicWreck = true,
-                        Header = new ConstructDefinitionItem.ServerPropertiesItem.HeaderProp
+                        Header = new PrefabItem.ServerPropertiesItem.HeaderProp
                         {
                             PrettyName = shipName
                         }

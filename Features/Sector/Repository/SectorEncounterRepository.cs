@@ -35,9 +35,16 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         throw new NotImplementedException();
     }
 
-    public Task<IEnumerable<SectorEncounterItem>> GetAllAsync()
+    public async Task<IEnumerable<SectorEncounterItem>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        using var db = _connectionFactory.Create();
+        db.Open();
+
+        var queryResult = await db.QueryAsync<DbRow>(
+            "SELECT * FROM public.mod_sector_encounter"
+        );
+
+        return queryResult.Select(DbRowToModel);
     }
 
     public Task<long> GetCountAsync()

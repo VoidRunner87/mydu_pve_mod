@@ -135,16 +135,16 @@ public class AddScriptDefaultItems : Migration
                 id = Guid.NewGuid(),
                 name = "wreck-unknown-origin",
                 content = JsonConvert.SerializeObject(
-                    new ConstructDefinitionItem
+                    new PrefabItem
                     {
                         Name = "wreck-unknown-origin",
                         Folder = "wrecks",
                         Path = "Wreck_5_UnknownOrigin.json",
                         OwnerId = 0,
-                        ServerProperties = new ConstructDefinitionItem.ServerPropertiesItem
+                        ServerProperties = new PrefabItem.ServerPropertiesItem
                         {
                             IsDynamicWreck = true,
-                            Header = new ConstructDefinitionItem.ServerPropertiesItem.HeaderProp
+                            Header = new PrefabItem.ServerPropertiesItem.HeaderProp
                             {
                                 PrettyName = "Unknown Ship Emissions"
                             }
@@ -160,16 +160,16 @@ public class AddScriptDefaultItems : Migration
                 id = Guid.NewGuid(),
                 name = "live-unknown-origin",
                 content = JsonConvert.SerializeObject(
-                    new ConstructDefinitionItem
+                    new PrefabItem
                     {
                         Name = "live-unknown-origin",
                         Folder = "wrecks",
                         Path = "Wreck_5_UnknownOrigin.json",
                         OwnerId = 4,
-                        ServerProperties = new ConstructDefinitionItem.ServerPropertiesItem
+                        ServerProperties = new PrefabItem.ServerPropertiesItem
                         {
                             IsDynamicWreck = true,
-                            Header = new ConstructDefinitionItem.ServerPropertiesItem.HeaderProp
+                            Header = new PrefabItem.ServerPropertiesItem.HeaderProp
                             {
                                 PrettyName = "UNKNOWN"
                             }

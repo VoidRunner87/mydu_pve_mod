@@ -21,15 +21,15 @@ public class ScriptService(IServiceProvider serviceProvider) : IScriptService
     private readonly ILogger<ScriptService> _logger = serviceProvider.CreateLogger<ScriptService>();
     private readonly IScriptActionItemRepository _scriptActionItemActionRepository = 
         serviceProvider.GetRequiredService<IScriptActionItemRepository>();
-    private readonly IConstructDefinitionItemRepository _constructDefinitionItemRepository = 
-        serviceProvider.GetRequiredService<IConstructDefinitionItemRepository>();
+    private readonly IPrefabItemRepository _prefabItemRepository = 
+        serviceProvider.GetRequiredService<IPrefabItemRepository>();
 
     public async Task LoadAllFromDatabase()
     {
         var scriptActionRepo = serviceProvider.GetRequiredService<IRepository<IScriptAction>>();
         var constructDefRepo = serviceProvider.GetRequiredService<IRepository<IConstructDefinition>>();
         var scriptsTask = _scriptActionItemActionRepository.GetAllAsync();
-        var constructDefsTask = _constructDefinitionItemRepository.GetAllAsync();
+        var constructDefsTask = _prefabItemRepository.GetAllAsync();
 
         await Task.WhenAll(scriptsTask, constructDefsTask);
 

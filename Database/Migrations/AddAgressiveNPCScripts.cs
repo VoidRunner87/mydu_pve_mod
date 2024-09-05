@@ -40,7 +40,7 @@ public class AddAgressiveNPCScripts : Migration
                 id = Guid.NewGuid(),
                 name = "test-enemy",
                 content = JsonConvert.SerializeObject(
-                    new ConstructDefinitionItem
+                    new PrefabItem
                     {
                         Name = "test-enemy",
                         Folder = "wrecks",
@@ -51,10 +51,10 @@ public class AddAgressiveNPCScripts : Migration
                             "aggressive",
                             "follow-target"
                         ],
-                        ServerProperties = new ConstructDefinitionItem.ServerPropertiesItem
+                        ServerProperties = new PrefabItem.ServerPropertiesItem
                         {
                             IsDynamicWreck = false,
-                            Header = new ConstructDefinitionItem.ServerPropertiesItem.HeaderProp
+                            Header = new PrefabItem.ServerPropertiesItem.HeaderProp
                             {
                                 PrettyName = "TEST ENEMY"
                             }

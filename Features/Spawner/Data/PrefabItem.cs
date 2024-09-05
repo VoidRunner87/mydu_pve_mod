@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Data;
 
-public class ConstructDefinitionItem
+public class PrefabItem
 {
     [JsonIgnore]
     public Guid Id { get; set; }

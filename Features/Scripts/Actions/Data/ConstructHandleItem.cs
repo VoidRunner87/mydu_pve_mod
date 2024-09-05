@@ -16,7 +16,7 @@ public class ConstructHandleItem
     
     public string OnCleanupScript { get; set; }
     
-    public ConstructDefinitionItem? ConstructDefinitionItem { get; set; }
+    public PrefabItem? ConstructDefinitionItem { get; set; }
 
     public ConstructHandleProperties JsonProperties { get; set; } = new();
 }

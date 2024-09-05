@@ -258,11 +258,11 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
 
     private ConstructHandleItem MapToModel(DbRow row)
     {
-        ConstructDefinitionItem? constructDefinition = null;
+        PrefabItem? constructDefinition = null;
 
         if (!string.IsNullOrEmpty(row.def_content))
         {
-            constructDefinition = JsonConvert.DeserializeObject<ConstructDefinitionItem>(row.def_content);
+            constructDefinition = JsonConvert.DeserializeObject<PrefabItem>(row.def_content);
         }
 
         var properties = new ConstructHandleProperties();

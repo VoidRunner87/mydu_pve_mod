@@ -11,11 +11,11 @@ using Newtonsoft.Json;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions.Repository;
 
-public class ConstructDefinitionItemDatabaseRepository(IServiceProvider provider) : IConstructDefinitionItemRepository
+public class PrefabItemDatabaseRepository(IServiceProvider provider) : IPrefabItemRepository
 {
     private readonly IPostgresConnectionFactory _factory = provider.GetRequiredService<IPostgresConnectionFactory>();
 
-    public async Task AddAsync(ConstructDefinitionItem item)
+    public async Task AddAsync(PrefabItem item)
     {
         using var db = _factory.Create();
         db.Open();
@@ -36,17 +36,17 @@ public class ConstructDefinitionItemDatabaseRepository(IServiceProvider provider
         );
     }
 
-    public Task SetAsync(IEnumerable<ConstructDefinitionItem> items)
+    public Task SetAsync(IEnumerable<PrefabItem> items)
     {
         throw new NotSupportedException();
     }
 
-    public Task AddRangeAsync(IEnumerable<ConstructDefinitionItem> items)
+    public Task AddRangeAsync(IEnumerable<PrefabItem> items)
     {
         throw new NotImplementedException("TODO LATER");
     }
 
-    public async Task<ConstructDefinitionItem?> FindAsync(object key)
+    public async Task<PrefabItem?> FindAsync(object key)
     {
         using var db = _factory.Create();
         db.Open();
@@ -59,7 +59,7 @@ public class ConstructDefinitionItemDatabaseRepository(IServiceProvider provider
         return MapToModel(rows[0]);
     }
 
-    public async Task<IEnumerable<ConstructDefinitionItem>> GetAllAsync()
+    public async Task<IEnumerable<PrefabItem>> GetAllAsync()
     {
         using var db = _factory.Create();
         db.Open();
@@ -89,9 +89,9 @@ public class ConstructDefinitionItemDatabaseRepository(IServiceProvider provider
         await db.ExecuteAsync("DELETE FROM public.mod_construct_def WHERE name = @key", new { key });
     }
 
-    private ConstructDefinitionItem MapToModel(DbRow row)
+    private PrefabItem MapToModel(DbRow row)
     {
-        var result = JsonConvert.DeserializeObject<ConstructDefinitionItem>(row.content);
+        var result = JsonConvert.DeserializeObject<PrefabItem>(row.content);
         result.Id = row.id;
         result.Name = row.name;
         

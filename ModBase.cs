@@ -75,10 +75,8 @@ public class ModBase
     }
 
     /// Setup everything, must be called once at startup
-    public static async Task Setup()
+    public static async Task Setup(IServiceCollection services)
     {
-        var services = new ServiceCollection();
-
         //services.RegisterCoreServices();
         var queueingUrl = Environment.GetEnvironmentVariable("QUEUEING");
         if (string.IsNullOrEmpty(queueingUrl))

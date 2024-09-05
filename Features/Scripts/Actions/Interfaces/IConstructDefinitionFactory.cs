@@ -4,5 +4,5 @@ namespace Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 
 public interface IConstructDefinitionFactory
 {
-    IConstructDefinition Create(ConstructDefinitionItem definitionItem);
+    IConstructDefinition Create(PrefabItem definitionItem);
 }

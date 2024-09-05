@@ -69,7 +69,7 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
         var random = provider.GetRequiredService<IRandomProvider>()
             .GetRandom();
 
-        var constructDefinitionRepo = provider.GetRequiredService<IConstructDefinitionItemRepository>();
+        var constructDefinitionRepo = provider.GetRequiredService<IPrefabItemRepository>();
         var constructDefItem = await constructDefinitionRepo.FindAsync(actionItem.Prefab);
 
         if (constructDefItem == null)

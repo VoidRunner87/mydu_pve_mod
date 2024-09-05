@@ -6,6 +6,6 @@ namespace Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 public interface IConstructDefinition : IHasKey<string>
 {
     Guid Id { get; }
-    ConstructDefinitionItem DefinitionItem { get; }
+    PrefabItem DefinitionItem { get; }
     IConstructEvents Events { get; }
 }
