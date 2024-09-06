@@ -43,30 +43,48 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             return await _sectorInstanceRepository.GetAllAsync();
         }
 
+        var allSectorInstances = await _sectorInstanceRepository.GetAllAsync();
+        var sectorInstanceMap = allSectorInstances
+            .ToDictionary(
+                k => k.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap), 
+                v => v.Id
+            );
+        
         var random = _randomProvider.GetRandom();
 
         var randomMinutes = random.Next(0, 60);
 
         for (var i = 0; i < missingQuantity; i++)
         {
+            var encounter = random.PickOneAtRandom(args.Encounters);
+            
+            // TODO
             var radius = MathFunctions.Lerp(
-                args.MinRadius,
-                args.MaxRadius,
+                encounter.Properties.MinRadius,
+                encounter.Properties.MaxRadius,
                 random.NextDouble()
             );
-            
-            var position = random.RandomDirectionVec3() * radius;
-            position += args.CenterPosition;
-            position = position.GridSnap(SectorGridSnap);
 
-            var encounter = random.PickOneAtRandom(args.Encounters);
+            Vec3 position;
+            var interactions = 0;
+            const int maxInteractions = 100;
+
+            do
+            {
+                position = random.RandomDirectionVec3() * radius;
+                position += encounter.Properties.CenterPosition;
+                position = position.GridSnap(SectorGridSnap);
+
+                interactions++;
+
+            } while (interactions < maxInteractions || sectorInstanceMap.ContainsKey(position.GridSnap(SectorGridSnap * args.SectorMinimumGap)));
 
             var instance = new SectorInstance
             {
                 Id = Guid.NewGuid(),
                 Sector = position,
                 CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow + args.ExpirationTimeSpan + TimeSpan.FromMinutes(randomMinutes * i),
+                ExpiresAt = DateTime.UtcNow + encounter.Properties.ExpirationTimeSpan + TimeSpan.FromMinutes(randomMinutes * i),
                 OnLoadScript = encounter.OnLoadScript,
                 OnSectorEnterScript = encounter.OnSectorEnterScript,
             };
@@ -82,7 +100,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         var scriptService = serviceProvider.GetRequiredService<IScriptService>();
         var unloadedSectors = (await _sectorInstanceRepository.FindUnloadedAsync()).ToList();
 
-        if (!unloadedSectors.Any())
+        if (unloadedSectors.Count == 0)
         {
             _logger.LogDebug("No Sectors {Count} Need Loading", unloadedSectors.Count);
             return;

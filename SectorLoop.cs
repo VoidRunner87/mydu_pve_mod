@@ -7,6 +7,7 @@ using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
+using Mod.DynamicEncounters.Features.Sector.Repository;
 using Mod.DynamicEncounters.Helpers;
 
 namespace Mod.DynamicEncounters;
@@ -61,7 +62,8 @@ public class SectorLoop : ModBase
         sw.Start();
 
         var sectorEncountersRepository = ServiceProvider.GetRequiredService<ISectorEncounterRepository>();
-        var encounters = await sectorEncountersRepository.FindActiveAsync();
+        var encounters = await sectorEncountersRepository
+            .FindActiveTaggedAsync(SectorEncounterTags.Pooled);
 
         var generationArgs = new SectorGenerationArgs
         {

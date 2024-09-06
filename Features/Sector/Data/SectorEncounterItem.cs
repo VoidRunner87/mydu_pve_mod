@@ -9,4 +9,6 @@ public class SectorEncounterItem
     public string OnLoadScript { get; set; }
     public string OnSectorEnterScript { get; set; }
     public bool Active { get; set; }
+    
+    public EncounterProperties Properties { get; set; }
 }

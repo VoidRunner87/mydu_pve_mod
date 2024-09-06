@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
+using Mod.DynamicEncounters.Helpers;
+using Newtonsoft.Json;
 
 namespace Mod.DynamicEncounters.Features.Sector.Repository;
 
@@ -57,13 +59,14 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         throw new NotImplementedException();
     }
 
-    public async Task<IEnumerable<SectorEncounterItem>> FindActiveAsync()
+    public async Task<IEnumerable<SectorEncounterItem>> FindActiveTaggedAsync(string tag)
     {
         using var db = _connectionFactory.Create();
         db.Open();
 
         var queryResult = await db.QueryAsync<DbRow>(
-            "SELECT * FROM public.mod_sector_encounter WHERE active = true"
+            "SELECT * FROM public.mod_sector_encounter WHERE active = true AND json_properties->'Tags' @> @tag::jsonb",
+            new { tag = tag.AsJsonB() }
         );
 
         return queryResult.Select(DbRowToModel);
@@ -77,7 +80,8 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
             Name = first.name,
             OnLoadScript = first.on_load_script,
             OnSectorEnterScript = first.on_sector_enter_script,
-            Active = first.active
+            Active = first.active,
+            Properties = JsonConvert.DeserializeObject<EncounterProperties>(first.json_properties)
         };
     }
 
@@ -88,5 +92,6 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         public string on_load_script { get; set; }
         public string on_sector_enter_script { get; set; }
         public bool active { get; set; }
+        public string json_properties { get; set; }
     }
 }

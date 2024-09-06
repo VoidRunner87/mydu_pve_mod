@@ -7,5 +7,5 @@ namespace Mod.DynamicEncounters.Features.Sector.Interfaces;
 
 public interface ISectorEncounterRepository : IRepository<SectorEncounterItem>
 {
-    public Task<IEnumerable<SectorEncounterItem>> FindActiveAsync();
+    public Task<IEnumerable<SectorEncounterItem>> FindActiveTaggedAsync(string tag);
 }

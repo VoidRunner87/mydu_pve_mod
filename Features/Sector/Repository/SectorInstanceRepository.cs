@@ -188,7 +188,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
              """
         );
     }
-    
+
     public async Task SetExpirationFromNowAsync(Guid id, TimeSpan span)
     {
         using var db = _connectionFactory.Create();
