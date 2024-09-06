@@ -43,7 +43,6 @@ public class StubDuClientFactory : IDuClientFactory
 #if !DEBUG
         queueingResponse.info.frontUri = "queueing:9630";
         queueingResponse.info.grpcInfo.address = "10.5.0.5:9210";
-        Console.WriteLine($"Queueing Override {queueingResponse}");
 #endif
         
         Console.WriteLine($"Connection: {queueingResponse.info.grpcInfo.address}");
