@@ -22,27 +22,28 @@ public static class Program
             var version = int.Parse(migrationVersion);
 
             await ModBase.Setup(serviceCollection);
-            
+
             using var scope = ModBase.ServiceProvider.CreateScope();
             ModBase.DowngradeDatabase(scope, version);
-            
+
             return;
         }
 
-        var apiDisabledEnvValue = Environment.GetEnvironmentVariable("API_DISABLED");
-        var apiEnabled = string.IsNullOrEmpty(apiDisabledEnvValue);
-        
+        var apiDisabledEnvValue = Environment.GetEnvironmentVariable("API_ENABLED");
+        var apiEnabled = !string.IsNullOrEmpty(apiDisabledEnvValue) && apiDisabledEnvValue == "true"
+                         || apiDisabledEnvValue == "1";
+
         try
         {
             Config.ReadYamlFileFromArgs("mod", args);
             await ModBase.Setup(serviceCollection);
-        
+
             var host = CreateHostBuilder(serviceCollection, args)
                 .Build();
-            
+
             using var scope = ModBase.ServiceProvider.CreateScope();
             ModBase.UpdateDatabase(scope);
-            
+
             Console.WriteLine("Starting...");
 
             var taskList = new List<Task>
@@ -57,9 +58,9 @@ public static class Program
             {
                 taskList.Add(host.RunAsync());
             }
-            
+
             await Task.WhenAll(taskList);
-            
+
             Console.WriteLine("Finished Main");
         }
         catch (Exception e)
@@ -71,8 +72,5 @@ public static class Program
 
     private static IHostBuilder CreateHostBuilder(IServiceCollection services, string[] args) =>
         Host.CreateDefaultBuilder(args)
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Startup>();
-            });
+            .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
 }
