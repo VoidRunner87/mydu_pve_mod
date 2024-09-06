@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +14,7 @@ public static class Program
     public static async Task Main(string[] args)
     {
         var serviceCollection = new ServiceCollection();
-        
+
         var migrationVersion = Environment.GetEnvironmentVariable("MIGRATION_VERSION");
         if (!string.IsNullOrEmpty(migrationVersion))
         {
@@ -28,6 +29,9 @@ public static class Program
             return;
         }
 
+        var apiDisabledEnvValue = Environment.GetEnvironmentVariable("API_DISABLED");
+        var apiEnabled = string.IsNullOrEmpty(apiDisabledEnvValue);
+        
         try
         {
             Config.ReadYamlFileFromArgs("mod", args);
@@ -40,14 +44,21 @@ public static class Program
             ModBase.UpdateDatabase(scope);
             
             Console.WriteLine("Starting...");
-            
-            await Task.WhenAll(
-                host.RunAsync(),
+
+            var taskList = new List<Task>
+            {
                 new SectorLoop().Start(),
                 new ConstructBehaviorLoop().Start(),
                 new HealthCheckLoop().Start(),
                 new TaskQueueLoop().Start()
-            );
+            };
+
+            if (apiEnabled)
+            {
+                taskList.Add(host.RunAsync());
+            }
+            
+            await Task.WhenAll(taskList);
             
             Console.WriteLine("Finished Main");
         }
