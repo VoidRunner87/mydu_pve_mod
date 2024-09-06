@@ -76,7 +76,7 @@ public class SectorLoop : ModBase
         Console.WriteLine($"Loaded Sector Pool Manager {sw.ElapsedMilliseconds}");
         await sectorPoolManager.ExecuteSectorCleanup(Bot, generationArgs);
         Console.WriteLine($"Executed Cleanup {sw.ElapsedMilliseconds}");
-        await sectorPoolManager.GenerateSectorPool(generationArgs);
+        await sectorPoolManager.GenerateSectors(generationArgs);
         Console.WriteLine($"Generated Sector Pool {sw.ElapsedMilliseconds}");
         await sectorPoolManager.LoadUnloadedSectors(Bot);
         Console.WriteLine($"Loaded Unloaded Sectors {sw.ElapsedMilliseconds}");

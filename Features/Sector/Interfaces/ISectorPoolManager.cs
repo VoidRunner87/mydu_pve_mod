@@ -9,7 +9,7 @@ namespace Mod.DynamicEncounters.Features.Sector.Interfaces;
 
 public interface ISectorPoolManager
 {
-    Task<IEnumerable<SectorInstance>> GenerateSectorPool(SectorGenerationArgs args);
+    Task<IEnumerable<SectorInstance>> GenerateSectors(SectorGenerationArgs args);
 
     Task LoadUnloadedSectors(Client client);
 

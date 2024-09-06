@@ -33,7 +33,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
     private readonly ILogger<SectorPoolManager> _logger = serviceProvider.CreateLogger<SectorPoolManager>();
 
-    public async Task<IEnumerable<SectorInstance>> GenerateSectorPool(SectorGenerationArgs args)
+    public async Task<IEnumerable<SectorInstance>> GenerateSectors(SectorGenerationArgs args)
     {
         var count = await _sectorInstanceRepository.GetCountAsync();
         var missingQuantity = args.Quantity - count;
