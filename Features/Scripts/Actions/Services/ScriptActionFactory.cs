@@ -108,11 +108,6 @@ public class ScriptActionFactory : IScriptActionFactory
 
                 return new RandomScriptAction(actions);
             default:
-                if (string.IsNullOrEmpty(action.Name))
-                {
-                    throw new InvalidOperationException("A composite action (action with multiple actions) need a name if the are root on the script");
-                }
-                
                 return action;
         }
     }

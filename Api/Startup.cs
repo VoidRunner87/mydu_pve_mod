@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Mod.DynamicEncounters.Api.Config;
 using Mod.DynamicEncounters.Features;
+using NQutils.Logging;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -42,6 +43,8 @@ public class Startup
             options.OutputFormatters.Add(new YamlOutputFormatter(serializer));  
             options.FormatterMappings.SetMediaTypeMappingForFormat("yaml", MediaTypeHeaderValues.ApplicationYaml); 
         });
+
+        services.AddLogging(logging => logging.Setup(logWebHostInfo: true));
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

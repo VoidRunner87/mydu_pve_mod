@@ -22,6 +22,7 @@ public class ScriptController(IServiceProvider provider) : Controller
     }
 
     [HttpPut]
+    [Route("")]
     public async Task<IActionResult> Create([FromBody] ScriptActionItem actionItem)
     {
         var validator = provider.GetRequiredService<IValidator<ScriptActionItem>>();
@@ -35,6 +36,15 @@ public class ScriptController(IServiceProvider provider) : Controller
         await _repository.AddAsync(actionItem);
 
         return Created();
+    }
+
+    [HttpDelete]
+    [Route("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await _repository.DeleteAsync(id);
+
+        return Ok();
     }
 
     [HttpGet]

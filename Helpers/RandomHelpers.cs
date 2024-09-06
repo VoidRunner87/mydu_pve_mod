@@ -7,26 +7,17 @@ namespace Mod.DynamicEncounters.Helpers;
 
 public static class RandomHelpers
 {
-    public static Vec3 RandomDirectionVec3(this Random random, int iteration = 0)
+    public static Vec3 RandomDirectionVec3(this Random random)
     {
-        while (true)
-        {
-            if (iteration >= 10)
-            {
-                return new Vec3 { x = 0, y = 0, z = 1 };
-            }
+        var theta = random.NextDouble() * 2 * Math.PI;
+        var phi = Math.Acos(2 * random.NextDouble() - 1);
 
-            var result = new Vec3 { x = random.Next(-1, 1), y = random.Next(-1, 1), z = random.Next(-1, 1), }
-                .NormalizeSafe();
+        // Convert spherical coordinates to Cartesian coordinates
+        var x = Math.Sin(phi) * Math.Cos(theta);
+        var y = Math.Sin(phi) * Math.Sin(theta);
+        var z = Math.Cos(phi);
 
-            if (result.Size() == 0)
-            {
-                iteration += 1;
-                continue;
-            }
-
-            return result;
-        }
+        return new Vec3 { x = x, y = y, z = z };
     }
 
     public static T PickOneAtRandom<T>(this Random random, IEnumerable<T> items)
