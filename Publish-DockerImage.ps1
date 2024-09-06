@@ -1,2 +1,0 @@
-﻿docker tag dynamic_encounters voidrunner7891/dynamic_encounters:latest
-docker push voidrunner7891/dynamic_encounters:latest

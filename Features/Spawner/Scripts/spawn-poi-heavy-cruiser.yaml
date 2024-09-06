@@ -1,7 +1,0 @@
-actions:
-  - type: spawn
-    prefab: poi-medium
-events:
-  onSectorEnter:
-    - type: run
-      script: spawn-heavy-cruiser.yaml
