@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 
-namespace Mod.DynamicEncounters.Features.Sector.Controllers;
+namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("sector/instance")]
 public class SectorInstanceController(IServiceProvider provider) : Controller

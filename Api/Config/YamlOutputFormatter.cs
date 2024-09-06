@@ -11,7 +11,7 @@ public class YamlOutputFormatter : TextOutputFormatter
 {  
     private readonly ISerializer _serializer;  
   
-    public YamlOutputFormatter(ISerializer serializer)  
+    public YamlOutputFormatter(ISerializer serializer)
     {  
         _serializer = serializer;  
   

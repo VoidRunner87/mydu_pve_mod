@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 
-namespace Mod.DynamicEncounters.Features.Spawner.Controllers;
+namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("prefab")]
 public class PrefabController(IServiceProvider provider) : Controller

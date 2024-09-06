@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 
-namespace Mod.DynamicEncounters.Features.Sector.Controllers;
+namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("sector/encounter")]
 public class SectorEncountersController(IServiceProvider provider) : Controller

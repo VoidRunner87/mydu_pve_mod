@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 
-namespace Mod.DynamicEncounters.Features.Scripts.Controllers;
+namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("script")]
 public class ScriptController(IServiceProvider provider) : Controller
