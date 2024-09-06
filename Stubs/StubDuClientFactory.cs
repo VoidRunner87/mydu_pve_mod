@@ -78,7 +78,7 @@ public class StubDuClientFactory : IDuClientFactory
             lr = await c2.PlayerCreationData(req2, ct2);
 
 #if !DEBUG
-            lr.itemBankUrl = "http://queueing:9630";
+            lr.itemBankUrl = lr.itemBankUrl.Replace("http://localhost:9630", Environment.GetEnvironmentVariable("QUEUEING"));
 #endif
             Console.WriteLine($"Item Bank URL CREATION NEEDED: {lr.itemBankUrl}");
             
@@ -102,7 +102,7 @@ public class StubDuClientFactory : IDuClientFactory
             Console.WriteLine($"OLD Item Bank URL NOT CREATION: {lr.itemBankUrl}");
             
 #if !DEBUG
-            lr.itemBankUrl = lr.itemBankUrl.Replace("http://localhost:9630", "http://queueing:9630");
+            lr.itemBankUrl = lr.itemBankUrl.Replace("http://localhost:9630", Environment.GetEnvironmentVariable("QUEUEING"));
 #endif
             Console.WriteLine($"OVERRIDE Item Bank URL NOT CREATION: {lr.itemBankUrl}");
 
