@@ -1,0 +1,98 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <Nullable>annotations</Nullable>
+    <AssemblyName>Mod.DynamicEncounters</AssemblyName>
+    <RootNamespace>Mod.DynamicEncounters</RootNamespace>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <SelfContained>false</SelfContained>
+    <UseAppHost>false</UseAppHost>
+    <LangVersion>12.0</LangVersion>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Backend.Telemetry">
+      <HintPath>NQ\Backend.Telemetry.dll</HintPath>
+    </Reference>
+    <Reference Include="NQutils">
+      <HintPath>.NQ\NQutils.dll</HintPath>
+    </Reference>
+    <Reference Include="Backend">
+      <HintPath>NQ\Backend.dll</HintPath>
+    </Reference>
+    <Reference Include="Interfaces">
+      <HintPath>NQ\Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="BotLib">
+      <HintPath>NQ\BotLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Router.Orleans">
+      <HintPath>NQ\Router.Orleans.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="28.0.1" />
+    <PackageReference Include="FluentMigrator" Version="5.2.0" />
+    <PackageReference Include="FluentMigrator.Runner" Version="5.2.0" />
+    <PackageReference Include="FluentMigrator.Runner.Postgres" Version="5.2.0" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+    <PackageReference Include="Grpc.Core" Version="2.40.0" />
+    <PackageReference Include="Grpc.Core.Api" Version="2.65.0" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.23.2" />
+    <PackageReference Include="Microsoft.Orleans.Core" Version="3.6.5" />
+    <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="3.6.5" />
+    <PackageReference Include="prometheus-net" Version="6.0.0" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
+    <PackageReference Include="YamlDotNet" Version="12.0.0" />
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="Microsoft.Orleans.Clustering.AdoNet" Version="3.6.5" />
+    <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
+    <PackageReference Include="Microsoft.Toolkit.HighPerformance" Version="7.1.0" />
+    <PackageReference Include="InfluxDB.LineProtocol" Version="1.1.1" />
+    <PackageReference Include="MathNet.Spatial" Version="0.6.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.19.0.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="2.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" />
+    <PackageReference Include="Npgsql" Version="6.0.11" />
+    <PackageReference Include="Google.Protobuf" Version="3.21.9" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Features\Sector\Scripts\" />
+    <Folder Include="NQ\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="libgrpc_csharp_ext.x64.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Remove="LoaderTest\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="LoaderTest\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="LoaderTest\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="LoaderTest\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="LoaderTest\bin\Debug\net6.0\win-x64\LoaderTest.deps.json" />
+    <_ContentIncludedByDefault Remove="LoaderTest\bin\Debug\net6.0\win-x64\LoaderTest.runtimeconfig.json" />
+    <_ContentIncludedByDefault Remove="LoaderTest\obj\LoaderTest.csproj.nuget.dgspec.json" />
+    <_ContentIncludedByDefault Remove="LoaderTest\obj\project.assets.json" />
+    <_ContentIncludedByDefault Remove="LoaderTest\obj\project.packagespec.json" />
+  </ItemGroup>
+
+  <!-- https://github.com/dotnet/efcore/issues/15047 -->
+  <Target Name="AddAssemblyAliasToReactiveAsync" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferencePath Condition=" '%(FileName)' == 'System.Interactive.Async' ">
+        <Aliases>reactive</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+
+</Project>
