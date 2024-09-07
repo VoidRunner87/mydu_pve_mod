@@ -140,6 +140,8 @@ Also it will set the name of that construct and scripts to run when events happe
 
 ### Example POI
 
+Table `mod_script`
+
 ```json
 {
   "Mods": {
@@ -184,6 +186,8 @@ Also it will set the name of that construct and scripts to run when events happe
 
 ### POI
 
+Table `mod_script`
+
 This script will spawn a Wreck.
 It does nothing else than spawning a wreck. Type=spawn, Prefab=wreck-medium-pirate-attack-1 prefab matches the field `name` of table `mod_construct_def`
 
@@ -214,6 +218,8 @@ It does nothing else than spawning a wreck. Type=spawn, Prefab=wreck-medium-pira
 ```
 
 ### Pirate Ship
+
+Table `mod_script`
 
 As seen before in this document, it spawns a pirate ship:
 * The pirate ship has Advanced Cannons Small Agile and fires T3 Ammo for Cannons
