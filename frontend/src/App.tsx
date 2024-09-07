@@ -5,9 +5,11 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
-import {createBrowserRouter, RouterProvider} from "react-router-dom";
+import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import Dashboard from "./dashboard/dashboard";
 import {Container, Typography} from "@mui/material";
+import ScriptPage from "./script/script-page";
+import SectorInstancePage from "./sector-instance/sector-instance-page";
 
 function App() {
 
@@ -23,7 +25,10 @@ function App() {
             element: <Dashboard/>,
             errorElement: <ErrorPage/>,
             children: [
-                {path: 'prefab', element: <PrefabPage/>}
+                {path: '', element: <Navigate to="prefab" replace />},
+                {path: 'prefab', element: <PrefabPage/>},
+                {path: 'script', element: <ScriptPage/>},
+                {path: 'sector-instance', element: <SectorInstancePage/>},
             ]
         }
     ]);

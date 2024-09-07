@@ -15,7 +15,7 @@ const NAVIGATION: Navigation = [
         icon: <Inventory/>,
     },
     {
-        segment: 'dashboard',
+        segment: 'script',
         title: 'Scripts',
         icon: <Slideshow/>,
     },
@@ -27,17 +27,17 @@ const NAVIGATION: Navigation = [
         title: 'Sectors',
     },
     {
-        segment: 'sector-encounters',
+        segment: 'sector-encounter',
         title: 'Sector Definitions',
         icon: <GridOn/>,
     },
     {
-        segment: 'sector-instances',
+        segment: 'sector-instance',
         title: 'Sector Instances',
         icon: <LensBlur/>,
     },
     {
-        segment: 'sector-3d',
+        segment: 'sector-instance-3d',
         title: 'Sector 3D View',
         icon: <ViewInAr/>,
     },
@@ -61,12 +61,12 @@ const NAVIGATION: Navigation = [
         title: 'Others',
     },
     {
-        segment: 'event-handlers',
+        segment: 'feature',
         title: 'Features',
         icon: <Checklist/>,
     },
     {
-        segment: 'event-handlers',
+        segment: 'queue',
         title: 'Task Queue',
         icon: <Reorder/>,
     },
@@ -90,7 +90,7 @@ const theme = createTheme({
 
 const Dashboard = (props: any) => {
 
-    const [pathname, setPathname] = React.useState('/prefab');
+    const [pathname, setPathname] = React.useState(window.location.pathname);
     const navigate = useNavigate();
 
     const router = React.useMemo<Router>(() => {
@@ -98,13 +98,11 @@ const Dashboard = (props: any) => {
             pathname,
             searchParams: new URLSearchParams(),
             navigate: (path) => {
-                //window.history.pushState({}, '', path);
-                // window.location.href = path.toString();
-                navigate(path);
                 setPathname(String(path));
+                navigate(path);
             },
         };
-    }, [navigate]);
+    }, [pathname, navigate]);
 
     return <AppProvider
         branding={{

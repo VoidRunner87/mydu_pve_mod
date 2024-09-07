@@ -19,7 +19,7 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-COPY dual.prod.yaml /app/dual.yaml
+#COPY dual.prod.yaml /app/dual.yaml
 COPY /Features/Spawner/Scripts /app/Scripts
 
 RUN apk add --no-cache \
@@ -41,4 +41,4 @@ RUN apk add musl-dev
 
 EXPOSE 9210
 
-CMD ["sh", "-c", "dotnet Mod.DynamicEncounters.dll"]
+CMD ["sh", "-c", "dotnet Mod.DynamicEncounters.dll ../config/dual.yaml"]

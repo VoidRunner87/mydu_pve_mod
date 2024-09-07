@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {getAll, PrefabItem} from "./prefab-service"
+import {getAll, ScriptItem} from "./script-service"
 import {Button, Paper, Stack} from "@mui/material";
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
 import DashboardContainer from "../dashboard/dashboard-container";
@@ -8,7 +8,7 @@ interface PrefabPageProps {}
 
 const PrefabPage: React.FC<PrefabPageProps> = () => {
 
-    const [data, setData] = useState<PrefabItem[]>([]);
+    const [data, setData] = useState<ScriptItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -21,9 +21,8 @@ const PrefabPage: React.FC<PrefabPageProps> = () => {
 
     const columns: GridColDef[] = [
         {field: 'name', headerName: 'Name', minWidth: 250, },
-        {field: 'folder', headerName: 'Folder'},
-        {field: 'path', headerName: 'Blueprint', minWidth: 250},
-        {field: 'serverProperties.isDynamicWreck', headerName: 'Wreck', minWidth: 250},
+        {field: 'type', headerName: 'Type'},
+        {field: 'prefab', headerName: 'Prefab', minWidth: 250},
     ];
 
     const paginationModel = { page: 0, pageSize: 10 };
@@ -33,7 +32,7 @@ const PrefabPage: React.FC<PrefabPageProps> = () => {
     }, []);
 
     return (
-        <DashboardContainer title="Prefabs">
+        <DashboardContainer title="Scripts">
             <Stack spacing={2} direction="row">
                 <Button variant="contained">Add</Button>
             </Stack>
@@ -42,6 +41,7 @@ const PrefabPage: React.FC<PrefabPageProps> = () => {
                 <DataGrid
                     rows={data}
                     columns={columns}
+                    getRowId={x => x.name}
                     initialState={{ pagination: { paginationModel } }}
                     pageSizeOptions={[10, 20, 30, 40, 50, 100]}
                     checkboxSelection
