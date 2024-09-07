@@ -28,17 +28,17 @@ const NAVIGATION: Navigation = [
     },
     {
         segment: 'sector-encounter',
-        title: 'Sector Definitions',
+        title: 'Definitions',
         icon: <GridOn/>,
     },
     {
         segment: 'sector-instance',
-        title: 'Sector Instances',
+        title: 'Instances',
         icon: <LensBlur/>,
     },
     {
         segment: 'sector-instance-3d',
-        title: 'Sector 3D View',
+        title: '3D View',
         icon: <ViewInAr/>,
     },
     {
@@ -49,7 +49,7 @@ const NAVIGATION: Navigation = [
         title: 'Events',
     },
     {
-        segment: 'event-handlers',
+        segment: 'event-handler',
         title: 'Event Handlers',
         icon: <Bolt/>,
     },

@@ -3,8 +3,8 @@ import {getAll, SectorInstanceItem} from "./sector-instance-service"
 import {Button, Paper, Stack} from "@mui/material";
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
 import DashboardContainer from "../dashboard/dashboard-container";
-import {VectorChip} from "../common/vector-chip";
-import {DateChip} from "../common/date-chip";
+import {SectorChip} from "../common/sector-chip";
+import {DateChip, TimeSpanChip} from "../common/date-chip";
 
 interface PrefabPageProps {
 }
@@ -26,21 +26,25 @@ const SectorInstancePage: React.FC<PrefabPageProps> = () => {
         {
             field: 'sector',
             headerName: 'Sector',
-            minWidth: 250,
-            renderCell: params => <VectorChip value={params.value}/>
+            width: 100,
+            renderCell: params => <SectorChip value={params.value}/>
         },
-        {field: 'onLoadScript', headerName: 'On Load Script', minWidth: 200},
-        {field: 'onSectorEnterScript', headerName: 'On Enter Script', minWidth: 200},
+        {field: 'onLoadScript', headerName: 'On Load Script', width: 180},
+        {field: 'onSectorEnterScript', headerName: 'On Enter Script', width: 180},
         {
             field: 'expiresAt',
             headerName: 'Expires at',
-            minWidth: 175,
-            renderCell: params => <DateChip value={params.value}/>
+            width: 275,
+            renderCell: params => <>
+                <DateChip value={params.value}/>
+                <span>&nbsp;in&nbsp;</span>
+                <TimeSpanChip value={params.value} now={new Date()}/>
+            </>
         },
         {
             field: 'forceExpiresAt',
             headerName: 'Force Expires at',
-            minWidth: 175,
+            width: 175,
             renderCell: params => <DateChip value={params.value}/>
         },
     ];
@@ -51,8 +55,17 @@ const SectorInstancePage: React.FC<PrefabPageProps> = () => {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+           fetchData();
+        }, 5000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
     return (
         <DashboardContainer title="Sector Instances">
+            <p>Sectors that have been procedurally generated and loaded</p>
             <Stack spacing={2} direction="row">
                 <Button variant="contained" color="primary">Expire</Button>
                 <Button variant="contained" color="error">Force Expire</Button>

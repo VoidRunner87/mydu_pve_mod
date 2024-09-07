@@ -1,16 +1,17 @@
 import React, {useEffect, useState} from "react";
-import {getAll, PrefabItem} from "./prefab-service"
+import {getAll, SectorEncounterItem} from "./sector-encounter-service"
 import {Button, Paper, Stack} from "@mui/material";
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
 import DashboardContainer from "../dashboard/dashboard-container";
-import {DynamicWreckChip} from "../common/dynamic-wreck-chip";
+import {ActiveChip} from "../common/active-chip";
+import {TagsChip} from "../common/tags-chip";
 
 interface PrefabPageProps {
 }
 
-const PrefabPage: React.FC<PrefabPageProps> = () => {
+const SectorEncounterPage: React.FC<PrefabPageProps> = () => {
 
-    const [data, setData] = useState<PrefabItem[]>([]);
+    const [data, setData] = useState<SectorEncounterItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -22,13 +23,19 @@ const PrefabPage: React.FC<PrefabPageProps> = () => {
     };
 
     const columns: GridColDef[] = [
-        {field: 'name', headerName: 'Name', width: 250,},
-        {field: 'folder', headerName: 'Folder'},
-        {field: 'path', headerName: 'Blueprint', width: 250},
         {
-            field: 'serverProperties', headerName: 'Wreck', width: 75,
-            renderCell: params => <DynamicWreckChip value={params.value.isDynamicWreck}/>
+            field: 'name',
+            headerName: 'Name',
+            width: 200,
         },
+        {field: 'onLoadScript', headerName: 'On Load Script', width: 180},
+        {field: 'onSectorEnterScript', headerName: 'On Enter Script', width: 180},
+        {
+            field: 'active', headerName: 'Active', width: 180,
+            renderCell: params => <ActiveChip value={params.value}/>
+        },
+        {field: 'properties', headerName: 'Tags', width: 180,
+            renderCell: params => <TagsChip tags={params.value.tags} />},
     ];
 
     const paginationModel = {page: 0, pageSize: 10};
@@ -38,10 +45,10 @@ const PrefabPage: React.FC<PrefabPageProps> = () => {
     }, []);
 
     return (
-        <DashboardContainer title="Prefabs">
-            <p>Blueprint and construct information to be used by scripts to spawn</p>
+        <DashboardContainer title="Sector Definitions">
+            <p>Every time the mod needs to generate a new sector it will pick one of these active items at random and generate a sector instance</p>
             <Stack spacing={2} direction="row">
-                <Button variant="contained">Add</Button>
+                <Button variant="contained" color="primary">Add</Button>
             </Stack>
             <br/>
             <Paper>
@@ -58,4 +65,4 @@ const PrefabPage: React.FC<PrefabPageProps> = () => {
     );
 }
 
-export default PrefabPage;
+export default SectorEncounterPage;

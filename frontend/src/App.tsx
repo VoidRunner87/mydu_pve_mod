@@ -10,6 +10,8 @@ import Dashboard from "./dashboard/dashboard";
 import {Container, Typography} from "@mui/material";
 import ScriptPage from "./script/script-page";
 import SectorInstancePage from "./sector-instance/sector-instance-page";
+import SectorEncounterPage from "./sector-encounter/sector-enounter-page";
+import EventHandlerPage from "./event-handler/event-handler-page";
 
 function App() {
 
@@ -29,6 +31,8 @@ function App() {
                 {path: 'prefab', element: <PrefabPage/>},
                 {path: 'script', element: <ScriptPage/>},
                 {path: 'sector-instance', element: <SectorInstancePage/>},
+                {path: 'sector-encounter', element: <SectorEncounterPage/>},
+                {path: 'event-handler', element: <EventHandlerPage/>},
             ]
         }
     ]);

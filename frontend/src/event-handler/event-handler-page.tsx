@@ -1,16 +1,16 @@
 import React, {useEffect, useState} from "react";
-import {getAll, ScriptItem} from "./script-service"
+import {getAll, EventHandlerItem} from "./event-handler-service"
 import {Button, Paper, Stack} from "@mui/material";
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
 import DashboardContainer from "../dashboard/dashboard-container";
 
 interface PrefabPageProps {}
 
-const ScriptPage: React.FC<PrefabPageProps> = () => {
+const EventHandlerPage: React.FC<PrefabPageProps> = () => {
 
-    const [data, setData] = useState<ScriptItem[]>([]);
+    const [data, setData] = useState<EventHandlerItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<any>(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -21,18 +21,18 @@ const ScriptPage: React.FC<PrefabPageProps> = () => {
 
     const columns: GridColDef[] = [
         {field: 'name', headerName: 'Name', width: 250, },
-        {field: 'type', headerName: 'Type', valueGetter: value => value ?? 'composite'},
+        {field: 'type', headerName: 'Type'},
+        {field: 'prefab', headerName: 'Prefab', width: 250},
     ];
 
     const paginationModel = { page: 0, pageSize: 10 };
 
     useEffect(() => {
-        fetchData();
+        fetchData().catch(reason => setError('Failed to fetch data'));
     }, []);
 
     return (
-        <DashboardContainer title="Scripts">
-            <p>Scripts can perform many kinds of actions in the game - from spawning constructs to giving player titles or quanta</p>
+        <DashboardContainer title="Event Handlers" error={error}>
             <Stack spacing={2} direction="row">
                 <Button variant="contained">Add</Button>
             </Stack>
@@ -52,4 +52,4 @@ const ScriptPage: React.FC<PrefabPageProps> = () => {
     );
 }
 
-export default ScriptPage;
+export default EventHandlerPage;
