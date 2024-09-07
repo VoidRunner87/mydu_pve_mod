@@ -53,8 +53,6 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
             );
         }
 
-        await Task.Yield(); // TODO
-        
-        return ScriptActionResult.Failed();
+        return ScriptActionResult.Successful();
     }
 }
