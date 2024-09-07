@@ -26,6 +26,7 @@ Before starting, know this:
     volumes:
       - ${DATAPATH}:/data
       - ${LOGPATH}:/logs
+      - ${CONFPATH}:/config
     networks:
       vpcbr:
         ipv4_address: 10.5.0.21
