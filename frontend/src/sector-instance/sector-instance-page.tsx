@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
-import {getAll, SectorInstanceItem} from "./sector-instance-service"
-import {Button, Paper, Stack} from "@mui/material";
+import {getAll, forceExpireAll, SectorInstanceItem} from "./sector-instance-service"
+import {Button, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Snackbar, Stack} from "@mui/material";
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
 import DashboardContainer from "../dashboard/dashboard-container";
 import {SectorChip} from "../common/sector-chip";
@@ -14,6 +14,11 @@ const SectorInstancePage: React.FC<PrefabPageProps> = () => {
     const [data, setData] = useState<SectorInstanceItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("Done");
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [dialogMessage, setDialogMessage] = useState("Are you sure?");
+    const [dialogAction, setDialogAction] = useState("");
 
     const fetchData = async () => {
         setLoading(true);
@@ -63,12 +68,46 @@ const SectorInstancePage: React.FC<PrefabPageProps> = () => {
         return () => clearInterval(intervalId);
     }, []);
 
+    function handleForceExpireAllClick() {
+        setDialogMessage("Forcefully expiring all sectors will automatically regenerate them even if there are players around.");
+        setDialogAction("expire-all");
+        setDialogOpen(true);
+    }
+
+    function doForceExpireAll() {
+        forceExpireAll()
+            .then(() => {
+                setSnackbarMessage("All sectors force expired");
+                setSnackbarOpen(true);
+            });
+    }
+
+    function handleSnackbarClose() {
+        setSnackbarOpen(false);
+    }
+
+    function handleDialogClose() {
+        setDialogOpen(false);
+    }
+
+    function doDialogAction()
+    {
+        switch (dialogAction)
+        {
+            case "expire-all":
+                return doForceExpireAll();
+        }
+
+        setDialogAction("");
+        setDialogOpen(false);
+    }
+
     return (
         <DashboardContainer title="Sector Instances">
             <p>Sectors that have been procedurally generated and loaded</p>
             <Stack spacing={2} direction="row">
                 <Button variant="contained" color="primary">Expire</Button>
-                <Button variant="contained" color="error">Force Expire</Button>
+                <Button onClick={handleForceExpireAllClick} variant="contained" color="error">Force Expire ALL</Button>
             </Stack>
             <br/>
             <Paper>
@@ -81,6 +120,23 @@ const SectorInstancePage: React.FC<PrefabPageProps> = () => {
                     sx={{border: 0}}
                 />
             </Paper>
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={3000}
+                message={snackbarMessage}
+                onClose={handleSnackbarClose}
+                />
+            <Dialog
+                open={dialogOpen}
+                onClose={handleDialogClose}
+                >
+                <DialogTitle>Are you sure?</DialogTitle>
+                <DialogContent>{dialogMessage}</DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDialogClose}>Cancel</Button>
+                    <Button onClick={doDialogAction} autoFocus>Proceed</Button>
+                </DialogActions>
+            </Dialog>
         </DashboardContainer>
     );
 }
