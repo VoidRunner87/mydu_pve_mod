@@ -3,6 +3,7 @@ import {getAll, ScriptItem} from "./script-service"
 import {Button, Paper, Stack} from "@mui/material";
 import {DataGrid, GridColDef} from "@mui/x-data-grid";
 import DashboardContainer from "../dashboard/dashboard-container";
+import {useNavigate} from "react-router-dom";
 
 interface PrefabPageProps {}
 
@@ -11,6 +12,8 @@ const ScriptPage: React.FC<PrefabPageProps> = () => {
     const [data, setData] = useState<ScriptItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const navigate = useNavigate();
 
     const fetchData = async () => {
         setLoading(true);
@@ -30,11 +33,15 @@ const ScriptPage: React.FC<PrefabPageProps> = () => {
         fetchData();
     }, []);
 
+    const handleAddClick = () => {
+        navigate('create');
+    };
+
     return (
         <DashboardContainer title="Scripts">
             <p>Scripts can perform many kinds of actions in the game - from spawning constructs to giving player titles or quanta</p>
             <Stack spacing={2} direction="row">
-                <Button variant="contained">Add</Button>
+                <Button variant="contained" onClick={handleAddClick}>Add</Button>
             </Stack>
             <br />
             <Paper>

@@ -29,6 +29,7 @@ public class ScriptActionItem
     public Vec3? Position { get; set; } = new();
     public Vec3? Sector { get; set; } = new();
     public TimeSpan TimeSpan { get; set; } = TimeSpan.Zero;
+    public double Value { get; set; }
     public ScriptActionOverrides Override { get; set; } = new();
     
     /// <summary>
