@@ -16,7 +16,7 @@ Before starting, know this:
 * Pull the docker container: [Docker Container](https://hub.docker.com/repository/docker/voidrunner7891/dynamic_encounters/general)
 * `docker pull voidrunner7891/dynamic_encounters`
 * Add it to the docker-compose of myDU:
-```
+```yaml
   mod_dynamic_encounters:
     image: voidrunner7891/dynamic_encounters:latest
     environment:
@@ -35,7 +35,7 @@ Before starting, know this:
 * Create a bot account on the backoffice - you need the roles Game and Bot at least
 * Append to the `.env` file on mydu-server root folder with the credentials of the bot and a name for the Chat window - PVE for instance
 
-```
+```env
 PVE_BOT_PREFIX=PVE
 PVE_BOT_USERNAME=bot
 PVE_BOT_PASSWORD=botpassword
@@ -44,13 +44,13 @@ PVE_BOT_PASSWORD=botpassword
 * Append to the `up.bat` or `up.sh` script
 
 for bat:
-```
+```bat
 timeout /t 5 /nobreak
 docker-compose up -d mod_dynamic_encounters
 ```
 
 for sh:
-```
+```sh
 sleep 5
 docker-compose up -d mod_dynamic_encounters
 ```
