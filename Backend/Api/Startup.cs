@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +31,18 @@ public class Startup
         });
         
         services.RegisterModFeatures();
+        
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll",
+                builder =>
+                {
+                    builder.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+        });
+        
         services.AddControllers(options =>
         {
             var deserializer = new DeserializerBuilder()
@@ -52,6 +65,14 @@ public class Startup
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
+        }
+        
+        var allowsAllCors = Environment.GetEnvironmentVariable("CORS_ALLOW_ALL") is "1" or "true";
+
+        if (allowsAllCors)
+        {
+            Console.WriteLine("WARNING: CORS IS SET TO ALLOW ALL");
+            app.UseCors("AllowAll");
         }
         
         app.UseRouting();
