@@ -7,7 +7,7 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
-[ScriptActionName(ActionName)]
+[ScriptActionName(ActionName, VisibleOnUI = false)]
 public class RunScriptAction(ScriptActionItem actionItem) : IScriptAction
 {
     public const string ActionName = "script";

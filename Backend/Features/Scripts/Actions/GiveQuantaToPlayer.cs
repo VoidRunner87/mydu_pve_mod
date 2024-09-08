@@ -1,20 +1,23 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Backend;
+using Backend.Database;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Features.NQ.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
+using NQutils.Sql;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
-[ScriptActionName(ActionName)]
+[ScriptActionName(ActionName, Description = Description)]
 public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
 {
     public const string ActionName = "give-quanta";
+    public const string Description = "Gives an amount of quanta to all players in the context of the execution";
     public string Name { get; } = Guid.NewGuid().ToString();
 
     public string GetKey() => Name;
@@ -23,7 +26,9 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
     {
         var provider = context.ServiceProvider;
         var orleans = provider.GetOrleans();
-
+        var sql = provider.GetRequiredService<ISql>();
+        var walletService = provider.GetRequiredService<IWalletService>();
+        
         if (context.PlayerIds.Count == 0)
         {
             return ScriptActionResult.Failed();
@@ -33,7 +38,6 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
         
         foreach (var playerId in context.PlayerIds)
         {
-            var notificationGrain = orleans.GetNotificationGrain(playerId);
             var transfer = new WalletTransfer
             {
                 amount = (ulong)valuePerPlayer,
@@ -47,7 +51,31 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
                     playerId = playerId
                 }
             };
+
+            await walletService.AddToPlayerWallet(
+                playerId,
+                (ulong)valuePerPlayer
+            );
             
+            await sql.InsertWalletOperation(
+                transfer.toWallet, 
+                transfer.fromWallet, 
+                (long) transfer.amount, 
+                WalletOperationType.Reward, 
+                new WalletOperationDetail
+            {
+                transfer = new WalletOperationTransfer
+                {
+                    reason = actionItem.Message,
+                    initiatingPlayer = new NamedEntity
+                    {
+                        id = transfer.toWallet,
+                        name = "United Earth Defense Force"
+                    }
+                }
+            });
+            
+            var notificationGrain = orleans.GetNotificationGrain(playerId);
             await notificationGrain.AddNewNotification(
                 Notifications.WalletReceivedMoney(transfer.fromWallet, transfer.amount)
             );
