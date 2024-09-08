@@ -19,7 +19,6 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-#COPY dual.prod.yaml /app/dual.yaml
 COPY /Features/Spawner/Scripts /app/Scripts
 
 RUN apk add --no-cache \
@@ -30,14 +29,7 @@ RUN apk add --no-cache \
       libstdc++ 
 
 RUN apk add gcompat
-#RUN wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r0/glibc-2.35-r0.apk
 RUN apk add musl-dev
-
-## Install NGINX and any other dependencies
-#RUN apk update && \
-#    apk add --no-cache nginx
-
-#COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 9210
 
