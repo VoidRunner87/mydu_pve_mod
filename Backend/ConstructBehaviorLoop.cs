@@ -72,7 +72,8 @@ public class ConstructBehaviorLoop : ModBase
                 {
                     constructHandleItems = (await constructHandleRepository.FindActiveHandlesAsync()).ToList();
                     totalHandleItemsDeltaTime = 0;
-                    logger.LogInformation("Fetched '{Count}' Construct Handles with Behavior", constructHandleItems.Count());
+                    
+                    logger.LogDebug("Fetched '{Count}' Construct Handles with Behavior", constructHandleItems.Count());
 
                     if (!constructHandleItems.Any())
                     {

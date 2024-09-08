@@ -29,7 +29,7 @@ public class TaskQueueService(IServiceProvider provider) : ITaskQueueService
 
         var messages = (await _repository.FindNextAsync(messageBatch)).ToList();
         
-        _logger.LogInformation("{Count} messages to process", messages.Count);
+        _logger.LogDebug("{Count} messages to process", messages.Count);
 
         var taskList = new List<Task>();
 
@@ -63,7 +63,10 @@ public class TaskQueueService(IServiceProvider provider) : ITaskQueueService
         {
             await Task.WhenAll(taskList);
 
-            _logger.LogInformation("Processed {Count} messages", messages.Count);
+            if (messages.Count > 0)
+            {
+                _logger.LogInformation("Processed {Count} messages", messages.Count);
+            }
         }
         catch (AggregateException ae)
         {

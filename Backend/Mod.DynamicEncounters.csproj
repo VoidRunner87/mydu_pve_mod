@@ -17,16 +17,16 @@
       <HintPath>NQ\Backend.Telemetry.dll</HintPath>
     </Reference>
     <Reference Include="NQutils">
-      <HintPath>.NQ\NQutils.dll</HintPath>
+      <HintPath>NQ\NQutils.dll</HintPath>
     </Reference>
     <Reference Include="Backend">
       <HintPath>NQ\Backend.dll</HintPath>
     </Reference>
-    <Reference Include="Interfaces">
-      <HintPath>NQ\Interfaces.dll</HintPath>
-    </Reference>
     <Reference Include="BotLib">
       <HintPath>NQ\BotLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Interfaces">
+      <HintPath>NQ\Interfaces.dll</HintPath>
     </Reference>
     <Reference Include="Router.Orleans">
       <HintPath>NQ\Router.Orleans.dll</HintPath>
@@ -64,7 +64,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Features\Sector\Scripts\" />
-    <Folder Include="NQ\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="libgrpc_csharp_ext.x64.so">
