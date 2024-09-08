@@ -10,6 +10,9 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Backend.PubSub">
+      <HintPath>NQ\Backend.PubSub.dll</HintPath>
+    </Reference>
     <Reference Include="Backend.Telemetry">
       <HintPath>NQ\Backend.Telemetry.dll</HintPath>
     </Reference>
