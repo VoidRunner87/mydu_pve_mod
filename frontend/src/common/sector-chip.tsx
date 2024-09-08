@@ -9,9 +9,9 @@ interface SectorChipProps
 export const SectorChip = (props: SectorChipProps) => {
 
     const vec = new Vector3(
-        props.value.x / 1000000,
-        props.value.y / 1000000,
-        props.value.z / 1000000,
+        props.value.x / 100000,
+        props.value.y / 100000,
+        props.value.z / 100000,
     );
 
     return (

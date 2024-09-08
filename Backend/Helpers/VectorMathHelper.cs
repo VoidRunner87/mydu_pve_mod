@@ -6,6 +6,21 @@ namespace Mod.DynamicEncounters.Helpers;
 
 public static class VectorMathHelper
 {
+    public static Vec3 DividedBy(this Vec3 vec, double value)
+    {
+        if (value == 0)
+        {
+            throw new DivideByZeroException("Cannot divide by zero.");
+        }
+
+        return new Vec3
+        {
+            x = vec.x / value,
+            y = vec.y / value,
+            z = vec.z / value
+        };
+    }
+    
     public static Vec3 GridSnap(this Vec3 input, double snapValue)
     {
         var v = input;

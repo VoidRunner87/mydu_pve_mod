@@ -23,15 +23,10 @@ public class SectorLoop : ModBase
 
         var featureService = provider.GetRequiredService<IFeatureReaderService>();
         
-        Console.WriteLine("Loading Script Service");
         var spawnerService = ServiceProvider.GetRequiredService<IScriptService>();
-        Console.WriteLine("Script Service Loaded");
-        // Loading for Local Development
 
         await spawnerService.LoadAllFromDatabase();
         
-        Console.WriteLine("All Scripts Loaded");
-
         try
         {
             while (true)
@@ -73,17 +68,11 @@ public class SectorLoop : ModBase
 
         var sectorPoolManager = ServiceProvider.GetRequiredService<ISectorPoolManager>();
 
-        Console.WriteLine($"Loaded Sector Pool Manager {sw.ElapsedMilliseconds}");
         await sectorPoolManager.ExecuteSectorCleanup(Bot, generationArgs);
-        Console.WriteLine($"Executed Cleanup {sw.ElapsedMilliseconds}");
         await sectorPoolManager.GenerateSectors(generationArgs);
-        Console.WriteLine($"Generated Sector Pool {sw.ElapsedMilliseconds}");
         await sectorPoolManager.LoadUnloadedSectors(Bot);
-        Console.WriteLine($"Loaded Unloaded Sectors {sw.ElapsedMilliseconds}");
         await sectorPoolManager.ActivateEnteredSectors(Bot);
-        Console.WriteLine($"Ran Sector Activation Check {sw.ElapsedMilliseconds}");
 
-        logger.LogInformation("Action took {Time}ms", sw.ElapsedMilliseconds);
-        Console.WriteLine($"Action Took {sw.ElapsedMilliseconds}ms");
+        logger.LogDebug("Action took {Time}ms", sw.ElapsedMilliseconds);
     }
 }

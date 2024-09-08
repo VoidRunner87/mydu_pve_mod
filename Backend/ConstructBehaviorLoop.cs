@@ -99,9 +99,8 @@ public class ConstructBehaviorLoop : ModBase
                     };
                     
                     var behaviors = handleItem.ConstructDefinitionItem
-                        .InitialBehaviors.Select(b => behaviorFactory.Create(handleItem.ConstructId, constructDef, b))
-                        .ToList();
-                    
+                        .InitialBehaviors.Select(b => behaviorFactory.Create(handleItem.ConstructId, constructDef, b));
+
                     finalBehaviors.AddRange(behaviors);
                     finalBehaviors.Add(new UpdateLastControlledDateBehavior(handleItem.ConstructId).WithErrorHandler());
 

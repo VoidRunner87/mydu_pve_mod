@@ -147,7 +147,7 @@ public class ModBase
         Console.WriteLine("BOT User Created");
     }
 
-    public async Task Start()
+    public virtual async Task Start()
     {
         try
         {
