@@ -22,6 +22,7 @@ public class Startup
         {
             // Removes other assemblies that we don't want controller parts
             apm.ApplicationParts.Remove(apm.ApplicationParts.Single(p => p.Name == "Backend"));
+            apm.ApplicationParts.Remove(apm.ApplicationParts.Single(p => p.Name == "Backend.PubSub"));
             apm.ApplicationParts.Remove(apm.ApplicationParts.Single(p => p.Name == "Backend.Telemetry"));
             apm.ApplicationParts.Remove(apm.ApplicationParts.Single(p => p.Name == "BotLib"));
             apm.ApplicationParts.Remove(apm.ApplicationParts.Single(p => p.Name == "Interfaces"));

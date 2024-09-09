@@ -44,8 +44,6 @@ public static class Program
             using var scope = ModBase.ServiceProvider.CreateScope();
             ModBase.UpdateDatabase(scope);
 
-            Console.WriteLine("Starting...");
-
             var taskList = new List<Task>
             {
                 new SectorLoop().Start(),
