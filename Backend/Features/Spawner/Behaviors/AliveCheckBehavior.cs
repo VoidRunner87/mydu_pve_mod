@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
+using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
@@ -60,6 +62,16 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
             context.IsAlive = false;
             
             await _handleRepository.RemoveHandleAsync(constructId);
+
+            var provider = context.ServiceProvider;
+
+            var featureService = provider.GetRequiredService<IFeatureReaderService>();
+
+            if (await featureService.GetBoolValueAsync("ResetNPCCombatLockOnDestruction", false))
+            {
+                var constructService = context.ServiceProvider.GetRequiredService<IConstructService>();
+                await constructService.ResetConstructCombatLock(constructId);
+            }
         }
     }
 }
