@@ -27,6 +27,7 @@ public static class FeaturesRegistration
         services.AddSingleton<IScriptLoaderService, FileSystemScriptLoaderService>();
         services.AddSingleton<IConstructSpatialHashRepository, ConstructSpatialHashRepository>();
         services.AddSingleton<IConstructService, ConstructService>();
+        services.AddSingleton<IErrorRepository, ErrorRepository>();
             
         services.RegisterSectorGeneration();
         services.RegisterSpawnerScripts();

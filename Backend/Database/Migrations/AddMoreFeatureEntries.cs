@@ -49,7 +49,8 @@ public class AddMoreFeatureEntries : Migration
             .InSchema("public")
             .Row(new
             {
-                name = $"{nameof(HealthCheckLoop)}Enabled",
+                // left for compatibility with past migrations
+                name = "HealthCheckLoopEnabled",
                 type = "bool",
                 value = "false"
             });
