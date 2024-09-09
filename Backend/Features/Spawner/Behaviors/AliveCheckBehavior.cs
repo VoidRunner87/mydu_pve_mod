@@ -62,16 +62,6 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
             context.IsAlive = false;
             
             await _handleRepository.RemoveHandleAsync(constructId);
-
-            var provider = context.ServiceProvider;
-
-            var featureService = provider.GetRequiredService<IFeatureReaderService>();
-
-            if (await featureService.GetBoolValueAsync("ResetNPCCombatLockOnDestruction", false))
-            {
-                var constructService = context.ServiceProvider.GetRequiredService<IConstructService>();
-                await constructService.ResetConstructCombatLock(constructId);
-            }
         }
     }
 }

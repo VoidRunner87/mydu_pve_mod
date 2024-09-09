@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Events.Data;
 using Mod.DynamicEncounters.Features.Events.Interfaces;
+using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using NQ;
@@ -114,6 +116,14 @@ public class BehaviorContext(
         taskList.Add(scriptExecutionTask);
 
         await Task.WhenAll(taskList);
+        
+        var featureService = ServiceProvider.GetRequiredService<IFeatureReaderService>();
+
+        if (await featureService.GetBoolValueAsync("ResetNPCCombatLockOnDestruction", false))
+        {
+            var constructService = ServiceProvider.GetRequiredService<IConstructService>();
+            await constructService.ResetConstructCombatLock(eventArgs.ConstructId);
+        }
         
         PublishedEvents.Add(nameof(NotifyConstructDestroyedAsync));
     }

@@ -88,7 +88,8 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
                     playerId,
                     context.Sector,
                     context.ConstructId,
-                    context.PlayerIds.Count
+                    context.PlayerIds.Count,
+                    (ulong)valuePerPlayer
                 )
             );
         }
