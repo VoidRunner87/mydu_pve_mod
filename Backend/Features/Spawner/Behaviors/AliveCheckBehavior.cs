@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
@@ -22,10 +23,7 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
     private IConstructInfoGrain _constructInfoGrain;
     private ElementId _coreUnitElementId;
     
-    private bool _active = true;
     private IConstructHandleRepository _handleRepository;
-
-    public bool IsActive() => _active;
 
     public async Task InitializeAsync(BehaviorContext context)
     {
@@ -38,17 +36,19 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
         _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
         
         context.IsAlive = _coreUnitElementId.elementId > 0;
-        _active = context.IsAlive;
     }
 
     public async Task TickAsync(BehaviorContext context)
     {
         if (!context.IsAlive)
         {
-            _active = false;
-
             await _handleRepository.RemoveHandleAsync(constructId);
             
+            return;
+        }
+        
+        if (!context.IsBehaviorActive<AliveCheckBehavior>())
+        {
             return;
         }
         
@@ -58,7 +58,7 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
         if (coreUnit.IsCoreDestroyed() || constructInfo.IsAbandoned())
         {
             await context.NotifyConstructDestroyedAsync(new BehaviorEventArgs(constructId, prefab, context));
-            _active = false;
+            context.Deactivate<AliveCheckBehavior>();
             context.IsAlive = false;
             
             await _handleRepository.RemoveHandleAsync(constructId);

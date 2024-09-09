@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -27,8 +28,11 @@ public class ConstructBehaviorLoop : HighTickModLoop
     private readonly IFeatureReaderService _featureService;
 
     private bool _featureEnabled;
-    private ImmutableList<ConstructHandleItem> _constructHandles = new List<ConstructHandleItem>()
-        .ToImmutableList();
+    private ConcurrentDictionary<ulong, ConstructHandleItem> _constructHandles = [];
+
+    private ConcurrentDictionary<ulong, BehaviorContext> _behaviorContexts = [];
+    
+    private static readonly object listLock = new();
 
     public ConstructBehaviorLoop(int framesPerSecond) : base(framesPerSecond)
     {
@@ -73,8 +77,16 @@ public class ConstructBehaviorLoop : HighTickModLoop
         var timer = new Timer(2000);
         timer.Elapsed += async (_, _) =>
         {
-            _constructHandles = (await _constructHandleRepository.FindActiveHandlesAsync())
-                .ToImmutableList();
+            var items = await _constructHandleRepository.FindActiveHandlesAsync();
+
+            lock (listLock)
+            {
+                _constructHandles.Clear();
+                foreach (var item in items)
+                {
+                    _constructHandles.TryAdd(item.ConstructId, item);
+                }
+            }
         };
         timer.Start();
 
@@ -89,11 +101,14 @@ public class ConstructBehaviorLoop : HighTickModLoop
         }
 
         var taskList = new List<Task>();
-        
-        foreach (var handleItem in _constructHandles)
+
+        lock (listLock)
         {
-            var task = RunIsolatedAsync(() => TickConstructHandle(deltaTime, handleItem));
-            taskList.Add(task);
+            foreach (var kvp in _constructHandles)
+            {
+                var task = RunIsolatedAsync(() => TickConstructHandle(deltaTime, kvp.Value));
+                taskList.Add(task);
+            }
         }
 
         await Task.WhenAll(taskList);
@@ -134,9 +149,13 @@ public class ConstructBehaviorLoop : HighTickModLoop
         finalBehaviors.AddRange(behaviors);
         finalBehaviors.Add(new UpdateLastControlledDateBehavior(handleItem.ConstructId).WithErrorHandler());
 
-        var context = new BehaviorContext(handleItem.Sector, Bot, _provider, constructDef);
-
-        context = _inMemoryContextRepo.GetOrDefault(handleItem.ConstructId, context);
+        if (!_behaviorContexts.TryGetValue(handleItem.ConstructId, out var context))
+        {
+            context = new BehaviorContext(handleItem.Sector, Bot, _provider, constructDef);
+            _behaviorContexts.TryAdd(handleItem.ConstructId, context);
+            
+            _logger.LogInformation("NEW CONTEXT {Construct}", handleItem.ConstructId);
+        }
         context.DeltaTime = deltaTime.TotalSeconds;
 
         foreach (var behavior in finalBehaviors)
@@ -146,14 +165,12 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
         foreach (var behavior in finalBehaviors)
         {
-            if (!behavior.IsActive())
+            if (!context.IsBehaviorActive(behavior.GetType()))
             {
                 continue;
             }
 
             await behavior.TickAsync(context);
         }
-
-        _inMemoryContextRepo.Set(handleItem.ConstructId, context);
     }
 }

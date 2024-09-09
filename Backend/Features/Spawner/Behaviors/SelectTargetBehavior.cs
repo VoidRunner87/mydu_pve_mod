@@ -13,6 +13,7 @@ using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
+using NQutils.Def;
 using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
@@ -24,18 +25,24 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
     private IConstructSpatialHashRepository _spatialHashRepo;
     private IClusterClient _orleans;
     private ILogger<SelectTargetBehavior> _logger;
+    private IConstructElementsGrain _constructElementsGrain;
 
     public bool IsActive() => _active;
 
-    public Task InitializeAsync(BehaviorContext context)
+    public async Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;
 
         _spatialHashRepo = provider.GetRequiredService<IConstructSpatialHashRepository>();
         _orleans = provider.GetOrleans();
         _logger = provider.CreateLogger<SelectTargetBehavior>();
+        _constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
         
-        return Task.CompletedTask;
+        var radarElementId = (await _constructElementsGrain.GetElementsOfType<RadarPvPSpace>()).FirstOrDefault();
+        var gunnerSeatElementId = (await _constructElementsGrain.GetElementsOfType<PVPSeatUnit>()).FirstOrDefault();
+
+        context.ExtraProperties.TryAdd("RADAR_ID", radarElementId.elementId);
+        context.ExtraProperties.TryAdd("SEAT_ID", gunnerSeatElementId.elementId);
     }
 
     public async Task TickAsync(BehaviorContext context)
@@ -104,7 +111,10 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             // Adds to the list of players involved
             if (construct.mutableData.pilot.HasValue)
             {
-                context.PlayerIds.Add(construct.mutableData.pilot.Value.id);
+                context.PlayerIds.TryAdd(
+                    construct.mutableData.pilot.Value.id, 
+                    construct.mutableData.pilot.Value.id
+                );
             }
 
             var pos = construct.rData.position;
@@ -121,7 +131,42 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         context.TargetConstructId = targetId == 0 ? null : targetId;
         context.TargetSelectedTime = DateTime.UtcNow;
+
+        if (!context.TargetConstructId.HasValue)
+        {
+            return;
+        }
         
         _logger.LogInformation("Selected a new Target: {Target}; {Time}ms", targetId, sw.ElapsedMilliseconds);
+        
+        if (!context.ExtraProperties.TryGetValue<ulong>("RADAR_ID", out var radarElementId))
+        {
+            return;
+        }
+        
+        if (!context.ExtraProperties.TryGetValue<ulong>("SEAT_ID", out var seatElementId))
+        {
+            return;
+        }
+
+        try
+        {
+            var constructInfoGrain = _orleans.GetConstructInfoGrain(context.TargetConstructId.Value);
+            var constructInfo = await constructInfoGrain.Get();
+            
+            await _orleans.GetRadarGrain(radarElementId)
+                .IdentifyStart(ModBase.Bot.PlayerId, new RadarIdentifyTarget
+                {
+                    playerId = constructInfo.mutableData.pilot ?? 0,
+                    sourceConstructId = constructId,
+                    targetConstructId = context.TargetConstructId.Value,
+                    sourceRadarElementId = radarElementId,
+                    sourceSeatElementId = seatElementId
+                });
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to Identity Target");
+        }
     }
 }

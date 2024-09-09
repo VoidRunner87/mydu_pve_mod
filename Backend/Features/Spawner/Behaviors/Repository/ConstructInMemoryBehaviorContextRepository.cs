@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Data;
@@ -9,7 +10,7 @@ namespace Mod.DynamicEncounters.Features.Spawner.Behaviors.Repository;
 
 public class ConstructInMemoryBehaviorContextRepository : IConstructInMemoryBehaviorContextRepository
 {
-    private readonly Dictionary<ulong, ShortLivedBehaviorContextEntry> _entries = new();
+    private readonly ConcurrentDictionary<ulong, ShortLivedBehaviorContextEntry> _entries = new();
     
     public BehaviorContext GetOrDefault(ulong constructId, BehaviorContext defaultValue)
     {
@@ -49,7 +50,7 @@ public class ConstructInMemoryBehaviorContextRepository : IConstructInMemoryBeha
             // let it do it again on the next cycle
             if (i > maxloop) break;
             
-            _entries.Remove(kvp.Key);
+            _entries.Remove(kvp.Key, out _);
             i++;
         }
     }

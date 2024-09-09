@@ -1,15 +1,19 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Events.Data;
 using Mod.DynamicEncounters.Features.Events.Interfaces;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
+using Mod.DynamicEncounters.Helpers;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Data;
@@ -35,12 +39,12 @@ public class BehaviorContext(
     public Vec3 Velocity { get; set; }
     public Vec3 Position { get; set; }
     public Quat Rotation { get; set; }
-    public HashSet<ulong> PlayerIds { get; set; } = new();
+    public ConcurrentDictionary<ulong, ulong> PlayerIds { get; set; } = new();
     public Vec3 Sector { get; } = sector;
     public IServiceProvider ServiceProvider { get; init; } = serviceProvider;
     public Client Client { get; set; } = client;
 
-    public HashSet<string> PublishedEvents = [];
+    public ConcurrentDictionary<string, bool> PublishedEvents = [];
     public IPrefab Prefab { get; set; } = prefab;
 
     public DateTime? TargetSelectedTime { get; set; }
@@ -57,7 +61,7 @@ public class BehaviorContext(
     
     public virtual async Task NotifyCoreStressHighAsync(BehaviorEventArgs eventArgs)
     {
-        if (PublishedEvents.Contains(nameof(NotifyCoreStressHighAsync)))
+        if (PublishedEvents.ContainsKey(nameof(NotifyCoreStressHighAsync)))
         {
             return;
         }
@@ -65,7 +69,7 @@ public class BehaviorContext(
         await Prefab.Events.OnCoreStressHigh.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
-                eventArgs.Context.PlayerIds,
+                eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
                 eventArgs.Context.Sector
             )
             {
@@ -73,12 +77,12 @@ public class BehaviorContext(
             }
         );
 
-        PublishedEvents.Add(nameof(NotifyCoreStressHighAsync));
+        PublishedEvents.TryAdd(nameof(NotifyCoreStressHighAsync), true);
     }
 
     public virtual async Task NotifyConstructDestroyedAsync(BehaviorEventArgs eventArgs)
     {
-        if (PublishedEvents.Contains(nameof(NotifyConstructDestroyedAsync)))
+        if (PublishedEvents.ContainsKey(nameof(NotifyConstructDestroyedAsync)))
         {
             return;
         }
@@ -89,10 +93,14 @@ public class BehaviorContext(
 
         // send event for all players piloting constructs
         // TODO #limitation = not considering gunners and boarders
+        var logger = eventArgs.Context.ServiceProvider.CreateLogger<BehaviorContext>();
+        
+        logger.LogInformation("NPC Defeated by players: {Players}", string.Join(", ", eventArgs.Context.PlayerIds));
+        
         var tasks = eventArgs.Context.PlayerIds.Select(id =>
             eventService.PublishAsync(
                 new PlayerDefeatedNpcEvent(
-                    id,
+                    id.Key,
                     eventArgs.Context.Sector,
                     eventArgs.ConstructId,
                     eventArgs.Context.PlayerIds.Count
@@ -105,7 +113,7 @@ public class BehaviorContext(
         var scriptExecutionTask = Prefab.Events.OnDestruction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
-                eventArgs.Context.PlayerIds,
+                eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
                 eventArgs.Context.Sector
             )
             {
@@ -125,12 +133,12 @@ public class BehaviorContext(
             await constructService.ResetConstructCombatLock(eventArgs.ConstructId);
         }
         
-        PublishedEvents.Add(nameof(NotifyConstructDestroyedAsync));
+        PublishedEvents.TryAdd(nameof(NotifyConstructDestroyedAsync), true);
     }
 
     public virtual async Task NotifyShieldHpHalfAsync(BehaviorEventArgs eventArgs)
     {
-        if (PublishedEvents.Contains(nameof(NotifyShieldHpHalfAsync)))
+        if (PublishedEvents.ContainsKey(nameof(NotifyShieldHpHalfAsync)))
         {
             return;
         }
@@ -138,7 +146,7 @@ public class BehaviorContext(
         await Prefab.Events.OnShieldHalfAction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
-                eventArgs.Context.PlayerIds,
+                eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
                 eventArgs.Context.Sector
             )
             {
@@ -146,12 +154,12 @@ public class BehaviorContext(
             }
         );
 
-        PublishedEvents.Add(nameof(NotifyShieldHpHalfAsync));
+        PublishedEvents.TryAdd(nameof(NotifyShieldHpHalfAsync), true);
     }
 
     public virtual async Task NotifyShieldHpLowAsync(BehaviorEventArgs eventArgs)
     {
-        if (PublishedEvents.Contains(nameof(NotifyShieldHpLowAsync)))
+        if (PublishedEvents.ContainsKey(nameof(NotifyShieldHpLowAsync)))
         {
             return;
         }
@@ -159,7 +167,7 @@ public class BehaviorContext(
         await Prefab.Events.OnShieldLowAction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
-                eventArgs.Context.PlayerIds,
+                eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
                 eventArgs.Context.Sector
             )
             {
@@ -167,12 +175,12 @@ public class BehaviorContext(
             }
         );
 
-        PublishedEvents.Add(nameof(NotifyShieldHpLowAsync));
+        PublishedEvents.TryAdd(nameof(NotifyShieldHpLowAsync), true);
     }
 
     public virtual async Task NotifyShieldHpDownAsync(BehaviorEventArgs eventArgs)
     {
-        if (PublishedEvents.Contains(nameof(NotifyShieldHpDownAsync)))
+        if (PublishedEvents.ContainsKey(nameof(NotifyShieldHpDownAsync)))
         {
             return;
         }
@@ -180,7 +188,7 @@ public class BehaviorContext(
         await Prefab.Events.OnShieldDownAction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
-                eventArgs.Context.PlayerIds,
+                eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
                 eventArgs.Context.Sector
             )
             {
@@ -188,6 +196,35 @@ public class BehaviorContext(
             }
         );
 
-        PublishedEvents.Add(nameof(NotifyShieldHpDownAsync));
+        PublishedEvents.TryAdd(nameof(NotifyShieldHpDownAsync), true);
+    }
+
+    public void Deactivate<T>() where T : IConstructBehavior
+    {
+        var name = typeof(T).FullName;
+        var key = $"{name}_FINISHED";
+        
+        if (!ExtraProperties.TryAdd(key, false))
+        {
+            ExtraProperties[key] = false;
+        }
+    }
+
+    public bool IsBehaviorActive<T>() where T : IConstructBehavior
+    {
+        return IsBehaviorActive(typeof(T));
+    }
+    
+    public bool IsBehaviorActive(Type type)
+    {
+        var name = type.FullName;
+        var key = $"{name}_FINISHED";
+
+        if (ExtraProperties.TryGetValue(key, out var finished) && finished is bool finishedBool)
+        {
+            return !finishedBool;
+        }
+
+        return true;
     }
 }

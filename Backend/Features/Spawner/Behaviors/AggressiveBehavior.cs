@@ -57,6 +57,8 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             .ToList();
 
         _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
+        context.ExtraProperties.TryAdd("CORE_ID", _coreUnitElementId);
+        
         context.IsAlive = _coreUnitElementId.elementId > 0;
         _active = context.IsAlive;
         
@@ -103,7 +105,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         
         if (targetInfo.mutableData.pilot.HasValue)
         {
-            context.PlayerIds.Add(targetInfo.mutableData.pilot.Value);
+            context.PlayerIds.TryAdd(targetInfo.mutableData.pilot.Value, targetInfo.mutableData.pilot.Value);
         }
 
         if (constructInfo.IsShieldLowerThanHalf())
