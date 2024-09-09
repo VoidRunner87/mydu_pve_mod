@@ -48,11 +48,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
         var allSectorInstances = await _sectorInstanceRepository.GetAllAsync();
         var sectorInstanceMap = allSectorInstances
-            .DistinctBy(x => x.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap))
-            .ToDictionary(
-                k => k.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap),
-                v => v.Id
-            );
+            .Select(k => k.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap))
+            .ToHashSet();
 
         var random = _randomProvider.GetRandom();
 
@@ -81,7 +78,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
                 interactions++;
             } while (interactions < maxInteractions ||
-                     sectorInstanceMap.ContainsKey(position.GridSnap(SectorGridSnap * args.SectorMinimumGap)));
+                     sectorInstanceMap.Contains(position.GridSnap(SectorGridSnap * args.SectorMinimumGap)));
 
             var instance = new SectorInstance
             {
