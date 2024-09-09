@@ -7,12 +7,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
+using Mod.DynamicEncounters.Features.Events.Data;
+using Mod.DynamicEncounters.Features.Events.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
+using NQ.Interfaces;
 
 namespace Mod.DynamicEncounters.Features.Sector.Services;
 
@@ -24,8 +27,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
     private readonly ISectorInstanceRepository _sectorInstanceRepository =
         serviceProvider.GetRequiredService<ISectorInstanceRepository>();
-    
-    private readonly IConstructHandleManager _constructHandleManager = 
+
+    private readonly IConstructHandleManager _constructHandleManager =
         serviceProvider.GetRequiredService<IConstructHandleManager>();
 
     private readonly IConstructSpatialHashRepository _constructSpatial =
@@ -46,10 +49,10 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         var allSectorInstances = await _sectorInstanceRepository.GetAllAsync();
         var sectorInstanceMap = allSectorInstances
             .ToDictionary(
-                k => k.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap), 
+                k => k.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap),
                 v => v.Id
             );
-        
+
         var random = _randomProvider.GetRandom();
 
         var randomMinutes = random.Next(0, 60);
@@ -57,7 +60,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         for (var i = 0; i < missingQuantity; i++)
         {
             var encounter = random.PickOneAtRandom(args.Encounters);
-            
+
             // TODO
             var radius = MathFunctions.Lerp(
                 encounter.Properties.MinRadius,
@@ -76,15 +79,16 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 position = position.GridSnap(SectorGridSnap);
 
                 interactions++;
-
-            } while (interactions < maxInteractions || sectorInstanceMap.ContainsKey(position.GridSnap(SectorGridSnap * args.SectorMinimumGap)));
+            } while (interactions < maxInteractions ||
+                     sectorInstanceMap.ContainsKey(position.GridSnap(SectorGridSnap * args.SectorMinimumGap)));
 
             var instance = new SectorInstance
             {
                 Id = Guid.NewGuid(),
                 Sector = position,
                 CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow + encounter.Properties.ExpirationTimeSpan + TimeSpan.FromMinutes(randomMinutes * i),
+                ExpiresAt = DateTime.UtcNow + encounter.Properties.ExpirationTimeSpan +
+                            TimeSpan.FromMinutes(randomMinutes * i),
                 OnLoadScript = encounter.OnLoadScript,
                 OnSectorEnterScript = encounter.OnSectorEnterScript,
             };
@@ -142,16 +146,17 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             var players = await _constructSpatial.FindPlayerLiveConstructsOnSector(sector.Sector);
             if (!sector.IsForceExpired(DateTime.UtcNow) && players.Any())
             {
-                _logger.LogInformation("Players Nearby - Extended Expiration of {Sector} {SectorGuid}", sector.Sector, sector.Id);
+                _logger.LogInformation("Players Nearby - Extended Expiration of {Sector} {SectorGuid}", sector.Sector,
+                    sector.Id);
                 await _sectorInstanceRepository.SetExpirationFromNowAsync(sector.Id, TimeSpan.FromMinutes(60));
                 continue;
             }
-            
+
             await _constructHandleManager.CleanupConstructHandlesInSectorAsync(client, sector.Sector);
         }
-        
+
         await _sectorInstanceRepository.DeleteExpiredAsync();
-        
+
         _logger.LogDebug("Executed Sector Cleanup");
     }
 
@@ -163,13 +168,13 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         {
             return;
         }
-        
+
         await _sectorInstanceRepository.SetExpirationFromNowAsync(instance.Id, span);
-        
+
         _logger.LogInformation(
-            "Set Sector expiration for {Sector}({Id}) to {Minutes} from now", 
-            instance.Sector, 
-            instance.Id, 
+            "Set Sector expiration for {Sector}({Id}) to {Minutes} from now",
+            instance.Sector,
+            instance.Id,
             span
         );
     }
@@ -184,37 +189,85 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             return;
         }
 
-        var scriptService = serviceProvider.GetRequiredService<IScriptService>();
+        var spatialHashRepository = serviceProvider.GetRequiredService<IConstructSpatialHashRepository>();
 
-        foreach (var sector in sectorsToActivate)
+        var scriptService = serviceProvider.GetRequiredService<IScriptService>();
+        var eventService = serviceProvider.GetRequiredService<IEventService>();
+        var random = serviceProvider.GetRandomProvider().GetRandom();
+        var orleans = serviceProvider.GetOrleans();
+
+        foreach (var sectorInstance in sectorsToActivate)
         {
+            var constructs = (await spatialHashRepository
+                .FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
+                .ToList();
+
+            HashSet<ulong> playerIds = [];
+
+            try
+            {
+                var queryPilotsTasks = constructs
+                    .Select(x => orleans.GetConstructInfoGrain(x)).Select(x => x.Get());
+                
+                playerIds = (await Task.WhenAll(queryPilotsTasks))
+                    .Select(x => x.mutableData.pilot)
+                    .Where(x => x.HasValue)
+                    .Select(x => x.Value.id)
+                    .ToHashSet();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e,
+                    "Failed to query player IDS for Sector Startup. Sector will startup without that information");
+            }
+
             _logger.LogInformation(
                 "Starting up sector({Sector}) encounter: '{Encounter}'",
-                sector.Sector,
-                sector.OnSectorEnterScript
+                sectorInstance.Sector,
+                sectorInstance.OnSectorEnterScript
             );
 
             try
             {
                 await scriptService.ExecuteScriptAsync(
-                    sector.OnSectorEnterScript,
+                    sectorInstance.OnSectorEnterScript,
                     new ScriptContext(
                         serviceProvider,
                         new HashSet<ulong>(),
-                        sector.Sector
+                        sectorInstance.Sector
                     )
+                    {
+                        PlayerIds = playerIds
+                    }
                 );
 
-                await _sectorInstanceRepository.TagAsStartedAsync(sector.Id);
+                await _sectorInstanceRepository.TagAsStartedAsync(sectorInstance.Id);
             }
             catch (Exception e)
             {
                 _logger.LogError(e,
                     "Failed to start encounter({Encounter}) at sector({Sector})",
-                    sector.OnSectorEnterScript,
-                    sector.Sector
+                    sectorInstance.OnSectorEnterScript,
+                    sectorInstance.Sector
                 );
                 throw;
+            }
+
+            try
+            {
+                await eventService.PublishAsync(
+                    new SectorActivatedEvent(
+                        playerIds,
+                        random.PickOneAtRandom(playerIds),
+                        sectorInstance.Sector,
+                        random.PickOneAtRandom(constructs),
+                        playerIds.Count
+                    )
+                );
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to publish {Event}", nameof(SectorActivatedEvent));
             }
         }
     }

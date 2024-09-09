@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using Backend.Database;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Features.Events.Data;
+using Mod.DynamicEncounters.Features.Events.Interfaces;
 using Mod.DynamicEncounters.Features.NQ.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
@@ -28,6 +30,7 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
         var orleans = provider.GetOrleans();
         var sql = provider.GetRequiredService<ISql>();
         var walletService = provider.GetRequiredService<IWalletService>();
+        var eventService = provider.GetRequiredService<IEventService>();
         
         if (context.PlayerIds.Count == 0)
         {
@@ -78,6 +81,15 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
             var notificationGrain = orleans.GetNotificationGrain(playerId);
             await notificationGrain.AddNewNotification(
                 Notifications.WalletReceivedMoney(transfer.fromWallet, transfer.amount)
+            );
+
+            await eventService.PublishAsync(
+                new QuantaGivenToPlayerEvent(
+                    playerId,
+                    context.Sector,
+                    context.ConstructId,
+                    context.PlayerIds.Count
+                )
             );
         }
 

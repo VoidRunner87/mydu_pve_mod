@@ -92,7 +92,8 @@ public class BehaviorContext(
                 new PlayerDefeatedNpcEvent(
                     id,
                     eventArgs.Context.Sector,
-                    eventArgs.ConstructId
+                    eventArgs.ConstructId,
+                    eventArgs.Context.PlayerIds.Count
                 )
             )
         );
