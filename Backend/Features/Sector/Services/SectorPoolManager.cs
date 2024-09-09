@@ -48,6 +48,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
         var allSectorInstances = await _sectorInstanceRepository.GetAllAsync();
         var sectorInstanceMap = allSectorInstances
+            .DistinctBy(x => x.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap))
             .ToDictionary(
                 k => k.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap),
                 v => v.Id
