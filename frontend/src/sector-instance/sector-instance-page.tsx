@@ -34,6 +34,7 @@ const SectorInstancePage: React.FC<PrefabPageProps> = () => {
             width: 100,
             renderCell: params => <SectorChip value={params.value}/>
         },
+        {field: 'startedAt', headerName: 'Started at', width: 175},
         {field: 'onLoadScript', headerName: 'On Load Script', width: 180},
         {field: 'onSectorEnterScript', headerName: 'On Enter Script', width: 180},
         {

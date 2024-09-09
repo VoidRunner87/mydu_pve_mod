@@ -35,6 +35,20 @@ public class ConstructService(IServiceProvider provider) : IConstructService
         }
     }
 
+    public async Task ResetConstructCombatLock(ulong constructId)
+    {
+        var constructInfoGrain = provider.GetOrleans().GetConstructInfoGrain(constructId);
+        await constructInfoGrain.Update(new ConstructInfoUpdate
+        {
+            pvpTimerExpiration = TimePoint.Now(),
+            constructId = constructId,
+            // shieldState = new ShieldState
+            // {
+            //     isActive = false
+            // }
+        });
+    }
+
     public async Task SetDynamicWreckAsync(ulong constructId, bool isDynamicWreck)
     {
         if (constructId == 0)

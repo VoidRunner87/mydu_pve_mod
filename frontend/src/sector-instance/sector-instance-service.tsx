@@ -3,6 +3,7 @@ import {Vector} from "three/examples/jsm/physics/RapierPhysics";
 export interface SectorInstanceItem {
     id: string;
     sector: Vector;
+    startedAt: string;
     expiresAt: string;
     forceExpiresAt: string;
     createdAt: string;
