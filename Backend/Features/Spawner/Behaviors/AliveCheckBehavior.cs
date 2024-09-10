@@ -34,8 +34,6 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
         _constructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
         _constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
         _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
-        
-        context.IsAlive = _coreUnitElementId.elementId > 0;
     }
 
     public async Task TickAsync(BehaviorContext context)

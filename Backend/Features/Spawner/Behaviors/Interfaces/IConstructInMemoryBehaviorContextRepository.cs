@@ -4,7 +4,7 @@ namespace Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 
 public interface IConstructInMemoryBehaviorContextRepository
 {
-    BehaviorContext GetOrDefault(ulong constructId, BehaviorContext defaultValue);
+    bool TryGetValue(ulong constructId, out BehaviorContext? context);
     void Set(ulong constructId, BehaviorContext context);
 
     void Cleanup();

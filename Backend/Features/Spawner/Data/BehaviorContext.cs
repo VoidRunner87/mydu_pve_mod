@@ -49,7 +49,7 @@ public class BehaviorContext(
 
     public DateTime? TargetSelectedTime { get; set; }
 
-    public bool IsAlive { get; set; }
+    public bool IsAlive { get; set; } = true;
 
     public bool IsActiveWreck { get; set; }
 

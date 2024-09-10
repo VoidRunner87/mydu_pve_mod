@@ -51,4 +51,6 @@ public class ErrorHandlerBehavior(IConstructBehavior constructBehavior) : IConst
             // _active = false;
         }
     }
+
+    public override string ToString() => constructBehavior.GetType().Name;
 }

@@ -26,6 +26,12 @@ public static class ElementInfoHelpers
         {
             if (elementInfo.properties.TryGetDoubleValue("stressCurrentHp", out var stressCurrentHp))
             {
+                // Ship without Voxels - then no CCS
+                if (stressMaxHp == 0)
+                {
+                    return 0;
+                }
+                
                 if (stressMaxHp <= 0)
                 {
                     return 1;

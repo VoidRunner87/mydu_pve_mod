@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 
@@ -16,5 +18,16 @@ public class ConstructBehaviorFactory : IConstructBehaviorFactory
             default:
                 return new WreckBehavior().WithErrorHandler();
         }
+    }
+
+    public IEnumerable<IConstructBehavior> CreateBehaviors(ulong constructId, IPrefab prefab)
+    {
+        if (prefab.DefinitionItem.InitialBehaviors.Count == 0)
+        {
+            return [new WreckBehavior()];
+        }
+        
+        return prefab.DefinitionItem.InitialBehaviors
+            .Select(x => Create(constructId, prefab, x));
     }
 }

@@ -13,6 +13,8 @@ public class WreckBehavior : IConstructBehavior
 
     public Task InitializeAsync(BehaviorContext context)
     {
+        context.IsActiveWreck = true;
+        context.IsAlive = false;
         return Task.CompletedTask;
     }
 

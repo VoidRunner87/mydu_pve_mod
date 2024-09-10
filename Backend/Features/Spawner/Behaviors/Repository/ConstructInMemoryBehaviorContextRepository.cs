@@ -12,14 +12,16 @@ public class ConstructInMemoryBehaviorContextRepository : IConstructInMemoryBeha
 {
     private readonly ConcurrentDictionary<ulong, ShortLivedBehaviorContextEntry> _entries = new();
     
-    public BehaviorContext GetOrDefault(ulong constructId, BehaviorContext defaultValue)
+    public bool TryGetValue(ulong constructId, out BehaviorContext? context)
     {
         if (_entries.TryGetValue(constructId, out var entry))
         {
-            return entry.BehaviorContext;
+            context = entry.BehaviorContext;
+            return true;
         }
 
-        return defaultValue;
+        context = default;
+        return false;
     }
 
     public void Set(ulong constructId, BehaviorContext context)
