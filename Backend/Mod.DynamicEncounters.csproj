@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Features\Sector\Scripts\" />
+    <Folder Include="Resources\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="libgrpc_csharp_ext.x64.so">
@@ -76,6 +77,14 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Remove="LoaderTest\**" />
+    <Content Remove="Resources\Basic_Pirate.json" />
+    <EmbeddedResource Include="Resources\Basic_Pirate.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <Content Remove="Resources\Simple_POI.json" />
+    <EmbeddedResource Include="Resources\Simple_POI.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Content Remove="LoaderTest\**" />

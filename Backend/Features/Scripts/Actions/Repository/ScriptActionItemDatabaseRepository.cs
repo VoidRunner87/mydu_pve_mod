@@ -20,6 +20,11 @@ public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : ISc
         using var db = _factory.Create();
         db.Open();
 
+        if (item.Id == Guid.Empty)
+        {
+            item.Id = Guid.NewGuid();
+        }
+
         await db.ExecuteAsync(
             """
             INSERT INTO public.mod_script (id, name, content) 
@@ -27,7 +32,7 @@ public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : ISc
             """,
             new
             {
-                id = Guid.NewGuid(),
+                id = item.Id,
                 name = item.Name,
                 content = JsonConvert.SerializeObject(item)
             }
@@ -105,7 +110,10 @@ public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : ISc
 
     private ScriptActionItem MapToModel(DbRow row)
     {
-        return JsonConvert.DeserializeObject<ScriptActionItem>(row.content);
+        var model = JsonConvert.DeserializeObject<ScriptActionItem>(row.content);
+        model.Id = row.id;
+        
+        return model;
     }
 
     private struct DbRow

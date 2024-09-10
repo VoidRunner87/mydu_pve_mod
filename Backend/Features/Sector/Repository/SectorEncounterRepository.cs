@@ -17,9 +17,26 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
     private readonly IPostgresConnectionFactory _connectionFactory =
         provider.GetRequiredService<IPostgresConnectionFactory>();
 
-    public Task AddAsync(SectorEncounterItem item)
+    public async Task AddAsync(SectorEncounterItem item)
     {
-        throw new NotImplementedException();
+        using var db = _connectionFactory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            """
+            INSERT INTO mod_sector_encounter (id, name, on_load_script, on_sector_enter_script, active, json_properties)
+            VALUES (@Id, @Name, @OnLoadScript, @OnSectorEnterScript, @Active, @json_properties::jsonb)
+            """,
+            new
+            {
+                item.Id,
+                item.Name,
+                item.OnLoadScript,
+                item.OnSectorEnterScript,
+                item.Active,
+                json_properties = JsonConvert.SerializeObject(item.Properties)
+            }
+        );
     }
 
     public Task SetAsync(IEnumerable<SectorEncounterItem> items)

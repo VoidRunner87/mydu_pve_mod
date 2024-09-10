@@ -1,0 +1,119 @@
+{
+  "fixtureheader": {
+    "Kind": {
+      "Type": 0,
+      "Version": 1
+    },
+    "PrettyName": "Simple POI",
+    "Dependencies": {
+      "ConstructDependencies": [
+        27
+      ]
+    },
+    "Construct": {
+      "ConstructId": 1000002
+    }
+  },
+  "serverProperties": {
+    "creatorId": {
+      "playerId": 2,
+      "organizationId": 0
+    }
+  },
+  "elements": [
+    {
+      "elementType": 183890713,
+      "id": 316859,
+      "localId": 1,
+      "position": {
+        "x": 16.125,
+        "y": 16.125,
+        "z": 16.125
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "properties": [
+        [
+          "constructLocalMass",
+          {
+            "type": 3,
+            "value": 70.89
+          }
+        ],
+        [
+          "construct_mass_total",
+          {
+            "type": 3,
+            "value": 70.89
+          }
+        ],
+        [
+          "lastElementsCollisionCheckDate",
+          {
+            "type": 2,
+            "value": 1725917779454
+          }
+        ],
+        [
+          "elementsColliding",
+          {
+            "type": 4,
+            "value": ""
+          }
+        ],
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 50.0
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    }
+  ],
+  "links": [],
+  "children": [],
+  "serializationVersion": 1,
+  "header": {
+    "constructIdHint": 1000002,
+    "prettyName": "Simple POI"
+  },
+  "size": 32,
+  "kind": "dynamic",
+  "isNPC": false,
+  "isUntargetable": false,
+  "position": {
+    "x": 205748.02906141683,
+    "y": 310491.45066688815,
+    "z": 223995.72344789034
+  },
+  "rotation": {
+    "x": -0.35666066,
+    "y": 0.7753215,
+    "z": 0.47351995,
+    "w": -0.21782702
+  },
+  "voxelGeometry": {
+    "size": 32,
+    "kind": 1,
+    "voxelLod0": 3
+  },
+  "parentId": 27,
+  "ownerId": {
+    "playerId": 2,
+    "organizationId": 0
+  },
+  "rdmsTags": [],
+  "containers": [],
+  "blueprints": [],
+  "territories": [],
+  "territoryTags": {},
+  "rdmsContext": [],
+  "marketOrders": {}
+}

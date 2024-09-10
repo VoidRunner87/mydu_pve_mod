@@ -9,9 +9,9 @@ using Mod.DynamicEncounters.Helpers;
 
 namespace Mod.DynamicEncounters.Features.Services;
 
-public class FeatureReaderService(IServiceProvider provider) : IFeatureReaderService
+public class FeatureService(IServiceProvider provider) : IFeatureReaderService, IFeatureWriterService
 {
-    private readonly ILogger<FeatureReaderService> _logger = provider.CreateLogger<FeatureReaderService>();
+    private readonly ILogger<FeatureService> _logger = provider.CreateLogger<FeatureService>();
     private readonly IPostgresConnectionFactory _factory = provider.GetRequiredService<IPostgresConnectionFactory>();
 
     public async Task<bool> GetBoolValueAsync(string name, bool @default)
@@ -33,7 +33,7 @@ public class FeatureReaderService(IServiceProvider provider) : IFeatureReaderSer
         var featureName = $"{name}Enabled";
 
         var result = await GetBoolValueAsync(featureName, defaultValue);
-        
+
         _logger.LogDebug("{Feature} is {State}", name, result ? "Enabled" : "Disabled");
 
         return result;
@@ -68,14 +68,29 @@ public class FeatureReaderService(IServiceProvider provider) : IFeatureReaderSer
                 });
 
             _logger.LogDebug("Read {Feature} as value {Value}", name, result);
-            
+
             return result;
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to retrieve feature value for '{Name}'. Falling back to default value '{Value}'", name, default);
+            _logger.LogError(e,
+                "Failed to retrieve feature value for '{Name}'. Falling back to default value '{Value}'", name,
+                default);
 
             return @default;
         }
+    }
+
+    public async Task EnableStarterContentFeaturesAsync()
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            """
+            UPDATE public.mod_features SET value = 'true'
+            WHERE name IN('SectorLoopEnabled', 'TaskQueueLoopEnabled', 'ConstructBehaviorLoopEnabled')
+            """
+        );
     }
 }

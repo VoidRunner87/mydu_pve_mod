@@ -23,7 +23,8 @@ public static class FeaturesRegistration
     {
         services.AddSingleton<IPostgresConnectionFactory, PostgresConnectionFactory>();
         services.AddSingleton<IRandomProvider, DefaultRandomProvider>();
-        services.AddSingleton<IFeatureReaderService, FeatureReaderService>();
+        services.AddSingleton<IFeatureReaderService, FeatureService>();
+        services.AddSingleton<IFeatureWriterService, FeatureService>();
         services.AddSingleton<IScriptLoaderService, FileSystemScriptLoaderService>();
         services.AddSingleton<IConstructSpatialHashRepository, ConstructSpatialHashRepository>();
         services.AddSingleton<IConstructService, ConstructService>();

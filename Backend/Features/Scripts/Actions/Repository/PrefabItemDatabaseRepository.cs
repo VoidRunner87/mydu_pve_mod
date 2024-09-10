@@ -20,12 +20,15 @@ public class PrefabItemDatabaseRepository(IServiceProvider provider) : IPrefabIt
         using var db = _factory.Create();
         db.Open();
 
-        item.Id = Guid.NewGuid();
+        if (item.Id == Guid.Empty)
+        {
+            item.Id = Guid.NewGuid();
+        }
 
         await db.ExecuteAsync(
             """
             INSERT INTO public.mod_construct_def (id, name, content) 
-            VALUES(@id, @content, @active)
+            VALUES(@id, @name, @content::jsonb)
             """,
             new
             {

@@ -15,7 +15,7 @@ public class HighTickModLoop(int framesPerSecond) : ModBase
     private StopWatch _stopWatch = new();
     private DateTime _lastTickTime;
     
-    public override Task Start()
+    public override async Task Start()
     {
         _stopWatch.Start();
         _lastTickTime = DateTime.UtcNow;
@@ -25,23 +25,25 @@ public class HighTickModLoop(int framesPerSecond) : ModBase
             throw new ArgumentOutOfRangeException(nameof(framesPerSecond), "Frames per second should be > 0");
         }
         
-        var taskCompletionSource = new TaskCompletionSource();
-        
-        var timer = new Timer(1000d / framesPerSecond);
-        timer.Elapsed += async (sender, args) => await OnTick(sender, args);
-        
-        timer.Start();
-
-        // It will never complete because we're not setting result
-        return taskCompletionSource.Task;
+        while (true)
+        {
+            await OnTick();
+        }
     }
 
-    private async Task OnTick(object? sender, ElapsedEventArgs args)
+    private async Task OnTick()
     {
         var currentTickTime = DateTime.UtcNow;
         var deltaTime = currentTickTime - _lastTickTime;
         _lastTickTime = currentTickTime;
-        
+
+        var fpsSeconds = 1d / framesPerSecond;
+        if (deltaTime.TotalSeconds < fpsSeconds)
+        {
+            var waitSeconds = fpsSeconds - deltaTime.TotalSeconds;
+            await Task.Delay(TimeSpan.FromSeconds(waitSeconds));
+        }
+            
         await Tick(deltaTime);
         
         _stopWatch = new StopWatch();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions.Data;
@@ -10,6 +11,8 @@ namespace Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 /// </summary>
 public class ScriptActionItem
 {
+    [JsonIgnore]
+    public Guid Id { get; set; }
     public string? Name { get; set; }
     
     /// <summary>

@@ -1,0 +1,723 @@
+{
+  "fixtureheader": {
+    "Kind": {
+      "Type": 0,
+      "Version": 1
+    },
+    "PrettyName": "Basic Pirate",
+    "Dependencies": {
+      "ConstructDependencies": [
+        27
+      ]
+    },
+    "Construct": {
+      "ConstructId": 1000003
+    }
+  },
+  "serverProperties": {
+    "creatorId": {
+      "playerId": 2,
+      "organizationId": 0
+    }
+  },
+  "elements": [
+    {
+      "elementType": 183890525,
+      "id": 316860,
+      "localId": 1,
+      "position": {
+        "x": 32.125,
+        "y": 32.125,
+        "z": 32.125
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "properties": [
+        [
+          "stressCurrentHp",
+          {
+            "type": 3,
+            "value": 0.0
+          }
+        ],
+        [
+          "stressMaxHp",
+          {
+            "type": 3,
+            "value": 0.0
+          }
+        ],
+        [
+          "resumeTotalMass",
+          {
+            "type": 3,
+            "value": 375.97
+          }
+        ],
+        [
+          "warpStage",
+          {
+            "type": 2,
+            "value": 0
+          }
+        ],
+        [
+          "resumeGrounded",
+          {
+            "type": 1,
+            "value": true
+          }
+        ],
+        [
+          "resumeLinearVelocity",
+          {
+            "type": 6,
+            "value": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          }
+        ],
+        [
+          "resumeAngularVelocity",
+          {
+            "type": 6,
+            "value": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          }
+        ],
+        [
+          "constructLocalMass",
+          {
+            "type": 3,
+            "value": 34623.036878
+          }
+        ],
+        [
+          "construct_mass_total",
+          {
+            "type": 3,
+            "value": 34623.036878
+          }
+        ],
+        [
+          "lastElementsCollisionCheckDate",
+          {
+            "type": 2,
+            "value": 1725918729911
+          }
+        ],
+        [
+          "elementsColliding",
+          {
+            "type": 4,
+            "value": ""
+          }
+        ],
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 183.0
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    },
+    {
+      "elementType": 2495558023,
+      "id": 316861,
+      "localId": 2,
+      "position": {
+        "x": 32.12888176819609,
+        "y": 27.051588273540737,
+        "z": 32.09755073728005
+      },
+      "rotation": {
+        "x": -4.3711402E-08,
+        "y": 1.0,
+        "z": -8.146034E-08,
+        "w": 1.1920929E-07
+      },
+      "properties": [
+        [
+          "maxPowerMultiplier",
+          {
+            "type": 3,
+            "value": 1.6
+          }
+        ],
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 11500.0
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    },
+    {
+      "elementType": 773467906,
+      "id": 316862,
+      "localId": 3,
+      "position": {
+        "x": 32.12500026305638,
+        "y": 33.699229817371986,
+        "z": 32.12499951571226
+      },
+      "rotation": {
+        "x": -8.4293696E-08,
+        "y": 0.70710677,
+        "z": 0.70710677,
+        "w": -8.4293696E-08
+      },
+      "properties": [
+        [
+          "current_volume",
+          {
+            "type": 3,
+            "value": 2148.248959
+          }
+        ],
+        [
+          "current_mass",
+          {
+            "type": 3,
+            "value": 6444.746878
+          }
+        ],
+        [
+          "itemFilter",
+          {
+            "type": 4,
+            "value": "SpaceFuel"
+          }
+        ],
+        [
+          "claimMode",
+          {
+            "type": 2,
+            "value": 2
+          }
+        ],
+        [
+          "maxVolume",
+          {
+            "type": 3,
+            "value": 3200.0
+          }
+        ],
+        [
+          "massFactor",
+          {
+            "type": 3,
+            "value": 0.5
+          }
+        ],
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 1720.3999999999999
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    },
+    {
+      "elementType": 1373443625,
+      "id": 316863,
+      "localId": 4,
+      "position": {
+        "x": 32.126999944049416,
+        "y": 32.11300006810234,
+        "z": 34.60356884197877
+      },
+      "rotation": {
+        "x": -4.371139E-08,
+        "y": -4.371139E-08,
+        "z": 4.371139E-08,
+        "w": 1.0
+      },
+      "properties": [
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 287.5
+          }
+        ],
+        [
+          "fittingCapacityMax",
+          {
+            "type": 2,
+            "value": 6250
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    },
+    {
+      "elementType": 809783311,
+      "id": 316864,
+      "localId": 5,
+      "position": {
+        "x": 32.125,
+        "y": 37.25,
+        "z": 33.82656882982701
+      },
+      "rotation": {
+        "x": -4.371139E-08,
+        "y": -4.371139E-08,
+        "z": 4.371139E-08,
+        "w": 1.0
+      },
+      "properties": [
+        [
+          "baseScanCone",
+          {
+            "type": 3,
+            "value": 15.0
+          }
+        ],
+        [
+          "maxIdentifiedTargets",
+          {
+            "type": 2,
+            "value": 7
+          }
+        ],
+        [
+          "baseIdentificationTime128m",
+          {
+            "type": 3,
+            "value": 1.0
+          }
+        ],
+        [
+          "baseIdentificationTime64m",
+          {
+            "type": 3,
+            "value": 2.0
+          }
+        ],
+        [
+          "baseIdentificationTime32m",
+          {
+            "type": 3,
+            "value": 3.0
+          }
+        ],
+        [
+          "baseIdentificationTime16m",
+          {
+            "type": 3,
+            "value": 4.0
+          }
+        ],
+        [
+          "baseIdentificationRange128m",
+          {
+            "type": 3,
+            "value": 136125.0
+          }
+        ],
+        [
+          "baseIdentificationRange64m",
+          {
+            "type": 3,
+            "value": 136125.0
+          }
+        ],
+        [
+          "baseIdentificationRange32m",
+          {
+            "type": 3,
+            "value": 136125.0
+          }
+        ],
+        [
+          "baseIdentificationRange16m",
+          {
+            "type": 3,
+            "value": 136125.0
+          }
+        ],
+        [
+          "fittingCapacity",
+          {
+            "type": 2,
+            "value": 375
+          }
+        ],
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 17250.0
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    },
+    {
+      "elementType": 429894438,
+      "id": 316865,
+      "localId": 6,
+      "position": {
+        "x": 32.12500002185569,
+        "y": 37.25,
+        "z": 33.372197293210775
+      },
+      "rotation": {
+        "x": 4.371139E-08,
+        "y": 1.0,
+        "z": 4.371139E-08,
+        "w": 4.371139E-08
+      },
+      "properties": [
+        [
+          "baseOptimalDistance",
+          {
+            "type": 3,
+            "value": 12500.0
+          }
+        ],
+        [
+          "baseReloadTime",
+          {
+            "type": 3,
+            "value": 5.625
+          }
+        ],
+        [
+          "baseCycleTime",
+          {
+            "type": 3,
+            "value": 2.8125
+          }
+        ],
+        [
+          "baseOptimalAimingCone",
+          {
+            "type": 3,
+            "value": 37.5
+          }
+        ],
+        [
+          "magazineVolume",
+          {
+            "type": 3,
+            "value": 187.5
+          }
+        ],
+        [
+          "fittingCapacity",
+          {
+            "type": 2,
+            "value": 937
+          }
+        ],
+        [
+          "baseOptimalTracking",
+          {
+            "type": 3,
+            "value": 1.5474999999999999
+          }
+        ],
+        [
+          "baseDamage",
+          {
+            "type": 3,
+            "value": 17062.5
+          }
+        ],
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 46000.0
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    },
+    {
+      "elementType": 2300179701,
+      "id": 316872,
+      "localId": 7,
+      "position": {
+        "x": 32.125,
+        "y": 33.625,
+        "z": 33.82656884030439
+      },
+      "rotation": {
+        "x": -4.371139E-08,
+        "y": -4.371139E-08,
+        "z": 4.371139E-08,
+        "w": 1.0
+      },
+      "properties": [
+        [
+          "current_volume",
+          {
+            "type": 3,
+            "value": 2000.0
+          }
+        ],
+        [
+          "current_mass",
+          {
+            "type": 3,
+            "value": 1071.0
+          }
+        ],
+        [
+          "maxVolume",
+          {
+            "type": 3,
+            "value": 8000.0
+          }
+        ],
+        [
+          "itemFilter",
+          {
+            "type": 4,
+            "value": "Ammo"
+          }
+        ],
+        [
+          "claimMode",
+          {
+            "type": 2,
+            "value": 2
+          }
+        ],
+        [
+          "massFactor",
+          {
+            "type": 3,
+            "value": 0.75
+          }
+        ],
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 1148.85
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    },
+    {
+      "elementType": 2882830295,
+      "id": 316880,
+      "localId": 8,
+      "position": {
+        "x": 32.125,
+        "y": 33.625,
+        "z": 30.42343022231944
+      },
+      "rotation": {
+        "x": 4.371139E-08,
+        "y": 1.0,
+        "z": 4.371138E-08,
+        "w": 4.371139E-08
+      },
+      "properties": [
+        [
+          "adjResistances",
+          {
+            "type": 4,
+            "value": "{\"antimatter\":0.0,\"electromagnetic\":0.0,\"kinetic\":0.0,\"thermic\":0.0,\"cooldown\":0}"
+          }
+        ],
+        [
+          "ventingCurrentCooldown",
+          {
+            "type": 2,
+            "value": 0
+          }
+        ],
+        [
+          "shieldMaxHp",
+          {
+            "type": 3,
+            "value": 450000.0
+          }
+        ],
+        [
+          "adjResistancePoolSize",
+          {
+            "type": 3,
+            "value": 0.6
+          }
+        ],
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 1609.9999999999998
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    }
+  ],
+  "links": [
+    {
+      "constructId": 1000003,
+      "fromElementId": 4,
+      "fromPlug": 10,
+      "toElementId": 6,
+      "toPlug": 0,
+      "plugType": 8
+    },
+    {
+      "constructId": 1000003,
+      "fromElementId": 4,
+      "fromPlug": 20,
+      "toElementId": 5,
+      "toPlug": 0,
+      "plugType": 8
+    },
+    {
+      "constructId": 1000003,
+      "fromElementId": 3,
+      "fromPlug": 0,
+      "toElementId": 2,
+      "toPlug": 0,
+      "plugType": 3
+    },
+    {
+      "constructId": 1000003,
+      "fromElementId": 7,
+      "fromPlug": 0,
+      "toElementId": 6,
+      "toPlug": 0,
+      "plugType": 1
+    }
+  ],
+  "children": [],
+  "serializationVersion": 1,
+  "header": {
+    "constructIdHint": 1000003,
+    "prettyName": "Basic Pirate"
+  },
+  "size": 64,
+  "kind": "dynamic",
+  "isNPC": false,
+  "isUntargetable": false,
+  "position": {
+    "x": 205776.39950700384,
+    "y": 310503.7511143824,
+    "z": 223990.90135819977
+  },
+  "rotation": {
+    "x": -0.35876545,
+    "y": 0.7759885,
+    "z": 0.4703321,
+    "w": -0.21889946
+  },
+  "voxelGeometry": {
+    "size": 64,
+    "kind": 1,
+    "voxelLod0": 3
+  },
+  "parentId": 27,
+  "ownerId": {
+    "playerId": 2,
+    "organizationId": 0
+  },
+  "rdmsTags": [],
+  "containers": [
+    {
+      "containerId": 316862,
+      "content": [
+        {
+          "position": 0,
+          "content": {
+            "type": 840202980,
+            "id": 0,
+            "owner": {
+              "playerId": 0,
+              "organizationId": 0
+            },
+            "properties": []
+          },
+          "quantity": {
+            "quantity": 36041636810
+          }
+        }
+      ],
+      "itemFilterId": 0,
+      "volume": 0.0,
+      "maxVolume": 0.0,
+      "mass": 0.0,
+      "claimMode": 0
+    },
+    {
+      "containerId": 316872,
+      "content": [
+        {
+          "position": 0,
+          "content": {
+            "type": 1256032552,
+            "id": 0,
+            "owner": {
+              "playerId": 0,
+              "organizationId": 0
+            },
+            "properties": []
+          },
+          "quantity": {
+            "quantity": 200
+          }
+        },
+        {
+          "position": 1,
+          "content": {
+            "type": 1081563239,
+            "id": 0,
+            "owner": {
+              "playerId": 0,
+              "organizationId": 0
+            },
+            "properties": []
+          },
+          "quantity": {
+            "quantity": 200
+          }
+        }
+      ],
+      "itemFilterId": 0,
+      "volume": 0.0,
+      "maxVolume": 0.0,
+      "mass": 0.0,
+      "claimMode": 0
+    }
+  ],
+  "blueprints": [],
+  "territories": [],
+  "territoryTags": {},
+  "rdmsContext": [],
+  "marketOrders": {}
+}
