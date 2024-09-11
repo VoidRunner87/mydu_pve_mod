@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Mod.DynamicEncounters.Api.Config;
 using Mod.DynamicEncounters.Features;
@@ -12,7 +13,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Mod.DynamicEncounters.Api;
 
-public class Startup
+public class Startup(IServiceCollection rootServices)
 {
     public void ConfigureServices(IServiceCollection services)
     {
@@ -59,6 +60,7 @@ public class Startup
         });
 
         services.AddLogging(logging => logging.Setup(logWebHostInfo: true));
+        services.TryAdd(rootServices);
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

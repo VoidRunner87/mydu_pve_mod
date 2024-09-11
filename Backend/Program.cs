@@ -48,8 +48,7 @@ public static class Program
             {
                 new SectorLoop().Start(),
                 new ConstructBehaviorLoop(30).Start(),
-                new TaskQueueLoop().Start(),
-                new DebugLoop().Start()
+                new TaskQueueLoop().Start()
             };
 
             if (apiEnabled)
@@ -70,5 +69,5 @@ public static class Program
 
     private static IHostBuilder CreateHostBuilder(IServiceCollection services, string[] args) =>
         Host.CreateDefaultBuilder(args)
-            .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
+            .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup(_ => new Startup(services)); });
 }

@@ -60,7 +60,7 @@ public class FeatureService(IServiceProvider provider) : IFeatureReaderService, 
 
             var result = await db.ExecuteScalarAsync<string>(
                 """
-                SELECT value FROM public.mod_features WHERE name = @name
+                SELECT value FROM public.mod_features WHERE LOWER(TRIM(name)) = LOWER(TRIM(@name))
                 """,
                 new
                 {

@@ -7,6 +7,7 @@ using Mod.DynamicEncounters.Features.Common.Repository;
 using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Features.Events;
 using Mod.DynamicEncounters.Features.Interfaces;
+using Mod.DynamicEncounters.Features.Loot;
 using Mod.DynamicEncounters.Features.NQ;
 using Mod.DynamicEncounters.Features.Scripts.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Services;
@@ -29,11 +30,13 @@ public static class FeaturesRegistration
         services.AddSingleton<IConstructSpatialHashRepository, ConstructSpatialHashRepository>();
         services.AddSingleton<IConstructService, ConstructService>();
         services.AddSingleton<IErrorRepository, ErrorRepository>();
+        services.AddSingleton<IErrorService, ErrorService>();
             
         services.RegisterSectorGeneration();
         services.RegisterSpawnerScripts();
         services.RegisterTaskQueue();
         services.RegisterEvents();
         services.RegisterNQServices();
+        services.RegisterLootSystem();
     }
 }
