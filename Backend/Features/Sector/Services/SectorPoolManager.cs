@@ -57,6 +57,11 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
         for (var i = 0; i < missingQuantity; i++)
         {
+            if (!args.Encounters.Any())
+            {
+                continue;
+            }
+            
             var encounter = random.PickOneAtRandom(args.Encounters);
 
             // TODO
@@ -253,10 +258,16 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
             try
             {
+                ulong? playerId = null;
+                if (playerIds.Count != 0)
+                {
+                    playerId = random.PickOneAtRandom(playerIds);
+                }
+
                 await eventService.PublishAsync(
                     new SectorActivatedEvent(
                         playerIds,
-                        random.PickOneAtRandom(playerIds),
+                        playerId,
                         sectorInstance.Sector,
                         random.PickOneAtRandom(constructs),
                         playerIds.Count
