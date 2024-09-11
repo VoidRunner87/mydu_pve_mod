@@ -48,7 +48,8 @@ public static class Program
             {
                 new SectorLoop().Start(),
                 new ConstructBehaviorLoop(30).Start(),
-                new TaskQueueLoop().Start()
+                new TaskQueueLoop().Start(),
+                new DebugLoop().Start()
             };
 
             if (apiEnabled)

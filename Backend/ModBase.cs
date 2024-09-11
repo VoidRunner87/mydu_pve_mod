@@ -7,6 +7,7 @@ using Backend;
 using Backend.AWS;
 using Backend.Business;
 using Backend.Scenegraph;
+using Backend.Storage;
 using Backend.Voxels;
 using BotLib.BotClient;
 using BotLib.Protocols;
@@ -107,7 +108,7 @@ public class ModBase
             )
             .AddSingleton<IDuClientFactory, StubDuClientFactory>()
             .AddSingleton<IS3, FakeS3.FakeS3Singleton>()
-            // .AddSingleton<Backend.Storage.IItemStorageService, Backend.Storage.ItemStorageService>()
+            .AddSingleton<IItemStorageService, ItemStorageService>()
             .AddInitializableSingleton<IUserContent, UserContent>()
             .AddInitializableSingleton<IVoxelService, VoxelService>()
             .AddInitializableSingleton<IVoxelImporter, VoxelService>()

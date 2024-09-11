@@ -121,13 +121,14 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             await ModBase.Bot.Req.ConstructUpdate(
                 new ConstructUpdate
                 {
+                    pilotId = ModBase.Bot.PlayerId,
                     constructId = constructId,
                     rotation = rotation,
                     position = position,
-                    // worldAbsoluteVelocity = new Vec3(), //context.Velocity,
-                    // worldAbsoluteAngVelocity = new Vec3(),
-                    worldRelativeAngVelocity = relativeAngularVel,
+                    worldAbsoluteVelocity = context.Velocity,
                     worldRelativeVelocity = context.Velocity,
+                    worldAbsoluteAngVelocity = relativeAngularVel,
+                    worldRelativeAngVelocity = relativeAngularVel,
                     time = _timePoint,
                     grounded = false,
                 }
