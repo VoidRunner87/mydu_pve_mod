@@ -115,7 +115,7 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
         }
         
         var fixture = ConstructFixture.FromSource(source);
-        fixture.parentId = null;
+        fixture.parentId = actionItem.Override.PositionParentId;
         fixture.header.prettyName = resultName;
         fixture.ownerId = new EntityId { playerId = constructDef.DefinitionItem.OwnerId };
         fixture.position = spawnPosition;

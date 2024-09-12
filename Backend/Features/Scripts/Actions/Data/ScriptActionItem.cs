@@ -51,4 +51,5 @@ public class ScriptActionItem
 public class ScriptActionOverrides
 {
     public string? ConstructName { get; set; }
+    public ulong? PositionParentId { get; set; }
 }
