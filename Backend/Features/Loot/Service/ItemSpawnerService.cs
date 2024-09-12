@@ -35,6 +35,13 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
             containers.Add(container);
         }
 
+        if (containers.Count == 0)
+        {
+            _logger.LogWarning("No containers found on Construct {Construct}", command.ConstructId);
+            
+            return;
+        }
+
         var random = provider.GetRandomProvider().GetRandom();
         
         foreach (var entry in command.ItemBag.GetEntries())

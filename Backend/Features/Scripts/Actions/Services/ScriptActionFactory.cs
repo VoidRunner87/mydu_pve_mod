@@ -89,7 +89,19 @@ public class ScriptActionFactory : IScriptActionFactory
                         Prefab = "test-enemy",
                         Position = actionItem.Position,
                         MinQuantity = 1,
-                        MaxQuantity = 1
+                        MaxQuantity = 1,
+                        Events =
+                        {
+                            OnLoad = new List<ScriptActionItem>
+                            {
+                                new ()
+                                {
+                                    Type = "spawn-loot",
+                                    Tags = ["ore-1-2", "ore-2-3", "parts-1-2", "parts-2-3"],
+                                    Value = 2000
+                                }
+                            }
+                        }
                     }
                 );
             case "for-each-handle-with-tag":

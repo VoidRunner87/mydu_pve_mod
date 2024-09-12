@@ -6,115 +6,37 @@
     },
     "PrettyName": "Basic Pirate",
     "Dependencies": {
-      "ConstructDependencies": [
-        27
-      ]
+      "ConstructDependencies": []
     },
     "Construct": {
-      "ConstructId": 1000003
+      "ConstructId": 1000220
     }
   },
   "serverProperties": {
     "creatorId": {
       "playerId": 2,
       "organizationId": 0
-    }
+    },
+    "blueprintId": 84,
+    "isDynamicWreck": false
   },
   "elements": [
     {
-      "elementType": 183890525,
-      "id": 316860,
-      "localId": 1,
+      "elementType": 2882830295,
+      "id": 321489,
+      "localId": 8,
       "position": {
         "x": 32.125,
-        "y": 32.125,
-        "z": 32.125
+        "y": 33.625,
+        "z": 30.42343022231944
       },
       "rotation": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0,
-        "w": 1.0
+        "x": 4.371139E-08,
+        "y": 1.0,
+        "z": 4.371138E-08,
+        "w": 4.371139E-08
       },
       "properties": [
-        [
-          "stressCurrentHp",
-          {
-            "type": 3,
-            "value": 0.0
-          }
-        ],
-        [
-          "stressMaxHp",
-          {
-            "type": 3,
-            "value": 0.0
-          }
-        ],
-        [
-          "resumeTotalMass",
-          {
-            "type": 3,
-            "value": 375.97
-          }
-        ],
-        [
-          "warpStage",
-          {
-            "type": 2,
-            "value": 0
-          }
-        ],
-        [
-          "resumeGrounded",
-          {
-            "type": 1,
-            "value": true
-          }
-        ],
-        [
-          "resumeLinearVelocity",
-          {
-            "type": 6,
-            "value": {
-              "x": 0.0,
-              "y": 0.0,
-              "z": 0.0
-            }
-          }
-        ],
-        [
-          "resumeAngularVelocity",
-          {
-            "type": 6,
-            "value": {
-              "x": 0.0,
-              "y": 0.0,
-              "z": 0.0
-            }
-          }
-        ],
-        [
-          "constructLocalMass",
-          {
-            "type": 3,
-            "value": 34623.036878
-          }
-        ],
-        [
-          "construct_mass_total",
-          {
-            "type": 3,
-            "value": 34623.036878
-          }
-        ],
-        [
-          "lastElementsCollisionCheckDate",
-          {
-            "type": 2,
-            "value": 1725918729911
-          }
-        ],
         [
           "elementsColliding",
           {
@@ -123,10 +45,31 @@
           }
         ],
         [
+          "ventingCurrentCooldown",
+          {
+            "type": 2,
+            "value": 0
+          }
+        ],
+        [
+          "shieldMaxHp",
+          {
+            "type": 3,
+            "value": 450000.0
+          }
+        ],
+        [
+          "adjResistancePoolSize",
+          {
+            "type": 3,
+            "value": 0.6
+          }
+        ],
+        [
           "hitpoints",
           {
             "type": 3,
-            "value": 183.0
+            "value": 1609.9999999999998
           }
         ]
       ],
@@ -134,74 +77,40 @@
       "rdmsTags": []
     },
     {
-      "elementType": 2495558023,
-      "id": 316861,
-      "localId": 2,
+      "elementType": 2300179701,
+      "id": 321490,
+      "localId": 7,
       "position": {
-        "x": 32.12888176819609,
-        "y": 27.051588273540737,
-        "z": 32.09755073728005
+        "x": 32.125,
+        "y": 33.625,
+        "z": 33.82656884030439
       },
       "rotation": {
-        "x": -4.3711402E-08,
-        "y": 1.0,
-        "z": -8.146034E-08,
-        "w": 1.1920929E-07
+        "x": -4.371139E-08,
+        "y": -4.371139E-08,
+        "z": 4.371139E-08,
+        "w": 1.0
       },
       "properties": [
         [
-          "maxPowerMultiplier",
+          "elementsColliding",
           {
-            "type": 3,
-            "value": 1.6
+            "type": 4,
+            "value": ""
           }
         ],
         [
-          "hitpoints",
+          "maxVolume",
           {
             "type": 3,
-            "value": 11500.0
-          }
-        ]
-      ],
-      "serverProperties": [],
-      "rdmsTags": []
-    },
-    {
-      "elementType": 773467906,
-      "id": 316862,
-      "localId": 3,
-      "position": {
-        "x": 32.12500026305638,
-        "y": 33.699229817371986,
-        "z": 32.12499951571226
-      },
-      "rotation": {
-        "x": -8.4293696E-08,
-        "y": 0.70710677,
-        "z": 0.70710677,
-        "w": -8.4293696E-08
-      },
-      "properties": [
-        [
-          "current_volume",
-          {
-            "type": 3,
-            "value": 2148.248959
-          }
-        ],
-        [
-          "current_mass",
-          {
-            "type": 3,
-            "value": 6444.746878
+            "value": 8000.0
           }
         ],
         [
           "itemFilter",
           {
             "type": 4,
-            "value": "SpaceFuel"
+            "value": "Ammo"
           }
         ],
         [
@@ -212,24 +121,17 @@
           }
         ],
         [
-          "maxVolume",
-          {
-            "type": 3,
-            "value": 3200.0
-          }
-        ],
-        [
           "massFactor",
           {
             "type": 3,
-            "value": 0.5
+            "value": 0.75
           }
         ],
         [
           "hitpoints",
           {
             "type": 3,
-            "value": 1720.3999999999999
+            "value": 1148.85
           }
         ]
       ],
@@ -237,33 +139,89 @@
       "rdmsTags": []
     },
     {
-      "elementType": 1373443625,
-      "id": 316863,
-      "localId": 4,
+      "elementType": 429894438,
+      "id": 321491,
+      "localId": 6,
       "position": {
-        "x": 32.126999944049416,
-        "y": 32.11300006810234,
-        "z": 34.60356884197877
+        "x": 32.12500002185569,
+        "y": 37.25,
+        "z": 33.372197293210775
       },
       "rotation": {
-        "x": -4.371139E-08,
-        "y": -4.371139E-08,
+        "x": 4.371139E-08,
+        "y": 1.0,
         "z": 4.371139E-08,
-        "w": 1.0
+        "w": 4.371139E-08
       },
       "properties": [
+        [
+          "elementsColliding",
+          {
+            "type": 4,
+            "value": ""
+          }
+        ],
+        [
+          "baseOptimalDistance",
+          {
+            "type": 3,
+            "value": 12500.0
+          }
+        ],
+        [
+          "baseReloadTime",
+          {
+            "type": 3,
+            "value": 5.625
+          }
+        ],
+        [
+          "baseCycleTime",
+          {
+            "type": 3,
+            "value": 2.8125
+          }
+        ],
+        [
+          "baseOptimalAimingCone",
+          {
+            "type": 3,
+            "value": 37.5
+          }
+        ],
+        [
+          "magazineVolume",
+          {
+            "type": 3,
+            "value": 187.5
+          }
+        ],
+        [
+          "fittingCapacity",
+          {
+            "type": 2,
+            "value": 937
+          }
+        ],
+        [
+          "baseOptimalTracking",
+          {
+            "type": 3,
+            "value": 1.5474999999999999
+          }
+        ],
+        [
+          "baseDamage",
+          {
+            "type": 3,
+            "value": 17062.5
+          }
+        ],
         [
           "hitpoints",
           {
             "type": 3,
-            "value": 287.5
-          }
-        ],
-        [
-          "fittingCapacityMax",
-          {
-            "type": 2,
-            "value": 6250
+            "value": 46000.0
           }
         ]
       ],
@@ -272,7 +230,7 @@
     },
     {
       "elementType": 809783311,
-      "id": 316864,
+      "id": 321492,
       "localId": 5,
       "position": {
         "x": 32.125,
@@ -286,6 +244,13 @@
         "w": 1.0
       },
       "properties": [
+        [
+          "elementsColliding",
+          {
+            "type": 4,
+            "value": ""
+          }
+        ],
         [
           "baseScanCone",
           {
@@ -375,96 +340,13 @@
       "rdmsTags": []
     },
     {
-      "elementType": 429894438,
-      "id": 316865,
-      "localId": 6,
+      "elementType": 1373443625,
+      "id": 321493,
+      "localId": 4,
       "position": {
-        "x": 32.12500002185569,
-        "y": 37.25,
-        "z": 33.372197293210775
-      },
-      "rotation": {
-        "x": 4.371139E-08,
-        "y": 1.0,
-        "z": 4.371139E-08,
-        "w": 4.371139E-08
-      },
-      "properties": [
-        [
-          "baseOptimalDistance",
-          {
-            "type": 3,
-            "value": 12500.0
-          }
-        ],
-        [
-          "baseReloadTime",
-          {
-            "type": 3,
-            "value": 5.625
-          }
-        ],
-        [
-          "baseCycleTime",
-          {
-            "type": 3,
-            "value": 2.8125
-          }
-        ],
-        [
-          "baseOptimalAimingCone",
-          {
-            "type": 3,
-            "value": 37.5
-          }
-        ],
-        [
-          "magazineVolume",
-          {
-            "type": 3,
-            "value": 187.5
-          }
-        ],
-        [
-          "fittingCapacity",
-          {
-            "type": 2,
-            "value": 937
-          }
-        ],
-        [
-          "baseOptimalTracking",
-          {
-            "type": 3,
-            "value": 1.5474999999999999
-          }
-        ],
-        [
-          "baseDamage",
-          {
-            "type": 3,
-            "value": 17062.5
-          }
-        ],
-        [
-          "hitpoints",
-          {
-            "type": 3,
-            "value": 46000.0
-          }
-        ]
-      ],
-      "serverProperties": [],
-      "rdmsTags": []
-    },
-    {
-      "elementType": 2300179701,
-      "id": 316872,
-      "localId": 7,
-      "position": {
-        "x": 32.125,
-        "y": 33.625,
-        "z": 33.82656884030439
+        "x": 32.126999944049416,
+        "y": 32.11300006810234,
+        "z": 34.60356884197877
       },
       "rotation": {
         "x": -4.371139E-08,
@@ -474,31 +356,58 @@
       },
       "properties": [
         [
-          "current_volume",
+          "elementsColliding",
           {
-            "type": 3,
-            "value": 2000.0
+            "type": 4,
+            "value": ""
           }
         ],
         [
-          "current_mass",
+          "hitpoints",
           {
             "type": 3,
-            "value": 1071.0
+            "value": 287.5
           }
         ],
         [
-          "maxVolume",
+          "fittingCapacityMax",
           {
-            "type": 3,
-            "value": 8000.0
+            "type": 2,
+            "value": 6250
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    },
+    {
+      "elementType": 773467906,
+      "id": 321494,
+      "localId": 3,
+      "position": {
+        "x": 32.12500026305638,
+        "y": 33.699229817371986,
+        "z": 32.12499951571226
+      },
+      "rotation": {
+        "x": -8.4293696E-08,
+        "y": 0.70710677,
+        "z": 0.70710677,
+        "w": -8.4293696E-08
+      },
+      "properties": [
+        [
+          "elementsColliding",
+          {
+            "type": 4,
+            "value": ""
           }
         ],
         [
           "itemFilter",
           {
             "type": 4,
-            "value": "Ammo"
+            "value": "SpaceFuel"
           }
         ],
         [
@@ -506,6 +415,221 @@
           {
             "type": 2,
             "value": 2
+          }
+        ],
+        [
+          "maxVolume",
+          {
+            "type": 3,
+            "value": 3200.0
+          }
+        ],
+        [
+          "massFactor",
+          {
+            "type": 3,
+            "value": 0.5
+          }
+        ],
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 1720.3999999999999
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    },
+    {
+      "elementType": 2495558023,
+      "id": 321495,
+      "localId": 2,
+      "position": {
+        "x": 32.12888176819609,
+        "y": 27.051588273540737,
+        "z": 32.09755073728005
+      },
+      "rotation": {
+        "x": -4.3711402E-08,
+        "y": 1.0,
+        "z": -8.146034E-08,
+        "w": 1.1920929E-07
+      },
+      "properties": [
+        [
+          "elementsColliding",
+          {
+            "type": 4,
+            "value": ""
+          }
+        ],
+        [
+          "maxPowerMultiplier",
+          {
+            "type": 3,
+            "value": 1.6
+          }
+        ],
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 11500.0
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    },
+    {
+      "elementType": 183890525,
+      "id": 321496,
+      "localId": 1,
+      "position": {
+        "x": 32.125,
+        "y": 32.125,
+        "z": 32.125
+      },
+      "rotation": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "properties": [
+        [
+          "resumeTotalMass",
+          {
+            "type": 3,
+            "value": 27107.29
+          }
+        ],
+        [
+          "warpStage",
+          {
+            "type": 2,
+            "value": 0
+          }
+        ],
+        [
+          "resumeGrounded",
+          {
+            "type": 1,
+            "value": false
+          }
+        ],
+        [
+          "resumeLinearVelocity",
+          {
+            "type": 6,
+            "value": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          }
+        ],
+        [
+          "resumeAngularVelocity",
+          {
+            "type": 6,
+            "value": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          }
+        ],
+        [
+          "constructLocalMass",
+          {
+            "type": 3,
+            "value": 29669.910000000003
+          }
+        ],
+        [
+          "construct_mass_total",
+          {
+            "type": 3,
+            "value": 29669.910000000003
+          }
+        ],
+        [
+          "lastElementsCollisionCheckDate",
+          {
+            "type": 2,
+            "value": 1726108362959
+          }
+        ],
+        [
+          "elementsColliding",
+          {
+            "type": 4,
+            "value": ""
+          }
+        ],
+        [
+          "stressCurrentHp",
+          {
+            "type": 3,
+            "value": 0.0
+          }
+        ],
+        [
+          "stressMaxHp",
+          {
+            "type": 3,
+            "value": 0.0
+          }
+        ],
+        [
+          "hitpoints",
+          {
+            "type": 3,
+            "value": 183.0
+          }
+        ]
+      ],
+      "serverProperties": [],
+      "rdmsTags": []
+    },
+    {
+      "elementType": 1594689569,
+      "id": 321497,
+      "localId": 9,
+      "position": {
+        "x": 32.125000366074694,
+        "y": 29.624999809306996,
+        "z": 29.330699622631258
+      },
+      "rotation": {
+        "x": -1.004859E-14,
+        "y": 0.70710665,
+        "z": -9.272586E-08,
+        "w": 0.7071069
+      },
+      "properties": [
+        [
+          "itemFilter",
+          {
+            "type": 4,
+            "value": ""
+          }
+        ],
+        [
+          "claimMode",
+          {
+            "type": 2,
+            "value": 0
+          }
+        ],
+        [
+          "maxVolume",
+          {
+            "type": 3,
+            "value": 12000.0
           }
         ],
         [
@@ -527,54 +651,54 @@
       "rdmsTags": []
     },
     {
-      "elementType": 2882830295,
-      "id": 316880,
-      "localId": 8,
+      "elementType": 1594689569,
+      "id": 321498,
+      "localId": 10,
       "position": {
-        "x": 32.125,
-        "y": 33.625,
-        "z": 30.42343022231944
+        "x": 32.125000366074694,
+        "y": 27.624999809306996,
+        "z": 29.32653015851993
       },
       "rotation": {
-        "x": 4.371139E-08,
-        "y": 1.0,
-        "z": 4.371138E-08,
-        "w": 4.371139E-08
+        "x": -1.004859E-14,
+        "y": 0.70710665,
+        "z": -9.272586E-08,
+        "w": 0.7071069
       },
       "properties": [
         [
-          "adjResistances",
+          "itemFilter",
           {
             "type": 4,
-            "value": "{\"antimatter\":0.0,\"electromagnetic\":0.0,\"kinetic\":0.0,\"thermic\":0.0,\"cooldown\":0}"
+            "value": ""
           }
         ],
         [
-          "ventingCurrentCooldown",
+          "claimMode",
           {
             "type": 2,
             "value": 0
           }
         ],
         [
-          "shieldMaxHp",
+          "maxVolume",
           {
             "type": 3,
-            "value": 450000.0
+            "value": 12000.0
           }
         ],
         [
-          "adjResistancePoolSize",
+          "massFactor",
           {
             "type": 3,
-            "value": 0.6
+            "value": 0.75
           }
         ],
         [
           "hitpoints",
           {
             "type": 3,
-            "value": 1609.9999999999998
+            "value": 1148.85
           }
         ]
       ],
@@ -584,23 +708,15 @@
   ],
   "links": [
     {
-      "constructId": 1000003,
-      "fromElementId": 4,
-      "fromPlug": 10,
+      "constructId": 1000220,
+      "fromElementId": 7,
+      "fromPlug": 0,
       "toElementId": 6,
       "toPlug": 0,
-      "plugType": 8
+      "plugType": 1
     },
     {
-      "constructId": 1000003,
-      "fromElementId": 4,
-      "fromPlug": 20,
-      "toElementId": 5,
-      "toPlug": 0,
-      "plugType": 8
-    },
-    {
-      "constructId": 1000003,
+      "constructId": 1000220,
       "fromElementId": 3,
       "fromPlug": 0,
       "toElementId": 2,
@@ -608,18 +724,26 @@
       "plugType": 3
     },
     {
-      "constructId": 1000003,
-      "fromElementId": 7,
-      "fromPlug": 0,
+      "constructId": 1000220,
+      "fromElementId": 4,
+      "fromPlug": 20,
+      "toElementId": 5,
+      "toPlug": 0,
+      "plugType": 8
+    },
+    {
+      "constructId": 1000220,
+      "fromElementId": 4,
+      "fromPlug": 10,
       "toElementId": 6,
       "toPlug": 0,
-      "plugType": 1
+      "plugType": 8
     }
   ],
   "children": [],
   "serializationVersion": 1,
   "header": {
-    "constructIdHint": 1000003,
+    "constructIdHint": 1000220,
     "prettyName": "Basic Pirate"
   },
   "size": 64,
@@ -627,97 +751,58 @@
   "isNPC": false,
   "isUntargetable": false,
   "position": {
-    "x": 205776.39950700384,
-    "y": 310503.7511143824,
-    "z": 223990.90135819977
+    "x": 10006024515.162024,
+    "y": 10001707119.656715,
+    "z": 9995922161.471418
   },
   "rotation": {
-    "x": -0.35876545,
-    "y": 0.7759885,
-    "z": 0.4703321,
-    "w": -0.21889946
+    "x": 0.04569104,
+    "y": 0.28802586,
+    "z": 0.94904816,
+    "w": 0.11941951
   },
   "voxelGeometry": {
     "size": 64,
     "kind": 1,
     "voxelLod0": 3
   },
-  "parentId": 27,
   "ownerId": {
     "playerId": 2,
     "organizationId": 0
   },
-  "rdmsTags": [],
-  "containers": [
+  "rdmsTags": [
     {
-      "containerId": 316862,
-      "content": [
-        {
-          "position": 0,
-          "content": {
-            "type": 840202980,
-            "id": 0,
-            "owner": {
-              "playerId": 0,
-              "organizationId": 0
-            },
-            "properties": []
-          },
-          "quantity": {
-            "quantity": 36041636810
-          }
-        }
-      ],
-      "itemFilterId": 0,
-      "volume": 0.0,
-      "maxVolume": 0.0,
-      "mass": 0.0,
-      "claimMode": 0
-    },
-    {
-      "containerId": 316872,
-      "content": [
-        {
-          "position": 0,
-          "content": {
-            "type": 1256032552,
-            "id": 0,
-            "owner": {
-              "playerId": 0,
-              "organizationId": 0
-            },
-            "properties": []
-          },
-          "quantity": {
-            "quantity": 200
-          }
-        },
-        {
-          "position": 1,
-          "content": {
-            "type": 1081563239,
-            "id": 0,
-            "owner": {
-              "playerId": 0,
-              "organizationId": 0
-            },
-            "properties": []
-          },
-          "quantity": {
-            "quantity": 200
-          }
-        }
-      ],
-      "itemFilterId": 0,
-      "volume": 0.0,
-      "maxVolume": 0.0,
-      "mass": 0.0,
-      "claimMode": 0
+      "tagId": 420,
+      "type": 0
     }
   ],
+  "containers": [],
   "blueprints": [],
   "territories": [],
   "territoryTags": {},
-  "rdmsContext": [],
+  "rdmsContext": [
+    {
+      "ownerId": {
+        "playerId": 2,
+        "organizationId": 0
+      },
+      "rdmsTagInfos": [
+        {
+          "owner": {
+            "playerId": 0,
+            "organizationId": 0
+          },
+          "tagId": {
+            "tagId": 420,
+            "type": 0
+          },
+          "name": "Basic Pirate",
+          "description": ""
+        }
+      ],
+      "rdmsPolicyInfos": [],
+      "rdmsActorInfos": []
+    }
+  ],
   "marketOrders": {}
 }
