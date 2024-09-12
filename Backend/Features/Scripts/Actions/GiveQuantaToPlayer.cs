@@ -23,7 +23,7 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
     public string Name { get; } = Guid.NewGuid().ToString();
 
     public string GetKey() => Name;
-    
+
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {
         var provider = context.ServiceProvider;
@@ -31,14 +31,14 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
         var sql = provider.GetRequiredService<ISql>();
         var walletService = provider.GetRequiredService<IWalletService>();
         var eventService = provider.GetRequiredService<IEventService>();
-        
+
         if (context.PlayerIds.Count == 0)
         {
             return ScriptActionResult.Failed();
         }
-        
+
         var valuePerPlayer = actionItem.Value / context.PlayerIds.Count;
-        
+
         foreach (var playerId in context.PlayerIds)
         {
             var transfer = new WalletTransfer
@@ -59,25 +59,25 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
                 playerId,
                 (ulong)valuePerPlayer
             );
-            
+
             await sql.InsertWalletOperation(
-                transfer.toWallet, 
-                transfer.fromWallet, 
-                (long) transfer.amount, 
-                WalletOperationType.Reward, 
+                transfer.toWallet,
+                transfer.fromWallet,
+                (long)transfer.amount,
+                WalletOperationType.Reward,
                 new WalletOperationDetail
-            {
-                transfer = new WalletOperationTransfer
                 {
-                    reason = actionItem.Message,
-                    initiatingPlayer = new NamedEntity
+                    transfer = new WalletOperationTransfer
                     {
-                        id = transfer.toWallet,
-                        name = "United Earth Defense Force"
+                        reason = actionItem.Message,
+                        initiatingPlayer = new NamedEntity
+                        {
+                            id = transfer.toWallet,
+                            name = "United Earth Defense Force"
+                        }
                     }
-                }
-            });
-            
+                });
+
             var notificationGrain = orleans.GetNotificationGrain(playerId);
             await notificationGrain.AddNewNotification(
                 Notifications.WalletReceivedMoney(transfer.fromWallet, transfer.amount)
