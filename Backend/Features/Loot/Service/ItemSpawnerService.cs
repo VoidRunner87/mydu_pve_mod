@@ -37,7 +37,7 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
 
         var random = provider.GetRandomProvider().GetRandom();
         
-        foreach (var entry in command.Item.Entries)
+        foreach (var entry in command.ItemBag.GetEntries())
         {
             var targetContainer = random.PickOneAtRandom(containers);
 
@@ -62,17 +62,38 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
                 continue;
             }
 
-            await _dataAccessor.ContainerGiveAsync(
-                (long)targetContainer.elementId,
-                new ItemAndQuantity
-                {
-                    item = new ItemInfo
+            try
+            {
+                await _dataAccessor.ContainerGiveAsync(
+                    (long)targetContainer.elementId,
+                    new ItemAndQuantity
                     {
-                        type = itemDef.Id
-                    },
-                    quantity = entry.Quantity
-                }
-            );
+                        item = new ItemInfo
+                        {
+                            type = itemDef.Id
+                        },
+                        quantity = entry.Quantity.ToQuantity()
+                    }
+                );
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to add item to container");
+                
+                await _errorService.AddAsync(
+                    new ErrorItem(
+                        "loot",
+                        "failed_to_add_to_container",
+                        new
+                        {
+                            entry.ItemName,
+                            command.ConstructId,
+                            quantity = entry.Quantity.ToQuantity()
+                        }
+                    )
+                );
+            }
+            
         }
         
         _logger.LogInformation("Items Spawned on Construct {Construct}", command.ConstructId);
