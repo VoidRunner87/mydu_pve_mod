@@ -14,4 +14,12 @@ public class ScriptContext(
     public HashSet<ulong> PlayerIds { get; set; } = playerIds;
     public Vec3 Sector { get; set; } = sector;
     public ulong? ConstructId { get; set; }
+
+    public ScriptContext WithConstructId(ulong constructId)
+    {
+        return new ScriptContext(ServiceProvider, PlayerIds, Sector)
+        {
+            ConstructId = constructId
+        };
+    }
 }

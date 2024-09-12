@@ -3,10 +3,10 @@ using Mod.DynamicEncounters.Features.Loot.Interfaces;
 
 namespace Mod.DynamicEncounters.Features.Loot.Data;
 
-public class ItemBagData(long maxBudget)
+public class ItemBagData(double maxBudget)
 {
-    public long MaxBudget { get; set; } = maxBudget;
-    public long CurrentCost { get; set; } = 0;
+    public double MaxBudget { get; set; } = maxBudget;
+    public double CurrentCost { get; set; } = 0;
     private IList<ItemAndQuantity> _entries { get; init; } = [];
     
     public readonly struct ItemAndQuantity(string itemName, IQuantity quantity)

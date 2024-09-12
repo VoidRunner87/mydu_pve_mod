@@ -183,6 +183,14 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
         _logger.LogInformation("Created Handle for {ConstructId} on {Sector}", constructId, context.Sector);
 
+        var actionFactory = provider.GetRequiredService<IScriptActionFactory>();
+        var onLoadAction = actionFactory.Create(actionItem.Events.OnLoad);
+
+        // Execute on load tasks
+        await onLoadAction.ExecuteAsync(
+            context.WithConstructId(constructId)
+        );
+        
         return ScriptActionResult.Successful();
     }
 
