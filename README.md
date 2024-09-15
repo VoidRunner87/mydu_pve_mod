@@ -72,6 +72,6 @@ see [Running Locally](Documentation/RunningLocally.md)
 
 * ~~Enhanced/Scriptable Wreck Experience~~
 * ~~NPCs that Shoot Back and have scriptable behaviors~~
-* Factions and Influence - Like Elite Dangerous
+* Factions and Influence - Like Elite Dangerous BGS
 * User Interface
 * Second Pass on NPCs and Wreck Experience
