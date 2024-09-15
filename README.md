@@ -58,8 +58,13 @@ docker-compose up -d mod_dynamic_encounters
 * Run the up script or `docker-compose up -d mod_dynamic_encounters` directly
 * For debugging, tail the logs with `tail -f logs/Mod.log` or similar.
 
+# Running Locally
+
+see [Running Locally](Documentation/RunningLocally.md)
+
 # Setting up Encounters
-[Encounters Setup](Documentation/EncountersSetup.md)
+[Quick Start via APIS](Documentation/QuickStartApis.md)
+[Encounters Setup OLD](Documentation/EncountersSetup.md)
 
 # Roadmap - Not in Order
 
