@@ -70,7 +70,8 @@ see [Running Locally](Documentation/RunningLocally.md)
 
 # Roadmap - Not in Order
 
-* Enhanced/Scriptable Wreck Experience
-* NPCs that Shoot Back and have scriptable behaviors
+* ~~Enhanced/Scriptable Wreck Experience~~
+* ~~NPCs that Shoot Back and have scriptable behaviors~~
+* Factions and Influence - Like Elite Dangerous
 * User Interface
 * Warp Gates
