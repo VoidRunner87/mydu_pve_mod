@@ -49,6 +49,8 @@ The port will be `5000`
 
 ### Setting up Data
 
+You can also hit those endpoints using a tool like postman.
+
 #### 1. Use The Starter Content API
 
 Hit the "StarterContent" Api Single POST Endpoint.
