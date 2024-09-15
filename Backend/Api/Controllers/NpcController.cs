@@ -11,44 +11,55 @@ using Mod.DynamicEncounters.Features.Spawner.Data;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
-[Route("wreck")]
-public class WreckController(IServiceProvider provider) : Controller
+[Route("npc")]
+public class NpcController(IServiceProvider provider) : Controller
 {
     private readonly IPrefabItemRepository _repository =
         provider.GetRequiredService<IPrefabItemRepository>();
 
-    private readonly AddWreckRequestValidator _validator = new();
+    private readonly AddNpcRequestValidator _validator = new(); 
 
     [HttpPut]
     [Route("")]
-    public async Task<IActionResult> Add([FromBody] AddWreckRequest request)
+    public async Task<IActionResult> Add([FromBody] AddNpcRequest request)
     {
         var validationResult = await _validator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {
             return BadRequest(validationResult);
         }
-
+        
         var guid = Guid.NewGuid();
 
+        var giveQuantaAction = new ScriptActionItem
+        {
+            Type = "give-quanta",
+            Value = request.QuantaReward * 100,
+            Message = "Kill Reward"
+        };
+        
         var prefab = new PrefabItem
         {
             Folder = request.Folder,
             Name = request.Name,
             Id = guid,
             Path = request.BlueprintPath,
-            OwnerId = 0,
-            InitialBehaviors = ["wreck"],
+            OwnerId = 4,
+            InitialBehaviors = ["aggressive", "follow-target"],
+            Events =
+            {
+                OnDestruction = request.QuantaReward == 0 ? [] : [giveQuantaAction]
+            },
             ServerProperties =
             {
                 Header =
                 {
                     PrettyName = request.ConstructName
                 },
-                IsDynamicWreck = true
+                IsDynamicWreck = false
             }
         };
-
+        
         await _repository.AddAsync(prefab);
 
         var scriptActionItemRepository = provider.GetRequiredService<IScriptActionItemRepository>();
@@ -61,7 +72,7 @@ public class WreckController(IServiceProvider provider) : Controller
                 Value = x.Budget
             })
             .ToList();
-
+        
         var scriptGuid = Guid.NewGuid();
 
         var script = new ScriptActionItem
@@ -75,7 +86,7 @@ public class WreckController(IServiceProvider provider) : Controller
                 OnLoad = lootActions
             }
         };
-
+        
         await scriptActionItemRepository.AddAsync(script);
 
         return Ok(new
@@ -87,16 +98,21 @@ public class WreckController(IServiceProvider provider) : Controller
         });
     }
 
-    public class AddWreckRequest
+    public class AddNpcRequest
     {
         public string Name { get; set; }
         public string Folder { get; set; } = "pve";
         public string ConstructName { get; set; }
         public string BlueprintPath { get; set; }
+        
+        public IEnumerable<string> AmmoItems { get; set; } = ["AmmoCannonSmallKineticAdvancedPrecision", "AmmoCannonSmallThermicAdvancedPrecision"];
+        public IEnumerable<string> WeaponItems { get; set; } = ["WeaponCannonSmallPrecision3"];
 
-        public IEnumerable<WreckLoot> LootList { get; set; } = new List<WreckLoot>();
+        public long QuantaReward { get; set; } = 250000;
 
-        public class WreckLoot
+        public IEnumerable<NpcLoot> LootList { get; set; } = new List<NpcLoot>();
+        
+        public class NpcLoot
         {
             public IEnumerable<string> Tags { get; set; } = [];
             public long Budget { get; set; } = 1000;
