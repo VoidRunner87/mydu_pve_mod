@@ -2,6 +2,11 @@
 
 public class DefaultQuantity(long quantity) : IQuantity
 {
+    public long GetRawQuantity()
+    {
+        return quantity;
+    }
+
     public long ToQuantity()
     {
         return quantity;

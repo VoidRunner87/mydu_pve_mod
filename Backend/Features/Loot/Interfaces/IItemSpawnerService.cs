@@ -6,4 +6,5 @@ namespace Mod.DynamicEncounters.Features.Loot.Interfaces;
 public interface IItemSpawnerService
 {
     Task SpawnItems(SpawnItemCommand command);
+    Task SpawnFuel(SpawnFuelCommand command);
 }

@@ -13,7 +13,7 @@ namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 /// No Validation Delete Construct
 /// </summary>
 [ScriptActionName(ActionName)]
-public class DeleteConstructAction : IScriptAction
+public class DeleteConstructAction(ScriptActionItem actionItem) : IScriptAction
 {
     public const string ActionName = "delete";
     
@@ -26,6 +26,11 @@ public class DeleteConstructAction : IScriptAction
         var provider = context.ServiceProvider;
 
         var logger = provider.CreateLogger<DeleteConstructAction>();
+
+        if (!context.ConstructId.HasValue && actionItem.ConstructId > 0)
+        {
+            context.ConstructId = actionItem.ConstructId;
+        }
         
         if (!context.ConstructId.HasValue)
         {

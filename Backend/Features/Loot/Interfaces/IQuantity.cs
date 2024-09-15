@@ -2,5 +2,6 @@
 
 public interface IQuantity
 {
+    long GetRawQuantity();
     long ToQuantity();
 }

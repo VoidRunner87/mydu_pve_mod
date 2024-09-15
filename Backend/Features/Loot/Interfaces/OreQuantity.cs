@@ -2,6 +2,11 @@
 
 public class OreQuantity(long quantity) : IQuantity
 {
+    public long GetRawQuantity()
+    {
+        return quantity;
+    }
+
     public long ToQuantity()
     {
         // Need to shift left the value

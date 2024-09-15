@@ -25,7 +25,7 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
     private readonly IDataAccessor _dataAccessor = provider.GetRequiredService<IDataAccessor>();
     private readonly ILogger<ItemSpawnerService> _logger = provider.CreateLogger<ItemSpawnerService>();
     private readonly IErrorService _errorService = provider.GetRequiredService<IErrorService>();
-    
+
     public async Task SpawnItems(SpawnItemCommand command)
     {
         var containers = new List<ElementId>();
@@ -38,12 +38,12 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
         if (containers.Count == 0)
         {
             _logger.LogWarning("No containers found on Construct {Construct}", command.ConstructId);
-            
+
             return;
         }
 
         var random = provider.GetRandomProvider().GetRandom();
-        
+
         foreach (var entry in command.ItemBag.GetEntries())
         {
             var targetContainer = random.PickOneAtRandom(containers);
@@ -65,7 +65,7 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
                         }
                     )
                 );
-                
+
                 continue;
             }
 
@@ -86,7 +86,7 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
             catch (Exception e)
             {
                 _logger.LogError(e, "Failed to add item to container");
-                
+
                 await _errorService.AddAsync(
                     new ErrorItem(
                         "loot",
@@ -100,10 +100,107 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
                     )
                 );
             }
-            
         }
-        
+
         _logger.LogInformation("Items Spawned on Construct {Construct}", command.ConstructId);
+    }
+
+    public async Task SpawnFuel(SpawnFuelCommand command)
+    {
+        var spaceFuelContainers = new List<ElementId>();
+
+        await foreach (var container in GetAvailableContainers<SpaceFuelContainer>(command.ConstructId))
+        {
+            spaceFuelContainers.Add(container);
+        }
+
+        var random = provider.GetRandomProvider().GetRandom();
+
+        var itemDef = _bank.GetDefinition(command.FuelType);
+
+        if (itemDef == null)
+        {
+            _logger.LogError("No item definition found for {Item}", command.FuelType);
+
+            await _errorService.AddAsync(
+                new ErrorItem(
+                    "loot",
+                    "failed_to_find_item_def",
+                    new
+                    {
+                        command.FuelType,
+                        command.ConstructId
+                    }
+                )
+            );
+
+            return;
+        }
+
+        var elementManagementGrain = _orleans.GetElementManagementGrain();
+        var elementGrain = _orleans.GetConstructElementsGrain(command.ConstructId);
+
+        foreach (var container in spaceFuelContainers)
+        {
+            var containerGrain = _orleans.GetContainerGrain(container);
+            var containerInfo = await containerGrain.Get(ModBase.Bot.PlayerId);
+            var elementInfo = await elementGrain.GetElement(container);
+
+            var volume = random.NextInt64(0, (long)containerInfo.maxVolume);
+
+            try
+            {
+                await _dataAccessor.SetDynamicProperty(
+                    ElementPropertyUpdate.Create(
+                        elementInfo,
+                        "current_volume",
+                        new PropertyValue(volume)
+                    )
+                );
+                
+                await _dataAccessor.ContainerGiveAsync(
+                    (long)container.elementId,
+                    new ItemAndQuantity
+                    {
+                        item = new ItemInfo
+                        {
+                            type = itemDef.Id
+                        },
+                        quantity = volume
+                    }
+                );
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to add item to container");
+
+                await _errorService.AddAsync(
+                    new ErrorItem(
+                        "loot",
+                        "failed_to_add_to_container",
+                        new
+                        {
+                            command.FuelType,
+                            command.ConstructId,
+                            quantity = volume
+                        }
+                    )
+                );
+            }
+        }
+
+        _logger.LogInformation("Items Spawned on Construct {Construct}", command.ConstructId);
+    }
+
+    private async IAsyncEnumerable<ElementId> GetAvailableContainers<T>(ulong constructId) where T : ContainerUnit
+    {
+        var constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
+        var containers = await constructElementsGrain.GetElementsOfType<SpaceFuelContainer>();
+
+        foreach (var container in containers)
+        {
+            yield return container;
+        }
     }
 
     private async IAsyncEnumerable<ElementId> GetAvailableContainers(ulong constructId)

@@ -143,12 +143,12 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
         var constructElementsGrain = orleans.GetConstructElementsGrain(constructId);
         var shields = await constructElementsGrain.GetElementsOfType<ShieldGeneratorUnit>();
 
+        var constructGrain = orleans.GetConstructGrain(constructId);
         if (!constructDef.DefinitionItem.ServerProperties.IsDynamicWreck && shields.Count > 0)
         {
             var sql = provider.GetRequiredService<ISql>();
             await sql.SetShieldEnabled(constructId, true);
 
-            var constructGrain = orleans.GetConstructGrain(constructId);
             await constructGrain.UpdateConstructInfo(new ConstructInfoUpdate
             {
                 shieldState = new ShieldState
