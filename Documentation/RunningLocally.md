@@ -1,7 +1,6 @@
 # Running the Mod Code on Local PC
 
-Expose these ports on your docker compose
-Below is my docker compose for reference:
+Expose these ports on your docker compose. Below is my docker compose for reference:
 
 ```yaml
 version: "3.1"
