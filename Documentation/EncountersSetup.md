@@ -16,6 +16,52 @@ Reasons:
 * This mod leverages the POI list for people to find encounters. Having a TONS of wrecks is going to make that more difficult.
 * You can spawn a wreck pool instead of constantly spawning wrecks using this mod.
 
+# Accessing the DB
+
+Currently, the mod doesn't not have a finished UI nor finished APIs.
+So you have to change things in the DB directly until that is done.
+
+## DB Running Locally
+
+You need to expose the Database port to your local machine by changing the `docker-compose.yml` file ports property of postgres.
+Here's what the postgres section looks like with the port exposed:
+
+```yaml
+  postgres:
+    image: postgres:11.2
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ${DBPATH}/db-postgres:/var/lib/postgresql/data
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.9
+    ports:
+      - "5432:5432"
+```
+
+## DB Running on a Server
+
+DO NOT expose the database to the internet. This will allow anyone to manipulate or brick your database.
+
+However you chose to expose the database must be secured. What I've seen so far is securing it via an ssh tunnel.
+So you can only access it if you setup an ssh tunnel to the port.
+
+This is technical stuff that people managing a server should know and out of the scope of this page to teach you how to do it.
+
+## Connecting to the DB
+
+I recommend using PgAdmin. It's easy and free. Google its name and install it.
+Find the credentials of postgres on your `config/dual.yml` file and connect to the DB to the port you exposed. Default 5432.
+
+## Manipulating Data
+
+For this you need to know SQL.
+While the mod is lacking a UI, this is the only way, for now.
+I'm slowly building APIs for it and I'll come up with another setup guide - much smaller - that people can just hit the apis...
+
+It's out of the scope of this page to teach you SQL.
+
 # Enable Spawner Features
 
 In the `mod_features` table, enable (set to "true"):
