@@ -21,26 +21,26 @@ public class WreckController(IServiceProvider provider) : Controller
     public async Task<IActionResult> Add([FromBody] AddWreckRequest request)
     {
         var guid = Guid.NewGuid();
-        
-        await _repository.AddAsync(
-            new PrefabItem
+
+        var prefab = new PrefabItem
+        {
+            Folder = request.Folder,
+            Name = request.Name,
+            Id = guid,
+            Path = request.BlueprintPath,
+            OwnerId = 0,
+            InitialBehaviors = ["wreck"],
+            ServerProperties =
             {
-                Folder = request.Folder,
-                Name = request.Name,
-                Id = guid,
-                Path = request.BlueprintPath,
-                OwnerId = 0,
-                InitialBehaviors = ["wreck"],
-                ServerProperties =
+                Header =
                 {
-                    Header =
-                    {
-                        PrettyName = request.ConstructName
-                    },
-                    IsDynamicWreck = true
-                }
+                    PrettyName = request.ConstructName
+                },
+                IsDynamicWreck = true
             }
-        );
+        };
+        
+        await _repository.AddAsync(prefab);
 
         var scriptActionItemRepository = provider.GetRequiredService<IScriptActionItemRepository>();
 
@@ -54,25 +54,27 @@ public class WreckController(IServiceProvider provider) : Controller
             .ToList();
         
         var scriptGuid = Guid.NewGuid();
-        
-        await scriptActionItemRepository.AddAsync(
-            new ScriptActionItem
+
+        var script = new ScriptActionItem
+        {
+            Id = scriptGuid,
+            Name = $"spawn-{request.Name}",
+            Type = "spawn",
+            Prefab = request.Name,
+            Events =
             {
-                Id = scriptGuid,
-                Name = $"spawn-{request.Name}",
-                Type = "spawn",
-                Prefab = request.Name,
-                Events =
-                {
-                    OnLoad = lootActions
-                }
+                OnLoad = lootActions
             }
-        );
+        };
+        
+        await scriptActionItemRepository.AddAsync(script);
 
         return Ok(new
         {
             PrefabId = guid,
-            ScriptId = scriptGuid
+            ScriptId = scriptGuid,
+            Prefab = prefab,
+            Script = script
         });
     }
 
@@ -87,7 +89,7 @@ public class WreckController(IServiceProvider provider) : Controller
         
         public class WreckLoot
         {
-            public string[] Tags = [];
+            public IEnumerable<string> Tags { get; set; } = [];
             public long Budget { get; set; } = 1000;
         }
     }
