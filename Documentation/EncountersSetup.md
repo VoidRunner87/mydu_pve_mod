@@ -7,6 +7,9 @@ When a player enters the sector area (10su radius - currently hardcoded in the c
 
 I recommend you DISABLE the Vanilla Wreck system.
 
+To disable the vanilla wreck system:
+Go to the backoffice -> Item Hierarchy -> search FeaturesList -> Open it -> set `dynamicWrecks` to `false` and save
+
 Reasons:
 
 * The ships available are bugged (Specially the Unknown Origins L Core)
