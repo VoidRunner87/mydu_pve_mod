@@ -63,7 +63,9 @@ docker-compose up -d mod_dynamic_encounters
 see [Running Locally](Documentation/RunningLocally.md)
 
 # Setting up Encounters
+
 [Quick Start via APIS](Documentation/QuickStartApis.md)
+
 [Encounters Setup OLD](Documentation/EncountersSetup.md)
 
 # Roadmap - Not in Order
