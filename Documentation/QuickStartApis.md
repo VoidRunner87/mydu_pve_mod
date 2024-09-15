@@ -43,9 +43,9 @@ The port will be `5000`
 
 [http://localhost:5000/swagger/](http://localhost:5000/swagger/)
 
-### From Docker
+### Running on Docker
 
-[http://mod_dynamic_encounters:8080/swagger] or [http://localhost:8080/swagger]
+[http://mod_dynamic_encounters:8080/swagger](http://mod_dynamic_encounters:8080/swagger) or [http://localhost:8080/swagger](http://localhost:8080/swagger)
 
 ### Setting up Data
 
