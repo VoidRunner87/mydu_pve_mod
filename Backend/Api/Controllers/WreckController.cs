@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Api.Controllers.Validators;
+using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
@@ -19,6 +22,7 @@ public class WreckController(IServiceProvider provider) : Controller
 
     private readonly AddWreckRequestValidator _validator = new();
 
+    [SwaggerOperation("Adds a wreck prefab and script to the system")]
     [HttpPut]
     [Route("")]
     public async Task<IActionResult> Add([FromBody] AddWreckRequest request)
@@ -28,6 +32,8 @@ public class WreckController(IServiceProvider provider) : Controller
         {
             return BadRequest(validationResult);
         }
+        
+        request.Sanitize();
 
         var guid = Guid.NewGuid();
 
@@ -87,11 +93,16 @@ public class WreckController(IServiceProvider provider) : Controller
         });
     }
 
+    [SwaggerSchema(Required = [nameof(Name), nameof(Folder), nameof(ConstructName), nameof(BlueprintPath)])]
     public class AddWreckRequest
     {
+        [SwaggerSchema("Identifier of the Wreck")]
         public string Name { get; set; }
+        [SwaggerSchema("Folder where the blueprint file is")]
         public string Folder { get; set; } = "pve";
+        [SwaggerSchema("Name of the construct")]
         public string ConstructName { get; set; }
+        [SwaggerSchema("Name of the blueprint json file")]
         public string BlueprintPath { get; set; }
 
         public IEnumerable<WreckLoot> LootList { get; set; } = new List<WreckLoot>();
@@ -100,6 +111,11 @@ public class WreckController(IServiceProvider provider) : Controller
         {
             public IEnumerable<string> Tags { get; set; } = [];
             public long Budget { get; set; } = 1000;
+        }
+
+        public void Sanitize()
+        {
+            Name = NameSanitationHelper.SanitizeName(Name);
         }
     }
 }

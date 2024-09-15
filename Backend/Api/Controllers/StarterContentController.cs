@@ -11,12 +11,14 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("starter")]
 public class StarterContentController(IServiceProvider provider) : Controller
 {
+    [SwaggerOperation("Initializes Starter Content")]
     [HttpPost]
     [Route("")]
     public async Task<IActionResult> InstallStarterContent()
@@ -179,6 +181,27 @@ public class StarterContentController(IServiceProvider provider) : Controller
                                     Type = "delete"
                                 }
                             ]
+                        }
+                    ]
+                }
+            );
+        }
+
+        if (!scriptsSet.Contains("expire-sector-default"))
+        {
+            await scriptItemRepository.AddAsync(
+                new ScriptActionItem
+                {
+                    Name = "expire-sector-default",
+                    Actions =
+                    [
+                        new()
+                        {
+                            Type = "expire-sector",
+                        },
+                        new()
+                        {
+                            Type = "publish-wreck-discovered-event"
                         }
                     ]
                 }

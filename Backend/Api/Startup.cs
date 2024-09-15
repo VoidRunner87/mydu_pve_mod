@@ -61,6 +61,8 @@ public class Startup(IServiceCollection rootServices)
 
         services.AddLogging(logging => logging.Setup(logWebHostInfo: true));
         services.TryAdd(rootServices);
+
+        services.AddSwaggerGen(c => c.EnableAnnotations());
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -85,5 +87,8 @@ public class Startup(IServiceCollection rootServices)
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
         });
+
+        app.UseSwagger();
+        app.UseSwaggerUI();
     }
 }

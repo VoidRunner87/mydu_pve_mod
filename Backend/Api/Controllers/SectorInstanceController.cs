@@ -11,6 +11,7 @@ public class SectorInstanceController(IServiceProvider provider) : Controller
 {
     private readonly ISectorInstanceRepository _repository = provider.GetRequiredService<ISectorInstanceRepository>();
     
+    [HttpGet]
     [Route("")]
     public async Task<IActionResult> GetAll()
     {
