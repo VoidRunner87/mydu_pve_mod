@@ -68,10 +68,10 @@ see [Running Locally](Documentation/RunningLocally.md)
 
 [Encounters Setup OLD](Documentation/EncountersSetup.md)
 
-# Roadmap - Not in Order
+# Roadmap - Not quite in Order
 
 * ~~Enhanced/Scriptable Wreck Experience~~
 * ~~NPCs that Shoot Back and have scriptable behaviors~~
 * Factions and Influence - Like Elite Dangerous
 * User Interface
-* Warp Gates
+* Second Pass on NPCs and Wreck Experience
