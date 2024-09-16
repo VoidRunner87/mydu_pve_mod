@@ -68,8 +68,9 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         var targetFiringPos = targetPos + offset;
 
         var distance = targetPos.Distance(npcPos);
+        var targetPosWithOffset = targetPos + offset;
 
-        var direction = (targetPos - npcPos + offset).NormalizeSafe();
+        var direction = (targetPosWithOffset - npcPos).NormalizeSafe();
 
         var velocityDirection = context.Velocity.NormalizeSafe();
         var velToTargetDot = velocityDirection.Dot(direction);
