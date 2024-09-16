@@ -101,6 +101,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         int maxIterations = 10;
         int counter = 0;
 
+        var targetingDistance = 5 * 200000;
+
         foreach (var construct in playerConstructs)
         {
             if (counter > maxIterations)
@@ -119,7 +121,15 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
             var pos = construct.rData.position;
 
-            var delta = pos.Distance(npcPos);
+            var delta = Math.Abs(pos.Distance(npcPos));
+
+            _logger.LogInformation("Construct {Construct} Distance: {Distance}m", construct.rData.constructId, delta);
+            
+            if (delta > targetingDistance)
+            {
+                continue;
+            }
+            
             if (delta < distance)
             {
                 distance = delta;

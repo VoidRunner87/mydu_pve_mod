@@ -9,7 +9,7 @@ using Mod.DynamicEncounters.Features.Sector.Interfaces;
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
 [ScriptActionName(ActionName)]
-public class ExpireSectorAction(TimeSpan timeSpan) : IScriptAction
+public class ExpireSectorAction : IScriptAction
 {
     public const string ActionName = "expire-sector";
     
@@ -22,7 +22,7 @@ public class ExpireSectorAction(TimeSpan timeSpan) : IScriptAction
         var provider = context.ServiceProvider;
 
         var sectorPoolManager = provider.GetRequiredService<ISectorPoolManager>();
-        await sectorPoolManager.SetExpirationFromNow(context.Sector, timeSpan);
+        await sectorPoolManager.SetExpirationFromNow(context.Sector, TimeSpan.FromHours(1));
         
         return ScriptActionResult.Successful();
     }

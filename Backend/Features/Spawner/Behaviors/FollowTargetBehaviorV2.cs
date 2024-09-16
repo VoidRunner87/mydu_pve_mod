@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Backend.Scenegraph;
 using BotLib.Generated;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
+using NQ.Interfaces;
 using NQutils.Exceptions;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
@@ -20,18 +22,35 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
     private bool _active = true;
     private IConstructService _constructService;
     private ILogger<FollowTargetBehavior> _logger;
+    private IConstructGrain _constructGrain;
 
     public bool IsActive() => _active;
 
     public Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;
-
+        var orleans = provider.GetOrleans();
+        
         _logger = provider.CreateLogger<FollowTargetBehavior>();
-        _constructService = context.ServiceProvider.GetRequiredService<IConstructService>();
+        _constructService = provider.GetRequiredService<IConstructService>();
 
+        _constructGrain = orleans.GetConstructGrain(constructId);
+        
+        SetSceneGraphDeltaTime(context, 0d);
+        
         return Task.CompletedTask;
     }
+
+    private void SetSceneGraphDeltaTime(BehaviorContext context, double value)
+    {
+        if (!context.ExtraProperties.TryAdd("SceneGraphDeltaTime", value))
+        {
+            context.ExtraProperties["SceneGraphDeltaTime"] = value;
+        }
+    }
+    
+    private bool GetSceneGraphDeltaTime(BehaviorContext context, out double deltaTime)
+        => context.ExtraProperties.TryGetValue("SceneGraphDeltaTime", out deltaTime);
 
     public async Task TickAsync(BehaviorContext context)
     {
@@ -140,6 +159,46 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             _logger.LogError(be, "Failed to update construct transform. Attempting a restart of the bot connection.");
 
             await ModBase.Bot.Reconnect();
+        }
+        
+        try
+        {
+            GetSceneGraphDeltaTime(context, out var sgDt);
+            if (sgDt < 0.5d)
+            {
+                SetSceneGraphDeltaTime(context, sgDt + context.DeltaTime);
+                return;
+            }
+            
+            SetSceneGraphDeltaTime(context, 0d);
+            
+            var sg = context.ServiceProvider.GetRequiredService<IScenegraphAPI>();
+            
+            await sg.SetLastConstructUpdate(
+                new ConstructUpdate
+                {
+                    constructId = constructId,
+                    rotation = rotation,
+                    position = position,
+                    grounded = false,
+                    pilotId = 4,
+                    time = _timePoint,
+                    worldAbsoluteAngVelocity = relativeAngularVel,
+                    worldAbsoluteVelocity = context.Velocity,
+                    worldRelativeVelocity = context.Velocity,
+                    worldRelativeAngVelocity = relativeAngularVel,
+                }
+            );
+            
+            await _constructGrain.SetResumeState(
+                relativeAngularVel,
+                context.Velocity,
+                false
+            );
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to update SceneGraph Position");
         }
     }
 
