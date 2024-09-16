@@ -126,14 +126,6 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
         try
         {
-            await ModBase.Bot.Req.ConstructChangeControl(
-                new ConstructControl
-                {
-                    constructId = constructId,
-                    isStrongControl = true
-                }
-            );
-            
             await ModBase.Bot.Req.ConstructUpdate(
                 new ConstructUpdate
                 {
