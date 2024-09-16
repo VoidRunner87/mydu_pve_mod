@@ -50,6 +50,50 @@ public static class VectorMathHelper
 
         return Math.Sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
     }
+    
+    public static Vec3 CrossProduct(this Vec3 v1, Vec3 v2)
+    {
+        return new Vec3
+        {
+            x = v1.y * v2.z - v1.z * v2.y,
+            y = v1.z * v2.x - v1.x * v2.z,
+            z = v1.x * v2.y - v1.y * v2.x
+        };
+    }
+    
+    public static Vec3 Reverse(this Vec3 vec)
+    {
+        return new Vec3
+        {
+            x = -vec.x,
+            y = -vec.y,
+            z = -vec.z
+        };
+    }
+    
+    public static Vec3 CalculateAngularVelocity(Vec3 d0, Vec3 d, double deltaTime)
+    {
+        if (deltaTime <= 0)
+        {
+            return d;
+        }
+        
+        Vec3 d0Normalized = d0.Normalized();
+        Vec3 dNormalized = d.Normalized();
+
+        Vec3 rotationAxis = d0Normalized.CrossProduct(dNormalized);
+        double dot = d0Normalized.Dot(dNormalized);
+
+        double angle = Math.Acos(dot); // Angle in radians
+        double angularVelocityMagnitude = angle / deltaTime;
+
+        return new Vec3
+        {
+            x = rotationAxis.x * angularVelocityMagnitude,
+            y = rotationAxis.y * angularVelocityMagnitude,
+            z = rotationAxis.z * angularVelocityMagnitude
+        };
+    }
 
     public static double Size(this Vec3 vector)
     {

@@ -36,21 +36,27 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
         _constructGrain = orleans.GetConstructGrain(constructId);
         
-        SetSceneGraphDeltaTime(context, 0d);
-        
         return Task.CompletedTask;
     }
 
-    private void SetSceneGraphDeltaTime(BehaviorContext context, double value)
+    private void SetD0(Vec3 value, BehaviorContext context)
     {
-        if (!context.ExtraProperties.TryAdd("SceneGraphDeltaTime", value))
+        if (!context.ExtraProperties.TryAdd("d0", value))
         {
-            context.ExtraProperties["SceneGraphDeltaTime"] = value;
+            context.ExtraProperties["d0"] = value;
         }
     }
-    
-    private bool GetSceneGraphDeltaTime(BehaviorContext context, out double deltaTime)
-        => context.ExtraProperties.TryGetValue("SceneGraphDeltaTime", out deltaTime);
+
+    private bool GetD0(BehaviorContext context, out Vec3 value, Vec3 defaultValue)
+    {
+        if (!context.ExtraProperties.TryGetValue("d0", out value))
+        {
+            value = defaultValue;
+            return false;
+        }
+
+        return true;
+    }
 
     public async Task TickAsync(BehaviorContext context)
     {
@@ -103,10 +109,10 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
         var accelV = direction * acceleration;
 
-        if (distance <= distanceGoal * 2)
-        {
-            accelV = new Vec3();
-        }
+        // if (distance <= distanceGoal * 2)
+        // {
+        //     accelV = new Vec3();
+        // }
 
         context.Velocity += accelV * context.DeltaTime;
         context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);
@@ -130,7 +136,14 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             accelerationFuturePos
         );
 
-        var relativeAngularVel = CalculateAngularVelocity(context.Rotation, rotation, context.DeltaTime);
+        GetD0(context, out var d0, new Vec3());
+        var relativeAngularVel = VectorMathHelper.CalculateAngularVelocity(
+            d0,
+            direction,
+            context.DeltaTime
+        );
+        
+        SetD0(direction, context);
 
         context.Rotation = rotation;
 
@@ -166,46 +179,6 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             {
                 _logger.LogError(e, "Failed to Reconnect");
             }
-        }
-        
-        try
-        {
-            GetSceneGraphDeltaTime(context, out var sgDt);
-            if (sgDt < 0.5d)
-            {
-                SetSceneGraphDeltaTime(context, sgDt + context.DeltaTime);
-                return;
-            }
-            
-            SetSceneGraphDeltaTime(context, 0d);
-            
-            var sg = context.ServiceProvider.GetRequiredService<IScenegraphAPI>();
-            
-            await sg.SetLastConstructUpdate(
-                new ConstructUpdate
-                {
-                    constructId = constructId,
-                    rotation = rotation,
-                    position = position,
-                    grounded = false,
-                    pilotId = 4,
-                    time = _timePoint,
-                    worldAbsoluteAngVelocity = relativeAngularVel,
-                    worldAbsoluteVelocity = context.Velocity,
-                    worldRelativeVelocity = context.Velocity,
-                    worldRelativeAngVelocity = relativeAngularVel,
-                }
-            );
-            
-            await _constructGrain.SetResumeState(
-                relativeAngularVel,
-                context.Velocity,
-                false
-            );
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to update SceneGraph Position");
         }
     }
 
