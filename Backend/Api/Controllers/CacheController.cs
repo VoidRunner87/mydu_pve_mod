@@ -12,8 +12,8 @@ namespace Mod.DynamicEncounters.Api.Controllers;
 public class CacheController : Controller
 {
     [SwaggerOperation("Clears the Prefab and Script Cache and reloads it.")]
-    [HttpPost]
-    [Route("clear")]
+    [HttpDelete]
+    [Route("")]
     public async Task<IActionResult> ClearCache()
     {
         var provider = ModBase.ServiceProvider;
