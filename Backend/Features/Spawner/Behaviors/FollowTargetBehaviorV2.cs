@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Backend.Scenegraph;
 using BotLib.Generated;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,9 @@ using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
+using NQ.Interfaces;
 using NQutils.Exceptions;
+using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
@@ -20,17 +23,22 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
     private bool _active = true;
     private IConstructService _constructService;
     private ILogger<FollowTargetBehavior> _logger;
+    private IClusterClient _orleans;
+    private IConstructGrain _constructGrain;
 
     public bool IsActive() => _active;
 
-    public Task InitializeAsync(BehaviorContext context)
+    public async Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;
 
         _logger = provider.CreateLogger<FollowTargetBehavior>();
         _constructService = context.ServiceProvider.GetRequiredService<IConstructService>();
 
-        return Task.CompletedTask;
+        _orleans = provider.GetOrleans();
+        
+        _constructGrain = _orleans.GetConstructGrain(constructId);
+        await _constructGrain.PilotingTakeOver(4, true);
     }
 
     public async Task TickAsync(BehaviorContext context)
@@ -103,11 +111,11 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         context.Velocity = velocity;
 
         // Make the ship point to where it's accelerating
-        var accelerationFuturePos = npcPos + direction * 200000;
+        // var accelerationFuturePos = npcPos + direction * 20000;
 
         var rotation = VectorMathHelper.CalculateRotationToPoint(
             npcPos,
-            accelerationFuturePos
+            targetFiringPos
         );
 
         var relativeAngularVel = CalculateAngularVelocity(context.Rotation, rotation, context.DeltaTime);
@@ -118,6 +126,14 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
         try
         {
+            await ModBase.Bot.Req.ConstructChangeControl(
+                new ConstructControl
+                {
+                    constructId = constructId,
+                    isStrongControl = true
+                }
+            );
+            
             await ModBase.Bot.Req.ConstructUpdate(
                 new ConstructUpdate
                 {
@@ -133,6 +149,30 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
                     grounded = false,
                 }
             );
+            
+            var sg = context.ServiceProvider
+                .GetRequiredService<IScenegraphAPI>();
+            await sg.SetLastConstructUpdate(
+                new ConstructUpdate
+                {
+                    constructId = constructId,
+                    rotation = rotation,
+                    position = position,
+                    grounded = false,
+                    pilotId = 4,
+                    time = _timePoint,
+                    worldAbsoluteAngVelocity = relativeAngularVel,
+                    worldAbsoluteVelocity = context.Velocity,
+                    worldRelativeVelocity = context.Velocity,
+                    worldRelativeAngVelocity = relativeAngularVel,
+                }
+            );
+
+            // await _constructGrain.SetResumeState(
+            //     relativeAngularVel,
+            //     context.Velocity,
+            //     false
+            // );
         }
         catch (BusinessException be)
         {
