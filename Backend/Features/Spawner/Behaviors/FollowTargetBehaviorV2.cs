@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Backend.Scenegraph;
 using BotLib.Generated;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -10,9 +9,7 @@ using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
-using NQ.Interfaces;
 using NQutils.Exceptions;
-using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
@@ -23,22 +20,17 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
     private bool _active = true;
     private IConstructService _constructService;
     private ILogger<FollowTargetBehavior> _logger;
-    private IClusterClient _orleans;
-    private IConstructGrain _constructGrain;
 
     public bool IsActive() => _active;
 
-    public async Task InitializeAsync(BehaviorContext context)
+    public Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;
 
         _logger = provider.CreateLogger<FollowTargetBehavior>();
         _constructService = context.ServiceProvider.GetRequiredService<IConstructService>();
 
-        _orleans = provider.GetOrleans();
-        
-        _constructGrain = _orleans.GetConstructGrain(constructId);
-        await _constructGrain.PilotingTakeOver(4, true);
+        return Task.CompletedTask;
     }
 
     public async Task TickAsync(BehaviorContext context)
@@ -111,11 +103,11 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         context.Velocity = velocity;
 
         // Make the ship point to where it's accelerating
-        // var accelerationFuturePos = npcPos + direction * 20000;
+        var accelerationFuturePos = npcPos + direction * 200000;
 
         var rotation = VectorMathHelper.CalculateRotationToPoint(
             npcPos,
-            targetFiringPos
+            accelerationFuturePos
         );
 
         var relativeAngularVel = CalculateAngularVelocity(context.Rotation, rotation, context.DeltaTime);

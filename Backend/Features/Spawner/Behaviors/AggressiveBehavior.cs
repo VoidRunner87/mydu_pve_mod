@@ -102,7 +102,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         var targetInfoGrain = _orleans.GetConstructInfoGrain(new ConstructId{constructId = context.TargetConstructId.Value});
         var targetInfo = await targetInfoGrain.Get();
         var targetSize = targetInfo.rData.geometry.size;
-
+        
         if (targetInfo.mutableData.pilot.HasValue)
         {
             context.PlayerIds.TryAdd(targetInfo.mutableData.pilot.Value, targetInfo.mutableData.pilot.Value);
