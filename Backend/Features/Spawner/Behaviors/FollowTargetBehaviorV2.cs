@@ -141,30 +141,6 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
                     grounded = false,
                 }
             );
-            
-            var sg = context.ServiceProvider
-                .GetRequiredService<IScenegraphAPI>();
-            await sg.SetLastConstructUpdate(
-                new ConstructUpdate
-                {
-                    constructId = constructId,
-                    rotation = rotation,
-                    position = position,
-                    grounded = false,
-                    pilotId = 4,
-                    time = _timePoint,
-                    worldAbsoluteAngVelocity = relativeAngularVel,
-                    worldAbsoluteVelocity = context.Velocity,
-                    worldRelativeVelocity = context.Velocity,
-                    worldRelativeAngVelocity = relativeAngularVel,
-                }
-            );
-
-            // await _constructGrain.SetResumeState(
-            //     relativeAngularVel,
-            //     context.Velocity,
-            //     false
-            // );
         }
         catch (BusinessException be)
         {

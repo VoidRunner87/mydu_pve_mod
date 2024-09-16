@@ -215,23 +215,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             return;
         }
         
-        var constructGrain = _orleans.GetConstructGrain(constructId);
-
-        var targetInfo = new TargetingConstructData
-        {
-            constructId = constructId,
-            constructName = "__ENEMY__",
-            ownerId = new EntityId
-            {
-                playerId = 4
-            }
-        };
-        
-        await constructGrain.ConstructStartAttacking(
-            targetInfo,
-            elementInfo.elementId
-        );
-
         SetShootTotalDeltaTime(context.BehaviorContext, 0);
 
         if (prefab.DefinitionItem.AmmoItems.Count == 0)
@@ -246,7 +229,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
         var ammoItem = random.PickOneAtRandom(prefab.DefinitionItem.AmmoItems);
         var weaponItem = random.PickOneAtRandom(prefab.DefinitionItem.WeaponItems);
-        
+
         await context.NpcShotGrain.Fire(
             w.displayName,
             context.ConstructPosition,
