@@ -1,11 +1,13 @@
 using System;
 using System.Threading.Tasks;
 using BotLib.Generated;
+using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
+using NQutils.Exceptions;
 using Orleans.Runtime;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
@@ -24,17 +26,26 @@ public class SendDirectMessageAction(ScriptActionItem actionItem) : IScriptActio
 
         foreach (var playerId in context.PlayerIds)
         {
-            await ModBase.Bot.Req.ChatMessageSend(
-                new MessageContent
-                {
-                    channel = new MessageChannel
+            try
+            {
+                await ModBase.Bot.Req.ChatMessageSend(
+                    new MessageContent
                     {
-                        channel = MessageChannelType.PRIVATE,
-                        targetId = playerId
-                    },
-                    message = actionItem.Message
-                }
-            );
+                        channel = new MessageChannel
+                        {
+                            channel = MessageChannelType.PRIVATE,
+                            targetId = playerId
+                        },
+                        message = actionItem.Message
+                    }
+                );
+            }
+            catch (BusinessException e)
+            {
+                logger.LogError(e, "Failed to Send Chat Message. Reconnecting Bot");
+
+                await ModBase.Bot.Reconnect();
+            }
         }
         
         logger.Debug("DM Messages Sent");

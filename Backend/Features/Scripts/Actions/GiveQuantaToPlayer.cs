@@ -64,7 +64,7 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
                 transfer.toWallet,
                 transfer.fromWallet,
                 (long)transfer.amount,
-                WalletOperationType.Reward,
+                WalletOperationType.MissionReward,
                 new WalletOperationDetail
                 {
                     transfer = new WalletOperationTransfer
