@@ -23,6 +23,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
     private List<WeaponHandle> _weaponUnits;
     private IClusterClient _orleans;
     private IGameplayBank _bank;
+    private IConstructGrain _constructGrain;
     private ILogger<AggressiveBehavior> _logger;
     private IConstructElementsGrain _constructElementsGrain;
 
@@ -57,6 +58,9 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             .ToList();
 
         _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
+
+        _constructGrain = _orleans.GetConstructGrain(constructId);
+        
         context.ExtraProperties.TryAdd("CORE_ID", _coreUnitElementId);
         
         context.IsAlive = _coreUnitElementId.elementId > 0;
@@ -211,6 +215,12 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         var cycleTime = w.baseCycleTime * mod.Weapon.CycleTime;
 
         if (totalDeltaTime < cycleTime)
+        {
+            return;
+        }
+
+        var isInSafeZone = await _constructGrain.IsInSafeZone();
+        if (isInSafeZone)
         {
             return;
         }

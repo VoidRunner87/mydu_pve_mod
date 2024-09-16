@@ -158,7 +158,14 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         {
             _logger.LogError(be, "Failed to update construct transform. Attempting a restart of the bot connection.");
 
-            await ModBase.Bot.Reconnect();
+            try
+            {
+                await ModBase.Bot.Reconnect();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to Reconnect");
+            }
         }
         
         try

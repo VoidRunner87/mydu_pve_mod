@@ -205,6 +205,11 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 .FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
                 .ToList();
 
+            if (constructs.Count == 0)
+            {
+                continue;
+            }
+
             HashSet<ulong> playerIds = [];
 
             try

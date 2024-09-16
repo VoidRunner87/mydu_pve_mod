@@ -44,7 +44,14 @@ public class SendDirectMessageAction(ScriptActionItem actionItem) : IScriptActio
             {
                 logger.LogError(e, "Failed to Send Chat Message. Reconnecting Bot");
 
-                await ModBase.Bot.Reconnect();
+                try
+                {
+                    await ModBase.Bot.Reconnect();
+                }
+                catch (Exception e2)
+                {
+                    logger.LogError(e2, "Failed to Reconnect");
+                }
             }
         }
         
