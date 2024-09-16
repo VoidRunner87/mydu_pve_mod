@@ -73,4 +73,11 @@ public abstract class BaseMemoryRepository<TKey, T>(IServiceProvider provider) :
 
         return Task.CompletedTask;
     }
+
+    public Task Clear()
+    {
+        _items.Clear();
+
+        return Task.CompletedTask;
+    }
 }

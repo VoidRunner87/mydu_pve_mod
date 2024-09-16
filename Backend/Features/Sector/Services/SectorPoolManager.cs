@@ -259,7 +259,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             try
             {
                 ulong? playerId = null;
-                if (playerIds.Count != 0)
+                if (playerIds.Count > 0)
                 {
                     playerId = random.PickOneAtRandom(playerIds);
                 }

@@ -92,6 +92,11 @@ public class PrefabItemDatabaseRepository(IServiceProvider provider) : IPrefabIt
         await db.ExecuteAsync("DELETE FROM public.mod_construct_def WHERE name = @key", new { key });
     }
 
+    public Task Clear()
+    {
+        throw new NotImplementedException();
+    }
+
     private PrefabItem MapToModel(DbRow row)
     {
         var result = JsonConvert.DeserializeObject<PrefabItem>(row.content);

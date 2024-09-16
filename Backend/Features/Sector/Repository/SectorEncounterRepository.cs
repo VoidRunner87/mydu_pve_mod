@@ -76,6 +76,11 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         throw new NotImplementedException();
     }
 
+    public Task Clear()
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<IEnumerable<SectorEncounterItem>> FindActiveTaggedAsync(string tag)
     {
         using var db = _connectionFactory.Create();

@@ -12,4 +12,5 @@ public interface IRepository<T>
     Task<IEnumerable<T>> GetAllAsync();
     Task<long> GetCountAsync();
     Task DeleteAsync(object key);
+    Task Clear();
 }

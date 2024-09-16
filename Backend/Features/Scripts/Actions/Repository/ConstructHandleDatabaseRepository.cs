@@ -159,6 +159,11 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         );
     }
 
+    public Task Clear()
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<IEnumerable<ConstructHandleItem>> FindTagInSectorAsync(Vec3 sector, string tag)
     {
         using var db = _factory.Create();

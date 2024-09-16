@@ -121,6 +121,11 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         );
     }
 
+    public Task Clear()
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<SectorInstance?> FindBySector(Vec3 sector)
     {
         using var db = _connectionFactory.Create();

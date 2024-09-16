@@ -97,6 +97,11 @@ public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : ISc
         await db.ExecuteAsync("DELETE FROM public.mod_script WHERE name = @key", new { key });
     }
 
+    public Task Clear()
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<bool> ActionExistAsync(string actionName)
     {
         using var db = _factory.Create();
