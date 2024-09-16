@@ -58,12 +58,20 @@ docker-compose up -d mod_dynamic_encounters
 * Run the up script or `docker-compose up -d mod_dynamic_encounters` directly
 * For debugging, tail the logs with `tail -f logs/Mod.log` or similar.
 
+# Running Locally
+
+see [Running Locally](Documentation/RunningLocally.md)
+
 # Setting up Encounters
-[Encounters Setup](Documentation/EncountersSetup.md)
 
-# Roadmap - Not in Order
+[Quick Start via APIS](Documentation/QuickStartApis.md)
 
-* Enhanced/Scriptable Wreck Experience
-* NPCs that Shoot Back and have scriptable behaviors
+[Encounters Setup OLD](Documentation/EncountersSetup.md)
+
+# Roadmap - Not quite in Order
+
+* ~~Enhanced/Scriptable Wreck Experience~~
+* ~~NPCs that Shoot Back and have scriptable behaviors~~
+* Factions and Influence - Like Elite Dangerous BGS
 * User Interface
-* Warp Gates
+* Second Pass on NPCs and Wreck Experience
