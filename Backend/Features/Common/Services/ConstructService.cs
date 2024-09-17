@@ -4,10 +4,12 @@ using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Database.Interfaces;
+using Mod.DynamicEncounters.Features.Common.Data;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
+using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Common.Services;
 
@@ -15,6 +17,7 @@ public class ConstructService(IServiceProvider provider) : IConstructService
 {
     private readonly ILogger<ConstructService> _logger = provider.CreateLogger<ConstructService>();
     private readonly IPostgresConnectionFactory _factory = provider.GetRequiredService<IPostgresConnectionFactory>();
+    private IClusterClient _orleans = provider.GetOrleans();
 
     public async Task<ConstructInfo?> GetConstructInfoAsync(ulong constructId)
     {
@@ -25,7 +28,7 @@ public class ConstructService(IServiceProvider provider) : IConstructService
                 return null;
             }
 
-            return await provider.GetOrleans().GetConstructInfoGrain(constructId).Get();
+            return await _orleans.GetConstructInfoGrain(constructId).Get();
         }
         catch (Exception e)
         {
@@ -71,5 +74,13 @@ public class ConstructService(IServiceProvider provider) : IConstructService
             """,
             new {id = (long)constructId}
         );
+    }
+
+    public async Task<Velocities> GetConstructVelocities(ulong constructId)
+    {
+        var result = await _orleans.GetConstructGrain(constructId)
+            .GetConstructVelocity();
+
+        return new Velocities(result.velocity, result.angVelocity);
     }
 }

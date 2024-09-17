@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Numerics;
+using MathNet.Spatial.Euclidean;
 using NQ;
+using Quaternion = System.Numerics.Quaternion;
 
 namespace Mod.DynamicEncounters.Helpers;
 
@@ -113,9 +115,25 @@ public static class VectorMathHelper
         return vector;
     }
 
-    private static Vector3 ToVector3(this Vec3 v)
+    public static Quat ToQuat(this Quaternion q)
+    {
+        return new Quat
+        {
+            z = q.Z,
+            x = q.X,
+            y = q.Y,
+            w = q.W
+        };
+    }
+    
+    public static Vector3 ToVector3(this Vec3 v)
     {
         return new Vector3((float)v.x, (float)v.y, (float)v.z);
+    }
+    
+    public static Vector3D ToFloatVector3(this Vec3 v)
+    {
+        return new Vector3D((float)v.x, (float)v.y, (float)v.z);
     }
     
     public static Vec3 NormalizeSafe(this Vec3 v)

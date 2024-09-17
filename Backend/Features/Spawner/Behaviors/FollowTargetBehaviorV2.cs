@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Backend.Scenegraph;
 using BotLib.Generated;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -109,10 +108,10 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
         var accelV = direction * acceleration;
 
-        // if (distance <= distanceGoal * 2)
-        // {
-        //     accelV = new Vec3();
-        // }
+        if (distance <= distanceGoal * 2)
+        {
+            accelV = new Vec3();
+        }
 
         context.Velocity += accelV * context.DeltaTime;
         context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);
