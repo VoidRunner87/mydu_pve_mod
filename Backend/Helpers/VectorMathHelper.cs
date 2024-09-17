@@ -115,20 +115,14 @@ public static class VectorMathHelper
         return vector;
     }
 
-    public static Quat ToQuat(this Quaternion q)
-    {
-        return new Quat
-        {
-            z = q.Z,
-            x = q.X,
-            y = q.Y,
-            w = q.W
-        };
-    }
-    
     public static Vector3 ToVector3(this Vec3 v)
     {
         return new Vector3((float)v.x, (float)v.y, (float)v.z);
+    }
+    
+    public static Vec3 ToNqVec3(this Vector3 v)
+    {
+        return new Vec3 { x = v.X, y = v.Y, z = v.Z };
     }
     
     public static Vector3D ToFloatVector3(this Vec3 v)
@@ -192,8 +186,6 @@ public static class VectorMathHelper
 
         return Quaternion.Normalize(quaternion);
     }
-
-    public static Quaternion ToQuaternion(this Quat q) => new(q.x, q.y, q.z, q.w);
 
     public static Quat FromQuaternion(this Quaternion q)
     {

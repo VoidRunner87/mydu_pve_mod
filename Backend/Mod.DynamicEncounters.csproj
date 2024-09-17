@@ -74,9 +74,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Remove="LoaderTest\**" />
+    <None Remove="Mod.DynamicEncounters.Tests\**" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="LoaderTest\**" />
+    <Compile Remove="Mod.DynamicEncounters.Tests\**" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Remove="LoaderTest\**" />
@@ -88,6 +90,8 @@
     <EmbeddedResource Include="Resources\Simple_POI.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Remove="Mod.DynamicEncounters.Tests\**" />
+    <Content Remove="Mod.DynamicEncounters.Tests\**" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="LoaderTest\**" />
@@ -98,6 +102,16 @@
     <_ContentIncludedByDefault Remove="LoaderTest\obj\LoaderTest.csproj.nuget.dgspec.json" />
     <_ContentIncludedByDefault Remove="LoaderTest\obj\project.assets.json" />
     <_ContentIncludedByDefault Remove="LoaderTest\obj\project.packagespec.json" />
+    <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\bin\Debug\net8.0\Mod.DynamicEncounters.Tests.deps.json" />
+    <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\bin\Debug\net8.0\Mod.DynamicEncounters.Tests.runtimeconfig.json" />
+    <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\obj\Debug\net8.0\Mod.DynamicEncounters.Tests.sourcelink.json" />
+    <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\obj\Mod.DynamicEncounters.Tests.csproj.nuget.dgspec.json" />
+    <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\obj\project.assets.json" />
+    <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\obj\project.packagespec.json" />
+    <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\bin\Debug\net8.0\Mod.DynamicEncounters.deps.json" />
+    <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\bin\Debug\net8.0\Mod.DynamicEncounters.runtimeconfig.json" />
+    <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\bin\Debug\net8.0\Resources\Basic_Pirate.json" />
+    <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\bin\Debug\net8.0\Resources\Simple_POI.json" />
   </ItemGroup>
 
   <!-- https://github.com/dotnet/efcore/issues/15047 -->

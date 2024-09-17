@@ -47,6 +47,40 @@ public class ConstructController : Controller
         return Ok();
     }
 
+    [HttpPost]
+    [Route("{fromConstructId:long}/lookat/{toConstructId:long}")]
+    public async Task<IActionResult> LookAt(long fromConstructId, long toConstructId)
+    {
+        var provider = ModBase.ServiceProvider;
+        var orleans = provider.GetOrleans();
+        
+        var fromConstructInfoGrain = orleans.GetConstructInfoGrain((ulong)fromConstructId);
+        var fromConstructInfo = await fromConstructInfoGrain.Get();
+        var fromPos = fromConstructInfo.rData.position;
+        
+        var toConstructInfoGrain = orleans.GetConstructInfoGrain((ulong)toConstructId);
+        var toConstructInfo = await toConstructInfoGrain.Get();
+        var toPos = toConstructInfo.rData.position;
+
+        var desiredRotation = VectorMathUtils.SetRotationToMatchDirection(
+            fromPos.ToVector3(), 
+            toPos.ToVector3()
+        );
+
+        await ModBase.Bot.Req.ConstructUpdate(
+            new ConstructUpdate
+            {
+                constructId = (ulong)fromConstructId,
+                position = fromPos,
+                time = TimePoint.Now(),
+                grounded = false,
+                rotation = desiredRotation.ToNqQuat()
+            }
+        );
+        
+        return Ok();
+    }
+
     [HttpGet]
     [Route("vel/{constructId:long}")]
     public async Task<IActionResult> GetVelocity(long constructId)
