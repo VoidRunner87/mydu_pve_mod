@@ -108,33 +108,36 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
         var accelV = direction * acceleration;
 
-        if (distance <= distanceGoal * 2)
-        {
-            accelV = new Vec3();
-        }
-
         context.Velocity += accelV * context.DeltaTime;
         context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);
         var velocity = context.Velocity;
 
-        var position = LerpWithVelocity(
-            npcPos,
-            targetFiringPos,
-            ref velocity,
-            accelV,
-            context.DeltaTime
-        );
+        Vec3 position;
+        if (distance > distanceGoal * 1.25)
+        {
+            position = LerpWithVelocity(
+                npcPos,
+                targetFiringPos,
+                ref velocity,
+                accelV,
+                context.DeltaTime
+            );
+        }
+        else
+        {
+            position = npcPos + velocity * context.DeltaTime;
+        }
 
         context.Velocity = velocity;
 
         // Make the ship point to where it's accelerating
         var accelerationFuturePos = npcPos + direction * 200000;
 
-        var rotation = VectorMathHelper.CalculateRotationToPoint(
-            npcPos,
-            accelerationFuturePos
+        var rotation = VectorMathUtils.SetRotationToMatchDirection(
+            npcPos.ToVector3(),
+            accelerationFuturePos.ToVector3()
         );
-
+        
         GetD0(context, out var d0, new Vec3());
         var relativeAngularVel = VectorMathHelper.CalculateAngularVelocity(
             d0,
@@ -144,7 +147,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         
         SetD0(direction, context);
 
-        context.Rotation = rotation;
+        context.Rotation = rotation.ToNqQuat();
 
         _timePoint = TimePoint.Now();
 
@@ -155,7 +158,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
                 {
                     pilotId = ModBase.Bot.PlayerId,
                     constructId = constructId,
-                    rotation = rotation,
+                    rotation = context.Rotation,
                     position = position,
                     worldAbsoluteVelocity = context.Velocity,
                     worldRelativeVelocity = context.Velocity,

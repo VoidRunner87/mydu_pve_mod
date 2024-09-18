@@ -14,7 +14,7 @@ public class ConstructBehaviorFactory : IConstructBehaviorFactory
             case "aggressive":
                 return new AggressiveBehavior(constructId, prefab).WithErrorHandler();
             case "follow-target":
-                return new FollowTargetBehaviorV3(constructId, prefab).WithErrorHandler();
+                return new FollowTargetBehaviorV2(constructId, prefab).WithErrorHandler();
             default:
                 return new WreckBehavior().WithErrorHandler();
         }
