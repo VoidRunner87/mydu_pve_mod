@@ -57,6 +57,8 @@ public class SectorLoop : ModBase
 
         var factionRepository = ServiceProvider.GetRequiredService<IFactionRepository>();
         
+        await _sectorPoolManager.ExecuteSectorCleanup();
+        
         var factionSectorPrepTasks = (await factionRepository.GetAllAsync())
             .Select(PrepareSectorByFaction);
         await Task.WhenAll(factionSectorPrepTasks);
@@ -91,7 +93,6 @@ public class SectorLoop : ModBase
             Tag = faction.Tag
         };
         
-        await _sectorPoolManager.ExecuteSectorCleanup(generationArgs);
         await _sectorPoolManager.GenerateSectors(generationArgs);
     }
 }

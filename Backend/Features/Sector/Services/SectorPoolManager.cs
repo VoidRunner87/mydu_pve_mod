@@ -139,7 +139,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         }
     }
 
-    public async Task ExecuteSectorCleanup(SectorGenerationArgs args)
+    public async Task ExecuteSectorCleanup()
     {
         var expiredSectors = await _sectorInstanceRepository.FindExpiredAsync();
 
