@@ -160,7 +160,7 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
         if (!_inMemoryContextRepo.TryGetValue(handleItem.ConstructId, out var context))
         {
-            context = new BehaviorContext(handleItem.Sector, Bot, _provider, constructDef);
+            context = new BehaviorContext(handleItem.FactionId, handleItem.Sector, Bot, _provider, constructDef);
             _inMemoryContextRepo.Set(handleItem.ConstructId, context);
             
             _logger.LogInformation("NEW CONTEXT {Construct}", handleItem.ConstructId);

@@ -34,17 +34,21 @@ public class FactionRepository(IServiceProvider provider) : IFactionRepository
         return new FactionItem
         {
             Id = row.id,
+            Tag = row.tag,
             Name = row.name,
-            OrganizationId = (uint)row.organization_id,
+            OrganizationId = (ulong?)row.organization_id,
+            PlayerId = (ulong)row.player_id,
             Properties = JsonConvert.DeserializeObject<FactionItem.FactionProperties>(row.json_properties)
         };
     }
 
     public struct DbRow
     {
-        public string id;
+        public long id;
         public string name;
-        public long organization_id;
+        public string tag;
+        public long player_id;
+        public long? organization_id;
         public string json_properties;
     }
 }

@@ -1,6 +1,5 @@
 ﻿using FluentMigrator;
 using Mod.DynamicEncounters.Features.Faction.Data;
-using Mod.DynamicEncounters.Features.Sector.Data;
 using Newtonsoft.Json;
 
 namespace Mod.DynamicEncounters.Database.Migrations;
@@ -13,20 +12,13 @@ public class AddMoreCustomizationToNpcHandles : Migration
 
     public override void Up()
     {
-        Alter.Table(SectorInstanceTable)
-            .AddColumn("json_properties").AsCustom("jsonb").NotNullable()
-            .WithDefaultValue(
-                JsonConvert.SerializeObject(
-                    new SectorInstance.SectorInstanceProperties
-                    {
-                        Tags = ["pooled"]
-                    }
-                )
-            );
-
         Create.Table(FactionTable)
-            .WithColumn("id").AsString().NotNullable().PrimaryKey()
+            .WithColumn("id").AsInt64().PrimaryKey().Identity()
+            .WithColumn("tag").AsString().Unique()
             .WithColumn("name").AsString().NotNullable()
+            .WithColumn("player_id").AsInt64().NotNullable()
+            .WithDefaultValue(4)
+            .ForeignKey("player", "id")
             .WithColumn("organization_id").AsInt64().Nullable()
             .ForeignKey("organization", "id")
             .WithColumn("json_properties").AsCustom("jsonb")
@@ -38,7 +30,7 @@ public class AddMoreCustomizationToNpcHandles : Migration
             .InSchema("public")
             .Row(new
             {
-                id = "pirates",
+                tag = "pirates",
                 name = "Pirates",
                 json_properties = JsonConvert.SerializeObject(
                     new FactionItem.FactionProperties
@@ -52,7 +44,7 @@ public class AddMoreCustomizationToNpcHandles : Migration
             .InSchema("public")
             .Row(new
             {
-                id = "uef",
+                tag = "uef",
                 name = "United Earth Force",
                 json_properties = JsonConvert.SerializeObject(
                     new FactionItem.FactionProperties
@@ -65,5 +57,6 @@ public class AddMoreCustomizationToNpcHandles : Migration
 
     public override void Down()
     {
+        Delete.Table(FactionTable);
     }
 }

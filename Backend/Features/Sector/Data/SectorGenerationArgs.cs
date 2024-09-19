@@ -8,6 +8,7 @@ public class SectorGenerationArgs
     public double SectorGridSnap { get; set; } = SectorPoolManager.SectorGridSnap;
     public int Quantity { get; set; } = 10;
     public string Tag { get; set; } = "pooled";
+    public long FactionId { get; set; }
 
     /// <summary>
     /// Minimum Gap of SectorSize between Sectors 

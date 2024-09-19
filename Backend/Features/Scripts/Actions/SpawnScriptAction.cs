@@ -181,11 +181,11 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
                 ConstructDefinitionItem = constructDef.DefinitionItem,
                 OriginalOwnerPlayerId = constructDef.DefinitionItem.OwnerId,
                 OriginalOrganizationId = 0,
+                FactionId = context.FactionId ?? 1,
                 JsonProperties = new ConstructHandleProperties
                 {
                     Tags = actionItem.Tags,
                     Behaviors = behaviorList,
-                    FactionId = constructDef.DefinitionItem.FactionId,
                 },
                 OnCleanupScript = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck
                     ? "despawn-wreck"

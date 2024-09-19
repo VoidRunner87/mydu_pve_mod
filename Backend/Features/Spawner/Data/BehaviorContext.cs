@@ -19,6 +19,7 @@ using NQ;
 namespace Mod.DynamicEncounters.Features.Spawner.Data;
 
 public class BehaviorContext(
+    long factionId,
     Vec3 sector,
     Client client,
     IServiceProvider serviceProvider,
@@ -40,6 +41,7 @@ public class BehaviorContext(
     public Vec3 Position { get; set; }
     public Quat Rotation { get; set; }
     public ConcurrentDictionary<ulong, ulong> PlayerIds { get; set; } = new();
+    public long FactionId { get; } = factionId;
     public Vec3 Sector { get; } = sector;
     public IServiceProvider ServiceProvider { get; init; } = serviceProvider;
     public Client Client { get; set; } = client;
@@ -53,13 +55,13 @@ public class BehaviorContext(
 
     public bool IsActiveWreck { get; set; }
 
-    public virtual Task NotifyEvent(string @event, BehaviorEventArgs eventArgs)
+    public Task NotifyEvent(string @event, BehaviorEventArgs eventArgs)
     {
         // TODO for custom events
         return Task.CompletedTask;
     }
     
-    public virtual async Task NotifyCoreStressHighAsync(BehaviorEventArgs eventArgs)
+    public async Task NotifyCoreStressHighAsync(BehaviorEventArgs eventArgs)
     {
         if (PublishedEvents.ContainsKey(nameof(NotifyCoreStressHighAsync)))
         {
@@ -69,6 +71,7 @@ public class BehaviorContext(
         await Prefab.Events.OnCoreStressHigh.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
+                eventArgs.Context.FactionId,
                 eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
                 eventArgs.Context.Sector
             )
@@ -80,7 +83,7 @@ public class BehaviorContext(
         PublishedEvents.TryAdd(nameof(NotifyCoreStressHighAsync), true);
     }
 
-    public virtual async Task NotifyConstructDestroyedAsync(BehaviorEventArgs eventArgs)
+    public async Task NotifyConstructDestroyedAsync(BehaviorEventArgs eventArgs)
     {
         if (PublishedEvents.ContainsKey(nameof(NotifyConstructDestroyedAsync)))
         {
@@ -103,7 +106,7 @@ public class BehaviorContext(
                     id.Key,
                     eventArgs.Context.Sector,
                     eventArgs.ConstructId,
-                    eventArgs.Prefab.DefinitionItem.FactionId,
+                    eventArgs.Context.FactionId,
                     eventArgs.Context.PlayerIds.Count
                 )
             )
@@ -114,6 +117,7 @@ public class BehaviorContext(
         var scriptExecutionTask = Prefab.Events.OnDestruction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
+                eventArgs.Context.FactionId,
                 eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
                 eventArgs.Context.Sector
             )
@@ -137,7 +141,7 @@ public class BehaviorContext(
         PublishedEvents.TryAdd(nameof(NotifyConstructDestroyedAsync), true);
     }
 
-    public virtual async Task NotifyShieldHpHalfAsync(BehaviorEventArgs eventArgs)
+    public async Task NotifyShieldHpHalfAsync(BehaviorEventArgs eventArgs)
     {
         if (PublishedEvents.ContainsKey(nameof(NotifyShieldHpHalfAsync)))
         {
@@ -147,6 +151,7 @@ public class BehaviorContext(
         await Prefab.Events.OnShieldHalfAction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
+                eventArgs.Context.FactionId,
                 eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
                 eventArgs.Context.Sector
             )
@@ -158,7 +163,7 @@ public class BehaviorContext(
         PublishedEvents.TryAdd(nameof(NotifyShieldHpHalfAsync), true);
     }
 
-    public virtual async Task NotifyShieldHpLowAsync(BehaviorEventArgs eventArgs)
+    public async Task NotifyShieldHpLowAsync(BehaviorEventArgs eventArgs)
     {
         if (PublishedEvents.ContainsKey(nameof(NotifyShieldHpLowAsync)))
         {
@@ -168,6 +173,7 @@ public class BehaviorContext(
         await Prefab.Events.OnShieldLowAction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
+                eventArgs.Context.FactionId,
                 eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
                 eventArgs.Context.Sector
             )
@@ -179,7 +185,7 @@ public class BehaviorContext(
         PublishedEvents.TryAdd(nameof(NotifyShieldHpLowAsync), true);
     }
 
-    public virtual async Task NotifyShieldHpDownAsync(BehaviorEventArgs eventArgs)
+    public async Task NotifyShieldHpDownAsync(BehaviorEventArgs eventArgs)
     {
         if (PublishedEvents.ContainsKey(nameof(NotifyShieldHpDownAsync)))
         {
@@ -189,6 +195,7 @@ public class BehaviorContext(
         await Prefab.Events.OnShieldDownAction.ExecuteAsync(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
+                eventArgs.Context.FactionId,
                 eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
                 eventArgs.Context.Sector
             )

@@ -22,7 +22,7 @@ public class PrefabItem
     public float AccelerationG { get; set; } = 15;
     public float MaxSpeedKph { get; set; } = 20000;
     public float TargetDistance { get; set; } = 20000;
-    public string FactionId { get; set; }
+    public long FactionId { get; set; }
 
     public PrefabEvents Events { get; set; } = new();
 

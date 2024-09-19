@@ -39,6 +39,7 @@ public class ForEachConstructHandleTaggedOnSectorAction(
         {
             var itemContext = new ScriptContext(
                 context.ServiceProvider,
+                context.FactionId,
                 context.PlayerIds,
                 context.Sector
             )

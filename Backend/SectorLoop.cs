@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Features.Faction.Data;
 using Mod.DynamicEncounters.Features.Faction.Interfaces;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
@@ -11,6 +12,7 @@ using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Repository;
 using Mod.DynamicEncounters.Helpers;
+using MongoDB.Driver.Linq;
 
 namespace Mod.DynamicEncounters;
 
@@ -56,13 +58,9 @@ public class SectorLoop : ModBase
         sw.Start();
 
         var factionRepository = ServiceProvider.GetRequiredService<IFactionRepository>();
-        var featuresService = ServiceProvider.GetRequiredService<IFeatureReaderService>();
-        var sectorsToGenerate = await featuresService.GetIntValueAsync(SectorsToGenerateFeatureName, 10);
         
-        await PrepareSector(SectorEncounterTags.Pooled, sectorsToGenerate);
-
         var factionSectorPrepTasks = (await factionRepository.GetAllAsync())
-            .Select(f => PrepareSector(f.Id, f.Properties.SectorPoolCount));
+            .Select(PrepareSectorByFaction);
         await Task.WhenAll(factionSectorPrepTasks);
         
         await _sectorPoolManager.LoadUnloadedSectors();
@@ -71,12 +69,13 @@ public class SectorLoop : ModBase
         _logger.LogDebug("Action took {Time}ms", sw.ElapsedMilliseconds);
     }
 
-    private async Task PrepareSector(string tag, int sectorsToGenerate)
+    [Obsolete]
+    private async Task PrepareSectorByTag(string tag, int sectorsToGenerate)
     {
-        // sector encounters becomes tied to a territory
-        // territory has center, max and min radius
-        // territory is owned by a faction
-        // territory is a point on a map - not constructs nor DU's territories - perhaps name it differently
+        // TODO sector encounters becomes tied to a territory
+        // a territory has center, max and min radius
+        // a territory is owned by a faction
+        // a territory is a point on a map - not constructs nor DU's territories - perhaps name it differently
         var sectorEncountersRepository = ServiceProvider.GetRequiredService<ISectorEncounterRepository>();
         var encounters = (await sectorEncountersRepository.FindActiveTaggedAsync(tag))
             .ToList();
@@ -92,6 +91,34 @@ public class SectorLoop : ModBase
             Encounters = encounters,
             Quantity = sectorsToGenerate,
             Tag = tag
+        };
+        
+        await _sectorPoolManager.ExecuteSectorCleanup(generationArgs);
+        await _sectorPoolManager.GenerateSectors(generationArgs);
+    }
+    
+    private async Task PrepareSectorByFaction(FactionItem faction)
+    {
+        // TODO sector encounters becomes tied to a territory
+        // a territory has center, max and min radius
+        // a territory is owned by a faction
+        // a territory is a point on a map - not constructs nor DU's territories - perhaps name it differently
+        var sectorEncountersRepository = ServiceProvider.GetRequiredService<ISectorEncounterRepository>();
+        var encounters = (await sectorEncountersRepository.FindActiveByFactionAsync(faction.Id))
+            .ToList();
+        
+        if (encounters.Count == 0)
+        {
+            _logger.LogWarning("No Encounters for Faction: {Faction}({Id})", faction.Name, faction.Id);
+            return;
+        }
+
+        var generationArgs = new SectorGenerationArgs
+        {
+            Encounters = encounters,
+            Quantity = faction.Properties.SectorPoolCount,
+            FactionId = faction.Id,
+            Tag = faction.Tag
         };
         
         await _sectorPoolManager.ExecuteSectorCleanup(generationArgs);

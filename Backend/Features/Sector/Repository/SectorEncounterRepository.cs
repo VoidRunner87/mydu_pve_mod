@@ -94,16 +94,32 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         return queryResult.Select(DbRowToModel);
     }
 
-    private static SectorEncounterItem DbRowToModel(DbRow first)
+    public async Task<IEnumerable<SectorEncounterItem>> FindActiveByFactionAsync(long factionId)
+    {
+        using var db = _connectionFactory.Create();
+        db.Open();
+
+        var queryResult = await db.QueryAsync<DbRow>(
+            "SELECT * FROM public.mod_sector_encounter WHERE active = true AND faction_id = @factionId",
+            new { factionId }
+        );
+
+        return queryResult.Select(DbRowToModel);
+    }
+
+    private static SectorEncounterItem DbRowToModel(DbRow row)
     {
         return new SectorEncounterItem
         {
-            Id = first.id,
-            Name = first.name,
-            OnLoadScript = first.on_load_script,
-            OnSectorEnterScript = first.on_sector_enter_script,
-            Active = first.active,
-            Properties = JsonConvert.DeserializeObject<EncounterProperties>(first.json_properties)
+            Id = row.id,
+            Name = row.name,
+            OnLoadScript = row.on_load_script,
+            OnSectorEnterScript = row.on_sector_enter_script,
+            Active = row.active,
+            Tag = row.tag,
+            TerritoryId = row.territory_id,
+            RestrictToOwnedTerritory = row.restrict_to_owned_territory,
+            Properties = JsonConvert.DeserializeObject<EncounterProperties>(row.json_properties)
         };
     }
 
@@ -115,5 +131,8 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         public string on_sector_enter_script { get; set; }
         public bool active { get; set; }
         public string json_properties { get; set; }
+        public string tag { get; set; }
+        public Guid territory_id { get; set; }
+        public bool restrict_to_owned_territory { get; set; }
     }
 }

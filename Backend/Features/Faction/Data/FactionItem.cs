@@ -2,9 +2,11 @@
 
 public class FactionItem
 {
-    public string Id { get; set; } = "";
+    public long Id { get; set; }
+    public string Tag { get; set; } = "";
     public string Name { get; set; } = "";
-    public ulong OrganizationId { get; set; } = 0;
+    public ulong? OrganizationId { get; set; }
+    public ulong PlayerId { get; set; } = 4;
     public FactionProperties Properties { get; set; } = new();
     
     public class FactionProperties

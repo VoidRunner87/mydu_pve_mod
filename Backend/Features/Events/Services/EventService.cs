@@ -102,7 +102,7 @@ public class EventService(IServiceProvider provider) : IEventService
 
             await _scriptService.ExecuteScriptAsync(
                 triggerItem.OnTriggerScript,
-                new ScriptContext(provider, playerIds, sector)
+                new ScriptContext(provider, triggerItem.FactionId, playerIds, sector)
                 {
                     ConstructId = constructId
                 }

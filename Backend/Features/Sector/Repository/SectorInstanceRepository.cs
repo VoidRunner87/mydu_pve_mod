@@ -9,7 +9,6 @@ using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Helpers;
-using Newtonsoft.Json;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Sector.Repository;
@@ -26,19 +25,19 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
 
         await db.ExecuteAsync(
             """
-            INSERT INTO public.mod_sector_instance (id, sector_x, sector_y, sector_z, expires_at, on_load_script, on_sector_enter_script, force_expire_at, json_properties)
-            VALUES (@Id, @PosX, @PosY, @PosZ, @ExpiresAt, @OnLoadScript, @OnSectorEnterScript, NOW() + INTERVAL '6 hours', @JsonProperties::jsonb);
+            INSERT INTO public.mod_sector_instance (id, faction_id, sector_x, sector_y, sector_z, expires_at, on_load_script, on_sector_enter_script, force_expire_at)
+            VALUES (@Id, @FactionId, @PosX, @PosY, @PosZ, @ExpiresAt, @OnLoadScript, @OnSectorEnterScript, NOW() + INTERVAL '6 hours');
             """,
             new
             {
                 item.Id,
+                item.FactionId,
                 PosX = item.Sector.x,
                 PosY = item.Sector.y,
                 PosZ = item.Sector.z,
                 item.ExpiresAt,
                 item.OnLoadScript,
-                item.OnSectorEnterScript,
-                JsonProperties = JsonConvert.SerializeObject(item.Properties)
+                item.OnSectorEnterScript
             }
         );
     }
@@ -75,6 +74,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         return new SectorInstance
         {
             Id = first.id,
+            FactionId = first.faction_id,
             ExpiresAt = first.expires_at,
             ForceExpiresAt = first.force_expire_at,
             OnLoadScript = first.on_load_script,
@@ -202,10 +202,14 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         db.Open();
 
         return await db.ExecuteScalarAsync<long>(
-            "SELECT COUNT(0) FROM public.mod_sector_instance WHERE json_properties->'Tags' @> @tag::jsonb",
+            """
+            SELECT COUNT(0) FROM public.mod_sector_instance AS SI
+            INNER JOIN public.mod_faction AS F ON (F.id = SI.faction_id)
+            WHERE F.tag = @tag
+            """,
             new
             {
-                tag = tag.AsJsonB()
+                tag
             }
         );
     }
@@ -283,6 +287,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
     private struct DbRow
     {
         public Guid id { get; set; }
+        public long faction_id { get; set; }
         public double sector_x { get; set; }
         public double sector_y { get; set; }
         public double sector_z { get; set; }

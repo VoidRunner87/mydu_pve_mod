@@ -22,11 +22,12 @@ public class ScriptRunnerController : Controller
             name,
             new ScriptContext(
                 provider,
+                request.FactionId,
                 [..request.PlayerIds],
                 request.Sector
             )
             {
-                ConstructId = request.ConstructId
+                ConstructId = request.ConstructId,
             }
         );
 
@@ -43,5 +44,6 @@ public class ScriptRunnerController : Controller
         public List<ulong> PlayerIds { get; set; } = [];
         public Vec3 Sector { get; set; }
         public ulong? ConstructId { get; set; }
+        public long FactionId { get; set; } = 1;
     }
 }

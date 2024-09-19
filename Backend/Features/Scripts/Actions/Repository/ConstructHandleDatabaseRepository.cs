@@ -33,6 +33,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             {
                 id = Guid.NewGuid(),
                 construct_id = (long)item.ConstructId,
+                faction_id = item.FactionId,
                 sector_x = item.Sector.x,
                 sector_y = item.Sector.y,
                 sector_z = item.Sector.z,
@@ -285,6 +286,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
                 y = row.sector_y,
                 z = row.sector_z,
             },
+            FactionId = row.faction_id,
             ConstructId = (ulong)row.construct_id,
             ConstructDefinitionId = row.construct_def_id,
             OriginalOwnerPlayerId = row.original_owner_player_id,
@@ -298,6 +300,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
     private struct DbRow
     {
         public Guid id { get; set; }
+        public long faction_id { get; set; }
         public long construct_id { get; set; }
         public Guid construct_def_id { get; set; }
         public double sector_x { get; set; }

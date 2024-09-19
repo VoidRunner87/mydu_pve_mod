@@ -88,15 +88,12 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             {
                 Id = Guid.NewGuid(),
                 Sector = position,
+                FactionId = args.FactionId,
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow + encounter.Properties.ExpirationTimeSpan +
                             TimeSpan.FromMinutes(randomMinutes * i),
                 OnLoadScript = encounter.OnLoadScript,
                 OnSectorEnterScript = encounter.OnSectorEnterScript,
-                Properties =
-                {
-                    Tags = [args.Tag]
-                }
             };
 
             await _sectorInstanceRepository.AddAsync(instance);
@@ -122,7 +119,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     sector.OnLoadScript,
                     new ScriptContext(
                         serviceProvider,
-                        new HashSet<ulong>(),
+                        sector.FactionId,
+                        [],
                         sector.Sector
                     )
                 );
@@ -242,7 +240,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     sectorInstance.OnSectorEnterScript,
                     new ScriptContext(
                         serviceProvider,
-                        new HashSet<ulong>(),
+                        sectorInstance.FactionId,
+                        [],
                         sectorInstance.Sector
                     )
                     {

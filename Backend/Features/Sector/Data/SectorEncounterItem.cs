@@ -10,5 +10,9 @@ public class SectorEncounterItem
     public string OnSectorEnterScript { get; set; }
     public bool Active { get; set; }
     
+    public Guid TerritoryId { get; set; }
+    public string Tag { get; set; }
+    public bool RestrictToOwnedTerritory { get; set; }
+    
     public EncounterProperties Properties { get; set; }
 }
