@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
@@ -36,14 +35,14 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
     private readonly ILogger<SectorPoolManager> _logger = serviceProvider.CreateLogger<SectorPoolManager>();
 
-    public async Task<IEnumerable<SectorInstance>> GenerateSectors(SectorGenerationArgs args)
+    public async Task GenerateSectors(SectorGenerationArgs args)
     {
-        var count = await _sectorInstanceRepository.GetCountAsync();
+        var count = await _sectorInstanceRepository.GetCountWithTagAsync(args.Tag);
         var missingQuantity = args.Quantity - count;
 
         if (missingQuantity <= 0)
         {
-            return await _sectorInstanceRepository.GetAllAsync();
+            return;
         }
 
         var allSectorInstances = await _sectorInstanceRepository.GetAllAsync();
@@ -94,15 +93,17 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                             TimeSpan.FromMinutes(randomMinutes * i),
                 OnLoadScript = encounter.OnLoadScript,
                 OnSectorEnterScript = encounter.OnSectorEnterScript,
+                Properties =
+                {
+                    Tags = [args.Tag]
+                }
             };
 
             await _sectorInstanceRepository.AddAsync(instance);
         }
-
-        return await _sectorInstanceRepository.GetAllAsync();
     }
 
-    public async Task LoadUnloadedSectors(Client client)
+    public async Task LoadUnloadedSectors()
     {
         var scriptService = serviceProvider.GetRequiredService<IScriptService>();
         var unloadedSectors = (await _sectorInstanceRepository.FindUnloadedAsync()).ToList();
@@ -140,7 +141,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         }
     }
 
-    public async Task ExecuteSectorCleanup(Client client, SectorGenerationArgs args)
+    public async Task ExecuteSectorCleanup(SectorGenerationArgs args)
     {
         var expiredSectors = await _sectorInstanceRepository.FindExpiredAsync();
 
@@ -155,7 +156,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 continue;
             }
 
-            await _constructHandleManager.CleanupConstructHandlesInSectorAsync(client, sector.Sector);
+            await _constructHandleManager.CleanupConstructHandlesInSectorAsync(ModBase.Bot, sector.Sector);
         }
 
         await _sectorInstanceRepository.DeleteExpiredAsync();
@@ -182,7 +183,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         );
     }
 
-    public async Task ActivateEnteredSectors(Client client)
+    public async Task ActivateEnteredSectors()
     {
         var sectorsToActivate = (await _sectorInstanceRepository.FindSectorsRequiringStartupAsync()).ToList();
 

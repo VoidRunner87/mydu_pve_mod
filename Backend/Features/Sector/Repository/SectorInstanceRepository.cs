@@ -9,6 +9,7 @@ using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Helpers;
+using Newtonsoft.Json;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Sector.Repository;
@@ -25,8 +26,8 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
 
         await db.ExecuteAsync(
             """
-            INSERT INTO public.mod_sector_instance (id, sector_x, sector_y, sector_z, expires_at, on_load_script, on_sector_enter_script, force_expire_at)
-            VALUES (@Id, @PosX, @PosY, @PosZ, @ExpiresAt, @OnLoadScript, @OnSectorEnterScript, NOW() + INTERVAL '6 hours');
+            INSERT INTO public.mod_sector_instance (id, sector_x, sector_y, sector_z, expires_at, on_load_script, on_sector_enter_script, force_expire_at, json_properties)
+            VALUES (@Id, @PosX, @PosY, @PosZ, @ExpiresAt, @OnLoadScript, @OnSectorEnterScript, NOW() + INTERVAL '6 hours', @JsonProperties::jsonb);
             """,
             new
             {
@@ -36,7 +37,8 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
                 PosZ = item.Sector.z,
                 item.ExpiresAt,
                 item.OnLoadScript,
-                item.OnSectorEnterScript
+                item.OnSectorEnterScript,
+                JsonProperties = JsonConvert.SerializeObject(item.Properties)
             }
         );
     }
@@ -191,6 +193,20 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
             """
              UPDATE public.mod_sector_instance SET force_expire_at = NOW()
              """
+        );
+    }
+
+    public async Task<long> GetCountWithTagAsync(string tag)
+    {
+        using var db = _connectionFactory.Create();
+        db.Open();
+
+        return await db.ExecuteScalarAsync<long>(
+            "SELECT COUNT(0) FROM public.mod_sector_instance WHERE json_properties->'Tags' @> @tag::jsonb",
+            new
+            {
+                tag = tag.AsJsonB()
+            }
         );
     }
 

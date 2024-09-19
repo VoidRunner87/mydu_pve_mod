@@ -103,6 +103,7 @@ public class BehaviorContext(
                     id.Key,
                     eventArgs.Context.Sector,
                     eventArgs.ConstructId,
+                    eventArgs.Prefab.DefinitionItem.FactionId,
                     eventArgs.Context.PlayerIds.Count
                 )
             )

@@ -147,15 +147,13 @@ public class ConstructBehaviorLoop : HighTickModLoop
         
         var constructDef = _constructDefinitionFactory.Create(handleItem.ConstructDefinitionItem);
 
-        var finalBehaviors = new List<IConstructBehavior>
-        {
-            new AliveCheckBehavior(handleItem.ConstructId, constructDef)
-                .WithErrorHandler(),
-            new SelectTargetBehavior(handleItem.ConstructId, constructDef)
-                .WithErrorHandler()
-        };
+        var finalBehaviors = new List<IConstructBehavior>();
 
-        var behaviors = _behaviorFactory.CreateBehaviors(handleItem.ConstructId, constructDef);
+        var behaviors = _behaviorFactory.CreateBehaviors(
+            handleItem.ConstructId, 
+            constructDef,
+            handleItem.JsonProperties.Behaviors
+        );
 
         finalBehaviors.AddRange(behaviors);
         finalBehaviors.Add(new UpdateLastControlledDateBehavior(handleItem.ConstructId).WithErrorHandler());

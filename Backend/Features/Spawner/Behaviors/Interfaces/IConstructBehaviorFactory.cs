@@ -13,6 +13,7 @@ public interface IConstructBehaviorFactory
 
     IEnumerable<IConstructBehavior> CreateBehaviors(
         ulong constructId,
-        IPrefab prefab
+        IPrefab prefab,
+        IEnumerable<string> behaviors
     );
 }

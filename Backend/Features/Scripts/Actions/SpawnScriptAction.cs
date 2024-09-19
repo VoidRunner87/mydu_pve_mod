@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Backend;
@@ -144,7 +145,8 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
         var shields = await constructElementsGrain.GetElementsOfType<ShieldGeneratorUnit>();
 
         var constructGrain = orleans.GetConstructGrain(constructId);
-        if (!constructDef.DefinitionItem.ServerProperties.IsDynamicWreck && shields.Count > 0)
+        var isWreck = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck;
+        if (!isWreck && shields.Count > 0)
         {
             var sql = provider.GetRequiredService<ISql>();
             await sql.SetShieldEnabled(constructId, true);
@@ -160,6 +162,14 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
             });
         }
 
+        var behaviorList = new List<string>();
+
+        if (!isWreck)
+        {
+            behaviorList.AddRange(["alive", "select-target"]);
+            behaviorList.AddRange(constructDefItem.InitialBehaviors);
+        }
+        
         // Keeping track of what this script instance spawned
         await constructHandleRepo.AddAsync(
             new ConstructHandleItem
@@ -173,7 +183,9 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
                 OriginalOrganizationId = 0,
                 JsonProperties = new ConstructHandleProperties
                 {
-                    Tags = actionItem.Tags
+                    Tags = actionItem.Tags,
+                    Behaviors = behaviorList,
+                    FactionId = constructDef.DefinitionItem.FactionId,
                 },
                 OnCleanupScript = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck
                     ? "despawn-wreck"

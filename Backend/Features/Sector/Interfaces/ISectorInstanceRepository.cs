@@ -19,4 +19,5 @@ public interface ISectorInstanceRepository : IRepository<SectorInstance>
     Task<IEnumerable<SectorInstance>> FindSectorsRequiringStartupAsync();
     Task ExpireAllAsync();
     Task ForceExpireAllAsync();
+    Task<long> GetCountWithTagAsync(string tag);
 }

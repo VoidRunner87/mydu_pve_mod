@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Sector.Data;
@@ -14,6 +15,13 @@ public class SectorInstance
     public string OnLoadScript { get; set; }
     public string OnSectorEnterScript { get; set; }
 
+    public SectorInstanceProperties Properties { get; set; } = new();
+    
     public bool IsForceExpired(DateTime dateTime)
         => ForceExpiresAt.HasValue && ForceExpiresAt.Value < dateTime;
+
+    public class SectorInstanceProperties
+    {
+        public IEnumerable<string> Tags { get; set; } = [];
+    }
 }
