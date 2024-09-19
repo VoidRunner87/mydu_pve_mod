@@ -26,6 +26,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
     private IClusterClient _orleans;
     private ILogger<SelectTargetBehavior> _logger;
     private IConstructElementsGrain _constructElementsGrain;
+    private IConstructGrain _constructGrain;
 
     public bool IsActive() => _active;
 
@@ -37,7 +38,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         _orleans = provider.GetOrleans();
         _logger = provider.CreateLogger<SelectTargetBehavior>();
         _constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
-        
+        _constructGrain = _orleans.GetConstructGrain(constructId);
+
         var radarElementId = (await _constructElementsGrain.GetElementsOfType<RadarPvPSpace>()).FirstOrDefault();
         var gunnerSeatElementId = (await _constructElementsGrain.GetElementsOfType<PVPSeatUnit>()).FirstOrDefault();
 
@@ -61,9 +63,9 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         var sw = new Stopwatch();
         sw.Start();
-        
+
         _logger.LogInformation("Selecting a new Target");
-        
+
         var npcConstructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
         var npcConstructInfo = await npcConstructInfoGrain.Get();
         var npcPos = npcConstructInfo.rData.position;
@@ -83,7 +85,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                 _logger.LogError("Failed to fetch construct info for {Construct}", id);
             }
         }
-        
+
         _logger.LogInformation("Found {Count} constructs around", result.Count);
 
         // TODO remove hardcoded
@@ -91,11 +93,11 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             .Where(r => r.mutableData.ownerId.IsPlayer() || r.mutableData.ownerId.IsOrg())
             .ToList();
 
-        _logger.LogInformation("Found {Count} PLAYER constructs around {List}", 
-            playerConstructs.Count, 
+        _logger.LogInformation("Found {Count} PLAYER constructs around {List}",
+            playerConstructs.Count,
             string.Join(", ", playerConstructs.Select(x => x.rData.constructId))
         );
-        
+
         ulong targetId = 0;
         var distance = double.MaxValue;
         int maxIterations = 10;
@@ -114,7 +116,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             if (construct.mutableData.pilot.HasValue)
             {
                 context.PlayerIds.TryAdd(
-                    construct.mutableData.pilot.Value.id, 
+                    construct.mutableData.pilot.Value.id,
                     construct.mutableData.pilot.Value.id
                 );
             }
@@ -124,12 +126,12 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             var delta = Math.Abs(pos.Distance(npcPos));
 
             _logger.LogInformation("Construct {Construct} Distance: {Distance}m", construct.rData.constructId, delta);
-            
+
             if (delta > targetingDistance)
             {
                 continue;
             }
-            
+
             if (delta < distance)
             {
                 distance = delta;
@@ -146,14 +148,14 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         {
             return;
         }
-        
+
         _logger.LogInformation("Selected a new Target: {Target}; {Time}ms", targetId, sw.ElapsedMilliseconds);
-        
+
         if (!context.ExtraProperties.TryGetValue<ulong>("RADAR_ID", out var radarElementId))
         {
             return;
         }
-        
+
         if (!context.ExtraProperties.TryGetValue<ulong>("SEAT_ID", out var seatElementId))
         {
             return;
@@ -163,7 +165,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         {
             var constructInfoGrain = _orleans.GetConstructInfoGrain(context.TargetConstructId.Value);
             var constructInfo = await constructInfoGrain.Get();
-            
+
             await _orleans.GetRadarGrain(radarElementId)
                 .IdentifyStart(ModBase.Bot.PlayerId, new RadarIdentifyTarget
                 {
@@ -173,6 +175,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                     sourceRadarElementId = radarElementId,
                     sourceSeatElementId = seatElementId
                 });
+
+            await _constructGrain.PilotingTakeOver(ModBase.Bot.PlayerId, true);
         }
         catch (Exception e)
         {

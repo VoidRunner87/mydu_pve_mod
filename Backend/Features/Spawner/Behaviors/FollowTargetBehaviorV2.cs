@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Backend.Scenegraph;
 using BotLib.Generated;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
     private IConstructService _constructService;
     private ILogger<FollowTargetBehavior> _logger;
     private IConstructGrain _constructGrain;
+    private IScenegraphAPI _sceneGraph;
 
     public bool IsActive() => _active;
 
@@ -34,6 +36,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         _constructService = provider.GetRequiredService<IConstructService>();
 
         _constructGrain = orleans.GetConstructGrain(constructId);
+        _sceneGraph = provider.GetRequiredService<IScenegraphAPI>();
         
         return Task.CompletedTask;
     }
@@ -151,23 +154,30 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
         _timePoint = TimePoint.Now();
 
+        var (v, av) = await _constructGrain.GetConstructVelocity();
+        var isBeingControlled = await _constructGrain.IsBeingControlled();
+        var lastUpdate = await _sceneGraph.GetLastConstructUpdate(constructId);
+
+        _logger.LogInformation("Velocities: {Controlled} {V} | {luv}", isBeingControlled, v, lastUpdate?.worldAbsoluteVelocity);
+        
         try
         {
-            await ModBase.Bot.Req.ConstructUpdate(
-                new ConstructUpdate
-                {
-                    pilotId = ModBase.Bot.PlayerId,
-                    constructId = constructId,
-                    rotation = context.Rotation,
-                    position = position,
-                    worldAbsoluteVelocity = context.Velocity,
-                    worldRelativeVelocity = context.Velocity,
-                    worldAbsoluteAngVelocity = relativeAngularVel,
-                    worldRelativeAngVelocity = relativeAngularVel,
-                    time = _timePoint,
-                    grounded = false,
-                }
-            );
+            var cUpdate = new ConstructUpdate
+            {
+                pilotId = ModBase.Bot.PlayerId,
+                constructId = constructId,
+                rotation = context.Rotation,
+                position = position,
+                worldAbsoluteVelocity = context.Velocity,
+                worldRelativeVelocity = context.Velocity,
+                worldAbsoluteAngVelocity = relativeAngularVel,
+                worldRelativeAngVelocity = relativeAngularVel,
+                time = _timePoint,
+                grounded = false,
+            };
+            
+            await ModBase.Bot.Req.ConstructUpdate(cUpdate);
+            await _sceneGraph.SetLastConstructUpdate(cUpdate);
         }
         catch (BusinessException be)
         {

@@ -19,6 +19,7 @@ using Mod.DynamicEncounters.Features;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Stubs;
 using NQ.Router;
+using NQ.Visibility;
 using NQutils;
 using NQutils.Logging;
 using NQutils.Sql;
@@ -116,6 +117,7 @@ public class ModBase
             .AddInitializableSingleton<IRDMSStorage, RDMSStorage>()
             .AddInitializableSingleton<IPlanetList, PlanetListStub>()
             .AddInitializableSingleton<IScenegraph, Scenegraph>()
+            .AddInitializableSingleton<Internal.InternalClient, Internal.InternalClient>()
             .RegisterGRPCClient()
             .AddInitializableSingleton<IScenegraphAPI, ScenegraphAPI>()
             // Mod Starts Here
