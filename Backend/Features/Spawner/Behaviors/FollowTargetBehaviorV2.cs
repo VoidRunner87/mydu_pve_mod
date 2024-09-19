@@ -140,11 +140,12 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             npcPos.ToVector3(),
             accelerationFuturePos.ToVector3()
         );
-        
+
+        var targetDirection = targetPos - npcPos;
         GetD0(context, out var d0, new Vec3());
         var relativeAngularVel = VectorMathHelper.CalculateAngularVelocity(
             d0,
-            direction,
+            targetDirection,
             context.DeltaTime
         );
         
@@ -154,11 +155,12 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
         _timePoint = TimePoint.Now();
 
-        var (v, av) = await _constructGrain.GetConstructVelocity();
-        var isBeingControlled = await _constructGrain.IsBeingControlled();
-        var lastUpdate = await _sceneGraph.GetLastConstructUpdate(constructId);
+        // var (v, av) = await _constructGrain.GetConstructVelocity();
+        // var isBeingControlled = await _constructGrain.IsBeingControlled();
+        // var lastUpdate = await _sceneGraph.GetLastConstructUpdate(constructId);
 
-        _logger.LogInformation("Velocities: {Controlled} {V} | {luv}", isBeingControlled, v, lastUpdate?.worldAbsoluteVelocity);
+        // _logger.LogInformation("Velocities: {Controlled} {V} | {luv}", isBeingControlled, v, lastUpdate?.worldAbsoluteVelocity);
+        //_logger.LogInformation("Velocities: {Controlled} {V} | {luv}", isBeingControlled, av, lastUpdate?.worldAbsoluteAngVelocity);
         
         try
         {
@@ -170,14 +172,13 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
                 position = position,
                 worldAbsoluteVelocity = context.Velocity,
                 worldRelativeVelocity = context.Velocity,
-                worldAbsoluteAngVelocity = relativeAngularVel,
-                worldRelativeAngVelocity = relativeAngularVel,
+                // worldAbsoluteAngVelocity = relativeAngularVel,
+                // worldRelativeAngVelocity = relativeAngularVel,
                 time = _timePoint,
                 grounded = false,
             };
             
             await ModBase.Bot.Req.ConstructUpdate(cUpdate);
-            await _sceneGraph.SetLastConstructUpdate(cUpdate);
         }
         catch (BusinessException be)
         {
