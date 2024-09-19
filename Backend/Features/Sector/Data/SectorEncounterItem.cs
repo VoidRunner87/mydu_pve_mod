@@ -13,6 +13,6 @@ public class SectorEncounterItem
     public Guid TerritoryId { get; set; }
     public string Tag { get; set; }
     public bool RestrictToOwnedTerritory { get; set; }
-    
-    public EncounterProperties Properties { get; set; }
+
+    public EncounterProperties Properties { get; set; } = new();
 }

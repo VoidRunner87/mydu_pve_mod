@@ -7,8 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
-using Mod.DynamicEncounters.Helpers;
 using Newtonsoft.Json;
+using NQ;
 
 namespace Mod.DynamicEncounters.Features.Sector.Repository;
 
@@ -59,11 +59,28 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         using var db = _connectionFactory.Create();
         db.Open();
 
-        var queryResult = await db.QueryAsync<DbRow>(
-            "SELECT * FROM public.mod_sector_encounter"
+        var queryResult = await db.QueryAsync<DbRowWithTerritoryJoin>(
+            """
+            SELECT 
+                E.id,
+                E.name,
+                E.on_load_script,
+                E.on_sector_enter_script,
+                E.active,
+                E.faction_id,
+                T.spawn_position_x,
+                T.spawn_position_y,
+                T.spawn_position_z,
+                T.spawn_min_radius,
+                T.spawn_max_radius,
+                T.spawn_expiration_span,
+                T.active territory_active
+            FROM public.mod_sector_encounter AS E
+            INNER JOIN public.mod_territory AS T ON (T.id = E.territory_id)
+            """
         );
 
-        return queryResult.Select(DbRowToModel);
+        return queryResult.Select(DbRowWithTerritoryToModel);
     }
 
     public Task<long> GetCountAsync()
@@ -81,30 +98,36 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         throw new NotImplementedException();
     }
 
-    public async Task<IEnumerable<SectorEncounterItem>> FindActiveTaggedAsync(string tag)
-    {
-        using var db = _connectionFactory.Create();
-        db.Open();
-
-        var queryResult = await db.QueryAsync<DbRow>(
-            "SELECT * FROM public.mod_sector_encounter WHERE active = true AND json_properties->'Tags' @> @tag::jsonb",
-            new { tag = tag.AsJsonB() }
-        );
-
-        return queryResult.Select(DbRowToModel);
-    }
-
     public async Task<IEnumerable<SectorEncounterItem>> FindActiveByFactionAsync(long factionId)
     {
         using var db = _connectionFactory.Create();
         db.Open();
 
-        var queryResult = await db.QueryAsync<DbRow>(
-            "SELECT * FROM public.mod_sector_encounter WHERE active = true AND faction_id = @factionId",
+        var queryResult = await db.QueryAsync<DbRowWithTerritoryJoin>(
+            """
+            SELECT 
+                E.id,
+                E.name,
+                E.on_load_script,
+                E.on_sector_enter_script,
+                E.active,
+                E.faction_id,
+                T.spawn_position_x,
+                T.spawn_position_y,
+                T.spawn_position_z,
+                T.spawn_min_radius,
+                T.spawn_max_radius,
+                T.spawn_expiration_span,
+                T.active territory_active
+            FROM public.mod_sector_encounter AS E
+            INNER JOIN public.mod_territory AS T ON (T.id = E.territory_id)
+            WHERE E.active IS TRUE AND E.faction_id = @factionId AND
+                  T.active IS TRUE
+            """,
             new { factionId }
         );
 
-        return queryResult.Select(DbRowToModel);
+        return queryResult.Select(DbRowWithTerritoryToModel);
     }
 
     private static SectorEncounterItem DbRowToModel(DbRow row)
@@ -122,8 +145,35 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
             Properties = JsonConvert.DeserializeObject<EncounterProperties>(row.json_properties)
         };
     }
+    
+    private static SectorEncounterItem DbRowWithTerritoryToModel(DbRowWithTerritoryJoin row)
+    {
+        return new SectorEncounterItem
+        {
+            Id = row.id,
+            Name = row.name,
+            OnLoadScript = row.on_load_script,
+            OnSectorEnterScript = row.on_sector_enter_script,
+            Active = row.active,
+            Tag = row.tag,
+            TerritoryId = row.territory_id,
+            RestrictToOwnedTerritory = row.restrict_to_owned_territory,
+            Properties =
+            {
+                CenterPosition = new Vec3
+                {
+                    x = row.spawn_position_x,
+                    y = row.spawn_position_y,
+                    z = row.spawn_position_z,
+                },
+                MaxRadius = row.spawn_max_radius,
+                MinRadius = row.spawn_min_radius,
+                ExpirationTimeSpan = row.spawn_expiration_span,
+            }
+        };
+    }
 
-    private struct DbRow
+    private class DbRow
     {
         public Guid id { get; set; }
         public string name { get; set; }
@@ -134,5 +184,16 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         public string tag { get; set; }
         public Guid territory_id { get; set; }
         public bool restrict_to_owned_territory { get; set; }
+    }
+
+    private class DbRowWithTerritoryJoin : DbRow
+    {
+        public double spawn_position_x { get; set; }
+        public double spawn_position_y { get; set; }
+        public double spawn_position_z { get; set; }
+        public double spawn_min_radius { get; set; }
+        public double spawn_max_radius { get; set; }
+        public TimeSpan spawn_expiration_span { get; set; }
+        public bool territory_active { get; set; }
     }
 }

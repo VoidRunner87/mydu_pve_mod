@@ -10,9 +10,7 @@ using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
-using Mod.DynamicEncounters.Features.Sector.Repository;
 using Mod.DynamicEncounters.Helpers;
-using MongoDB.Driver.Linq;
 
 namespace Mod.DynamicEncounters;
 
@@ -68,34 +66,6 @@ public class SectorLoop : ModBase
 
         _logger.LogDebug("Action took {Time}ms", sw.ElapsedMilliseconds);
     }
-
-    [Obsolete]
-    private async Task PrepareSectorByTag(string tag, int sectorsToGenerate)
-    {
-        // TODO sector encounters becomes tied to a territory
-        // a territory has center, max and min radius
-        // a territory is owned by a faction
-        // a territory is a point on a map - not constructs nor DU's territories - perhaps name it differently
-        var sectorEncountersRepository = ServiceProvider.GetRequiredService<ISectorEncounterRepository>();
-        var encounters = (await sectorEncountersRepository.FindActiveTaggedAsync(tag))
-            .ToList();
-        
-        if (encounters.Count == 0)
-        {
-            _logger.LogWarning("No Encounters for Tag: {Tag}", tag);
-            return;
-        }
-
-        var generationArgs = new SectorGenerationArgs
-        {
-            Encounters = encounters,
-            Quantity = sectorsToGenerate,
-            Tag = tag
-        };
-        
-        await _sectorPoolManager.ExecuteSectorCleanup(generationArgs);
-        await _sectorPoolManager.GenerateSectors(generationArgs);
-    }
     
     private async Task PrepareSectorByFaction(FactionItem faction)
     {
@@ -109,7 +79,7 @@ public class SectorLoop : ModBase
         
         if (encounters.Count == 0)
         {
-            _logger.LogWarning("No Encounters for Faction: {Faction}({Id})", faction.Name, faction.Id);
+            _logger.LogDebug("No Encounters for Faction: {Faction}({Id})", faction.Name, faction.Id);
             return;
         }
 
