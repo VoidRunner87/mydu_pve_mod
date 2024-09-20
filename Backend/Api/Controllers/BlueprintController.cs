@@ -86,7 +86,7 @@ public partial class BlueprintController : Controller
         return Ok($"File {file.FileName} uploaded successfully");
     }
 
-    [HttpPut]
+    [HttpPost]
     [Route("import")]
     public async Task<IActionResult> ImportAsync([FromBody] ImportBlueprintRequest request)
     {
