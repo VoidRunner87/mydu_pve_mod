@@ -1,13 +1,16 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 using Backend;
 using Backend.AWS;
 using Backend.Database;
 using Backend.Fixture;
 using Backend.Fixture.Construct;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Helpers;
+using Newtonsoft.Json.Linq;
 using NQ;
 using NQ.Interfaces;
 using NQutils.Def;
@@ -17,7 +20,7 @@ using Orleans;
 namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("bp")]
-public class ImportBlueprintController : Controller
+public class BlueprintController : Controller
 {
     public class ImportBlueprintRequest
     {
@@ -30,13 +33,42 @@ public class ImportBlueprintController : Controller
         public ulong? ParentId { get; set; }
     }
 
+    [Route("upload/{folder}")]
+    [HttpPost]
+    public async Task<IActionResult> UploadAsync(string folder, [FromForm] IFormFile? file)
+    {
+        if (file == null || file.Length == 0 || !file.FileName.EndsWith("json"))
+        {
+            return BadRequest("Invalid");
+        }
+
+        var dataFolderPath = NQutils.Config.Config.Instance.s3.override_base_path;
+
+        var filePath = Path.Combine(dataFolderPath, folder, file.FileName);
+
+        await using var readContentStream = file.OpenReadStream();
+        using var sr = new StreamReader(readContentStream);
+        var blueprintContents = await sr.ReadToEndAsync();
+        var blueprintJToken = JObject.Parse(blueprintContents);
+
+        if (blueprintJToken["fixtureheader"] == null)
+        {
+            return BadRequest("Not a correct blueprint type");
+        }
+        
+        await using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
+        
+        return Ok($"File {file.FileName} uploaded successfully");
+    }
+
     [HttpPut]
     [Route("import")]
     public async Task<IActionResult> ImportAsync([FromBody] ImportBlueprintRequest request)
     {
         var provider = ModBase.ServiceProvider;
         var orleans = provider.GetOrleans();
-        var logger = provider.CreateLogger<ImportBlueprintController>();
+        var logger = provider.CreateLogger<BlueprintController>();
 
         var s3 = provider.GetRequiredService<IS3>();
 

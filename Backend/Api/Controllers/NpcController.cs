@@ -19,7 +19,7 @@ public class NpcController(IServiceProvider provider) : Controller
     private readonly IPrefabItemRepository _repository =
         provider.GetRequiredService<IPrefabItemRepository>();
 
-    private readonly AddNpcRequestValidator _validator = new(); 
+    private readonly AddNpcRequestValidator _validator = new();
 
     [SwaggerOperation("Adds an NPC prefab and script to the system")]
     [HttpPut]
@@ -31,9 +31,9 @@ public class NpcController(IServiceProvider provider) : Controller
         {
             return BadRequest(validationResult);
         }
-        
+
         request.Sanitize();
-        
+
         var guid = Guid.NewGuid();
 
         var giveQuantaAction = new ScriptActionItem
@@ -42,7 +42,7 @@ public class NpcController(IServiceProvider provider) : Controller
             Value = request.QuantaReward * 100,
             Message = "Kill Reward"
         };
-        
+
         var prefab = new PrefabItem
         {
             Folder = request.Folder,
@@ -64,7 +64,7 @@ public class NpcController(IServiceProvider provider) : Controller
                 IsDynamicWreck = false
             }
         };
-        
+
         await _repository.AddAsync(prefab);
 
         var scriptActionItemRepository = provider.GetRequiredService<IScriptActionItemRepository>();
@@ -77,7 +77,7 @@ public class NpcController(IServiceProvider provider) : Controller
                 Value = x.Budget
             })
             .ToList();
-        
+
         var scriptGuid = Guid.NewGuid();
 
         var script = new ScriptActionItem
@@ -91,7 +91,7 @@ public class NpcController(IServiceProvider provider) : Controller
                 OnLoad = lootActions
             }
         };
-        
+
         await scriptActionItemRepository.AddAsync(script);
 
         return Ok(new
