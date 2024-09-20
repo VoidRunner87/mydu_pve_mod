@@ -12,7 +12,7 @@ public static class ElementInfoHelpers
             return true;
         }
 
-        return GetCoreStressPercentage(elementInfo) > 0.99;
+        return GetCoreStressPercentage(elementInfo) >= 0.999999;
     }
     
     public static bool IsCoreStressHigh(this ElementInfo elementInfo)
