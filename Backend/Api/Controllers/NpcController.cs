@@ -78,6 +78,28 @@ public class NpcController(IServiceProvider provider) : Controller
             })
             .ToList();
 
+        var onLoadActions = new List<ScriptActionItem>
+        {
+            new()
+            {
+                Type = "for-each-handle-with-tag",
+                Tags = ["pod"],
+                Actions = new List<ScriptActionItem>
+                {
+                    new()
+                    {
+                        Type = "delete"
+                    }
+                }
+            },
+            new()
+            {
+                Type = "expire-sector"
+            }
+        };
+        
+        onLoadActions.AddRange(lootActions);
+        
         var scriptGuid = Guid.NewGuid();
 
         var script = new ScriptActionItem
@@ -88,7 +110,7 @@ public class NpcController(IServiceProvider provider) : Controller
             Prefab = request.Name,
             Events =
             {
-                OnLoad = lootActions
+                OnLoad = onLoadActions
             }
         };
 
