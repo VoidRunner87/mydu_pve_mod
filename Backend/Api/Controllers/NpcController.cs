@@ -84,13 +84,13 @@ public class NpcController(IServiceProvider provider) : Controller
             {
                 Type = "for-each-handle-with-tag",
                 Tags = ["pod"],
-                Actions = new List<ScriptActionItem>
-                {
-                    new()
+                Actions =
+                [
+                    new ScriptActionItem()
                     {
                         Type = "delete"
                     }
-                }
+                ]
             },
             new()
             {
