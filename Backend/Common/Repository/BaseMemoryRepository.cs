@@ -29,6 +29,18 @@ public abstract class BaseMemoryRepository<TKey, T>(IServiceProvider provider) :
         return Task.CompletedTask;
     }
 
+    public Task UpdateAsync(T item)
+    {
+        if (!_items.ContainsKey(item.GetKey()))
+        {
+            return AddAsync(item);
+        }
+
+        _items[item.GetKey()] = item;
+        
+        return Task.CompletedTask;
+    }
+
     public Task AddRangeAsync(IEnumerable<T> items)
     {
         foreach (var item in items)

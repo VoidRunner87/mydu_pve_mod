@@ -44,6 +44,25 @@ public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : ISc
         throw new NotSupportedException();
     }
 
+    public async Task UpdateAsync(ScriptActionItem item)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            """
+            UPDATE public.mod_script SET
+                content = @content::jsonb
+            WHERE name = @name
+            """,
+            new
+            {
+                item.Id,
+                content = JsonConvert.SerializeObject(item)
+            }
+        );
+    }
+
     public Task AddRangeAsync(IEnumerable<ScriptActionItem> items)
     {
         throw new NotImplementedException("TODO LATER");

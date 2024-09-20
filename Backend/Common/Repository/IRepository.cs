@@ -7,6 +7,7 @@ public interface IRepository<T>
 {
     Task AddAsync(T item);
     Task SetAsync(IEnumerable<T> items);
+    Task UpdateAsync(T item);
     Task AddRangeAsync(IEnumerable<T> items);
     Task<T?> FindAsync(object key);
     Task<IEnumerable<T>> GetAllAsync();

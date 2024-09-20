@@ -44,6 +44,11 @@ public class PrefabItemDatabaseRepository(IServiceProvider provider) : IPrefabIt
         throw new NotSupportedException();
     }
 
+    public Task UpdateAsync(PrefabItem item)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task AddRangeAsync(IEnumerable<PrefabItem> items)
     {
         throw new NotImplementedException("TODO LATER");

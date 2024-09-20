@@ -44,6 +44,11 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         throw new NotImplementedException();
     }
 
+    public Task UpdateAsync(SectorEncounterItem item)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task AddRangeAsync(IEnumerable<SectorEncounterItem> items)
     {
         throw new NotImplementedException();

@@ -21,6 +21,22 @@ public class ScriptController(IServiceProvider provider) : Controller
         return Ok(await _repository.GetAllAsync());
     }
 
+    [HttpGet]
+    [Route("{name}")]
+    public async Task<IActionResult> Get(string name)
+    {
+        return Ok(await _repository.FindAsync(name));
+    }
+    
+    [HttpPost]
+    [Route("")]
+    public async Task<IActionResult> Update([FromBody] ScriptActionItem item)
+    {
+        await _repository.UpdateAsync(item);
+        
+        return Ok();
+    }
+
     [HttpPut]
     [Route("")]
     public async Task<IActionResult> Create([FromBody] ScriptActionItem actionItem)

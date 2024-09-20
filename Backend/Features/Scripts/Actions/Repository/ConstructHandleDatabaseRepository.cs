@@ -51,6 +51,11 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         throw new NotSupportedException();
     }
 
+    public Task UpdateAsync(ConstructHandleItem item)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task AddRangeAsync(IEnumerable<ConstructHandleItem> items)
     {
         throw new NotSupportedException();

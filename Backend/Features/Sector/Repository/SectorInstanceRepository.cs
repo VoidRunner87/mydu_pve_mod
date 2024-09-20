@@ -47,6 +47,11 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         return Task.CompletedTask;
     }
 
+    public Task UpdateAsync(SectorInstance item)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task AddRangeAsync(IEnumerable<SectorInstance> items)
     {
         return Task.CompletedTask;
