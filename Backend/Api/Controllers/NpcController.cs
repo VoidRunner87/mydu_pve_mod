@@ -22,7 +22,7 @@ public class NpcController(IServiceProvider provider) : Controller
     private readonly AddNpcRequestValidator _validator = new();
 
     [SwaggerOperation("Adds an NPC prefab and script to the system")]
-    [HttpPut]
+    [HttpPost]
     [Route("")]
     public async Task<IActionResult> Add([FromBody] AddNpcRequest request)
     {
