@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Backend;
 using Backend.AWS;
@@ -20,7 +21,7 @@ using Orleans;
 namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("bp")]
-public class BlueprintController : Controller
+public partial class BlueprintController : Controller
 {
     public class ImportBlueprintRequest
     {
@@ -31,6 +32,29 @@ public class BlueprintController : Controller
         public ulong? OwnerOrganizationId { get; set; }
         public string? Name { get; set; }
         public ulong? ParentId { get; set; }
+    }
+
+    [Route("download/{folder}/{file}")]
+    [HttpGet]
+    public async Task<IActionResult> DownloadAsync(string folder, string file)
+    {
+        folder = OnlyBasicTextRegex()
+            .Replace(folder, "");
+        file = OnlyBasicTextRegex()
+            .Replace(file, "");
+        
+        var dataFolderPath = NQutils.Config.Config.Instance.s3.override_base_path;
+        
+        var filePath = Path.Combine(dataFolderPath, folder, file);
+        
+        if (!System.IO.File.Exists(filePath))
+        {
+            return NotFound("File not found.");
+        }
+        
+        var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+        
+        return File(fileBytes, "application/octet-stream", file);
     }
 
     [Route("upload/{folder}")]
@@ -143,4 +167,7 @@ public class BlueprintController : Controller
 
         return Ok(new { constructId });
     }
+
+    [GeneratedRegex("[^a0-z9_\\.]")]
+    private static partial Regex OnlyBasicTextRegex();
 }
