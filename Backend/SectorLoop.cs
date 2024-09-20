@@ -60,7 +60,7 @@ public class SectorLoop : ModBase
         await _sectorPoolManager.ExecuteSectorCleanup();
         
         var factionSectorPrepTasks = (await factionRepository.GetAllAsync())
-            .Select(PrepareSectorByFaction);
+            .Select(PrepareSector);
         await Task.WhenAll(factionSectorPrepTasks);
         
         await _sectorPoolManager.LoadUnloadedSectors();
@@ -69,7 +69,7 @@ public class SectorLoop : ModBase
         _logger.LogDebug("Action took {Time}ms", sw.ElapsedMilliseconds);
     }
     
-    private async Task PrepareSectorByFaction(FactionItem faction)
+    private async Task PrepareSector(FactionItem faction)
     {
         // TODO sector encounters becomes tied to a territory
         // a territory has center, max and min radius

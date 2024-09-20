@@ -229,7 +229,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             }
 
             _logger.LogInformation(
-                "Starting up sector({Sector}) encounter: '{Encounter}'",
+                "Starting up sector F({Faction}) ({Sector}) encounter: '{Encounter}'",
+                sectorInstance.FactionId,
                 sectorInstance.Sector,
                 sectorInstance.OnSectorEnterScript
             );

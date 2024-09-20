@@ -9,7 +9,6 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
-using Mod.DynamicEncounters.Helpers.DU;
 using NQ;
 using NQ.Interfaces;
 using NQutils.Def;
@@ -85,11 +84,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         
         var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
 
-        if (coreUnit.IsCoreStressHigh())
-        {
-            await context.NotifyCoreStressHighAsync(new BehaviorEventArgs(constructId, prefab, context));
-        }
-        
         var provider = context.ServiceProvider;
 
         var constructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
@@ -112,21 +106,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             context.PlayerIds.TryAdd(targetInfo.mutableData.pilot.Value, targetInfo.mutableData.pilot.Value);
         }
 
-        if (constructInfo.IsShieldLowerThanHalf())
-        {
-            await context.NotifyShieldHpHalfAsync(new BehaviorEventArgs(constructId, prefab, context));
-        }
-        
-        if (constructInfo.IsShieldLowerThan25())
-        {
-            await context.NotifyShieldHpLowAsync(new BehaviorEventArgs(constructId, prefab, context));
-        }
-        
-        if (constructInfo.IsShieldDown())
-        {
-            await context.NotifyShieldHpDownAsync(new BehaviorEventArgs(constructId, prefab, context));
-        }
-        
         var random = provider.GetRandomProvider()
             .GetRandom();
 

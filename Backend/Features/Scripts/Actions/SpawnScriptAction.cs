@@ -166,7 +166,7 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
         if (!isWreck)
         {
-            behaviorList.AddRange(["alive", "select-target"]);
+            behaviorList.AddRange(["alive", "select-target", "notifier"]);
             behaviorList.AddRange(constructDefItem.InitialBehaviors);
         }
         

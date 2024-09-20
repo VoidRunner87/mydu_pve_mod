@@ -26,8 +26,8 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
 
         await db.ExecuteAsync(
             $"""
-             INSERT INTO {NpcConstructHandleTable} (id, construct_id, sector_x, sector_y, sector_z, construct_def_id, original_owner_player_id, original_organization_id, on_cleanup_script, json_properties)
-             VALUES (@id, @construct_id, @sector_x, @sector_y, @sector_z, @construct_def_id, @original_owner_player_id, @original_organization_id, @on_cleanup_script, @json_properties::jsonb)
+             INSERT INTO {NpcConstructHandleTable} (id, construct_id, faction_id, sector_x, sector_y, sector_z, construct_def_id, original_owner_player_id, original_organization_id, on_cleanup_script, json_properties)
+             VALUES (@id, @construct_id, @faction_id, @sector_x, @sector_y, @sector_z, @construct_def_id, @original_owner_player_id, @original_organization_id, @on_cleanup_script, @json_properties::jsonb)
              """,
             new
             {

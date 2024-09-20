@@ -19,6 +19,8 @@ public class ConstructBehaviorFactory : IConstructBehaviorFactory
                 return new AggressiveBehavior(constructId, prefab).WithErrorHandler();
             case "follow-target":
                 return new FollowTargetBehaviorV2(constructId, prefab).WithErrorHandler();
+            case "notifier":
+                return new NotifierBehavior(constructId, prefab).WithErrorHandler();
             default:
                 return new WreckBehavior().WithErrorHandler();
         }
@@ -43,6 +45,7 @@ public class ConstructBehaviorFactory : IConstructBehaviorFactory
         {
             finalBehaviors.Add("alive");
             finalBehaviors.Add("select-target");
+            finalBehaviors.Add("notifier");
             finalBehaviors.AddRange(prefab.DefinitionItem.InitialBehaviors);
         }
         
