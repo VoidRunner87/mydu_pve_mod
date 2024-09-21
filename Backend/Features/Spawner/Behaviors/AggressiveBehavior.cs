@@ -5,6 +5,7 @@ using Backend;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
+using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
@@ -29,6 +30,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
     private ElementId _coreUnitElementId;
     
     private bool _active = true;
+    private bool _pveVoxelDamageEnabled;
 
     public bool IsActive() => _active;
 
@@ -64,6 +66,10 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         
         context.IsAlive = _coreUnitElementId.elementId > 0;
         _active = context.IsAlive;
+        
+        _pveVoxelDamageEnabled = await context.ServiceProvider
+            .GetRequiredService<IFeatureReaderService>()
+            .GetBoolValueAsync("PVEVoxelDamage", false);
         
         _logger = provider.CreateLogger<AggressiveBehavior>();
     }
@@ -186,9 +192,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         
         var handle = context.WeaponHandle;
 
-        // TODO check if weapon is destroyed
-        var elementInfo = await _constructElementsGrain.GetElement(handle.ElementInfo.elementId);
-
         var w = handle.Unit;
         var mod = prefab.DefinitionItem.Mods;
         var cycleTime = w.baseCycleTime * mod.Weapon.CycleTime;
@@ -219,6 +222,10 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         var ammoItem = random.PickOneAtRandom(prefab.DefinitionItem.AmmoItems);
         var weaponItem = random.PickOneAtRandom(prefab.DefinitionItem.WeaponItems);
 
+        context.HitPosition = _pveVoxelDamageEnabled
+            ? random.PickOneAtRandom(context.BehaviorContext.TargetElementPositions)
+            : context.HitPosition;
+        
         await context.NpcShotGrain.Fire(
             w.displayName,
             context.ConstructPosition,

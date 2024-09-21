@@ -56,7 +56,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         }
 
         var targetSpan = DateTime.UtcNow - context.TargetSelectedTime;
-        if (targetSpan < TimeSpan.FromSeconds(20))
+        if (targetSpan < TimeSpan.FromSeconds(10))
         {
             return;
         }
@@ -120,7 +120,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                     construct.mutableData.pilot.Value.id
                 );
             }
-
+            
             var pos = construct.rData.position;
 
             var delta = Math.Abs(pos.Distance(npcPos));
@@ -149,6 +149,15 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             return;
         }
 
+        var constructElementsGrain = _orleans.GetConstructElementsGrain(context.TargetConstructId.Value);
+        var elements = (await constructElementsGrain.GetElementsOfType<ConstructElement>()).ToList();
+        
+        var elementInfoListTasks = elements
+            .Select(constructElementsGrain.GetElement);
+
+        var elementInfoList = await Task.WhenAll(elementInfoListTasks);
+        context.TargetElementPositions = elementInfoList.Select(x => x.position);
+        
         _logger.LogInformation("Selected a new Target: {Target}; {Time}ms", targetId, sw.ElapsedMilliseconds);
 
         if (!context.ExtraProperties.TryGetValue<ulong>("RADAR_ID", out var radarElementId))
