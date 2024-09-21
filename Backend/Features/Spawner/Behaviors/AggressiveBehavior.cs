@@ -222,6 +222,9 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         var ammoItem = random.PickOneAtRandom(prefab.DefinitionItem.AmmoItems);
         var weaponItem = random.PickOneAtRandom(prefab.DefinitionItem.WeaponItems);
 
+        // var targetConstructInfoGrain = _orleans.GetConstructInfoGrain(context.TargetConstructId);
+        // var targetConstructInfo = await targetConstructInfoGrain.Get();
+        
         context.HitPosition = _pveVoxelDamageEnabled
             ? random.PickOneAtRandom(context.BehaviorContext.TargetElementPositions)
             : context.HitPosition;
@@ -256,5 +259,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             5,
             context.HitPosition
         );
+        
+        _logger.LogInformation("Shot Weapon {Weapon} / {Ammo}", weaponItem, ammoItem);
     }
 }
