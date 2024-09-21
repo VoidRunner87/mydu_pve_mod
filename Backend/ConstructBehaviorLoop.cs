@@ -27,7 +27,6 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
     private bool _featureEnabled;
     private readonly ConcurrentDictionary<ulong, ConstructHandleItem> _constructHandles = [];
-    // private readonly ConcurrentDictionary<ulong, BehaviorContext> _behaviorContexts = [];
     
     private static readonly object ListLock = new();
 

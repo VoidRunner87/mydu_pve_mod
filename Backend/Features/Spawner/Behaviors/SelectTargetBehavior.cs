@@ -185,7 +185,10 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                     sourceSeatElementId = seatElementId
                 });
 
-            await _constructGrain.PilotingTakeOver(ModBase.Bot.PlayerId, true);
+            if (!await _constructGrain.IsBeingControlled())
+            {
+                await _constructGrain.PilotingTakeOver(ModBase.Bot.PlayerId, true);
+            }
         }
         catch (Exception e)
         {

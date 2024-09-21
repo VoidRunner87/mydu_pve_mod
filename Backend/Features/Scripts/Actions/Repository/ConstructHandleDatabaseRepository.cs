@@ -108,13 +108,15 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
 
         var result = (await db.QueryAsync<DbRow>(
             """
-            SELECT 
-                CH.*,
-                CD.name as def_name,
-                CD.content as def_content
+            SELECT
+            	CH.*,
+            	CD.name as def_name,
+            	CD.content as def_content
             FROM public.mod_npc_construct_handle CH
             INNER JOIN public.mod_construct_def CD ON (CD.id = CH.construct_def_id)
-            WHERE NOT (CD.content->'InitialBehaviors' @> '"wreck"');
+            INNER JOIN public.construct C ON (C.id = CH.construct_id)
+            WHERE NOT (CD.content->'InitialBehaviors' @> '"wreck"') AND
+            	C.deleted_at IS NULL
             """
         )).ToList();
 

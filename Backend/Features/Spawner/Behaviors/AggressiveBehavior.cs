@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Backend;
@@ -228,6 +229,9 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         context.HitPosition = _pveVoxelDamageEnabled
             ? random.PickOneAtRandom(context.BehaviorContext.TargetElementPositions)
             : context.HitPosition;
+
+        var sw = new Stopwatch();
+        sw.Start();
         
         await context.NpcShotGrain.Fire(
             w.displayName,
@@ -260,6 +264,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             context.HitPosition
         );
         
-        _logger.LogInformation("Shot Weapon {Weapon} / {Ammo}", weaponItem, ammoItem);
+        _logger.LogInformation("Shot Weapon. Took: {Time}ms {Weapon} / {Ammo}",sw.Elapsed.TotalMilliseconds, weaponItem, ammoItem);
     }
 }
