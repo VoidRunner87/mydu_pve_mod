@@ -1,14 +1,13 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using BotLib.Generated;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Features.Loot.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
 using NQ.Visibility;
-using NQutils.Def;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
@@ -16,71 +15,13 @@ namespace Mod.DynamicEncounters.Api.Controllers;
 public class ConstructController : Controller
 {
     [HttpPost]
-    [Route("{constructId}/replace/{elementTypeName}/with/{replaceElementTypeName}")]
+    [Route("{constructId:long}/replace/{elementTypeName}/with/{replaceElementTypeName}")]
     public async Task<IActionResult> ReplaceElement(long constructId, string elementTypeName, string replaceElementTypeName)
     {
         var provider = ModBase.ServiceProvider;
-        var orleans = provider.GetOrleans();
-        var bank = provider.GetGameplayBank();
-        var elementDef = bank.GetDefinition(elementTypeName)!;
-        var replaceElDef = bank.GetDefinition(replaceElementTypeName)!;
+        var elementReplacerService = provider.GetRequiredService<IElementReplacerService>();
 
-        var constructElementsGrain = orleans.GetConstructElementsGrain((ulong)constructId);
-        var elementIds = await constructElementsGrain.GetElementsOfType<ConstructElement>();
-        var element = (await Task.WhenAll(elementIds.Select(constructElementsGrain.GetElement)))
-            .First(x => x.elementType == elementDef.Id);
-        
-        var elementInfo = await constructElementsGrain.GetElement(element.elementId);
-        var elPos = elementInfo.position;
-        var elRot = elementInfo.rotation;
-        
-        await ModBase.Bot.Req.ElementDestroy(
-            new ElementInConstruct
-            {
-                constructId = (ulong)constructId,
-                elementId = element.elementId
-            }
-        );
-
-        await ModBase.Bot.Req.BotGiveItems(
-            new ItemAndQuantityList
-            {
-                content =
-                [
-                    new()
-                    {
-                        item = new ItemInfo
-                        {
-                            type = replaceElDef.Id,
-                        },
-                        quantity = 1
-                    }
-                ]
-            }
-        );
-
-        var inventory = await ModBase.Bot.Req.InventoryGet();
-        var item = inventory.content
-            .First(x => x.content.type == replaceElDef.Id);
-        
-        await ModBase.Bot.Req.ElementAdd(
-            new ElementDeploy
-            {
-                element = new ElementInfo
-                {
-                    constructId = (ulong)constructId,
-                    elementType = replaceElDef.Id,
-                    position = elPos,
-                    rotation = elRot
-                },
-                fromInventory = new ItemId
-                {
-                    ownerId = item.content.owner,
-                    instanceId = item.content.id,
-                    typeId = item.content.type
-                }
-            }
-        );
+        await elementReplacerService.ReplaceSingleElementAsync((ulong)constructId, elementTypeName, replaceElementTypeName);
 
         return Ok();
     }
