@@ -30,23 +30,22 @@ public class SectorLoop : ModBase
 
         await spawnerService.LoadAllFromDatabase();
 
-        try
+        while (true)
         {
-            while (true)
-            {
-                await Task.Delay(3000);
-                var isEnabled = await featureService.GetEnabledValue<SectorLoop>(false);
+            await Task.Delay(3000);
+            var isEnabled = await featureService.GetEnabledValue<SectorLoop>(false);
 
-                if (isEnabled)
+            if (isEnabled)
+            {
+                try
                 {
                     await ExecuteAction();
                 }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Failed to execute {Name}", nameof(SectorLoop));
+                }
             }
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to execute {Name}", nameof(SectorLoop));
-            // TODO implement alerting on too many failures
         }
     }
 

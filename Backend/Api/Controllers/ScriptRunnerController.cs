@@ -4,14 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Helpers;
 using NQ;
+using NQ.Interfaces;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("script")]
 public class ScriptRunnerController : Controller
 {
-    [HttpPut]
+    [HttpPost]
     [Route("run/{name}")]
     public async Task<IActionResult> RunScript(string name, [FromBody] RunScriptContextRequest request)
     {

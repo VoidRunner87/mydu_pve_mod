@@ -161,4 +161,17 @@ public class ConstructController : Controller
             }
         );
     }
+
+    [HttpDelete]
+    [Route("{constructId:long}")]
+    public async Task<IActionResult> Delete(long constructId)
+    {
+        var provider = ModBase.ServiceProvider;
+        var orleans = provider.GetOrleans();
+
+        var gcGrain = orleans.GetConstructGCGrain();
+        await gcGrain.DeleteConstruct((ulong)constructId);
+
+        return Ok();
+    }
 }

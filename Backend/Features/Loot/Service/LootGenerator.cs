@@ -73,7 +73,7 @@ public class LootGeneratorService(IServiceProvider provider) : ILootGeneratorSer
 
             if (!stillWithinBudget)
             {
-                return itemBag;
+                break;
             }
         }
 
@@ -103,6 +103,8 @@ public class LootGeneratorService(IServiceProvider provider) : ILootGeneratorSer
                     randomQuantity
                 )
             );
+            
+            _logger.LogInformation("Replacing {Quantity}x {Item} with {Replacement}", randomQuantity, elementRule.FindElement, elementRule.ReplaceElement);
         }
         
         return itemBag;

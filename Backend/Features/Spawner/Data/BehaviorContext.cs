@@ -27,6 +27,7 @@ public class BehaviorContext(
 )
 {
     public ulong? TargetConstructId { get; set; }
+    public Vec3 TargetMovePosition { get; set; }
     public IEnumerable<Vec3> TargetElementPositions { get; set; } = [];
     private double _deltaTime;
 

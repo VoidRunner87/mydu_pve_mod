@@ -20,7 +20,6 @@ namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
 public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstructBehavior
 {
-    private readonly IPrefab _prefab = prefab;
     private bool _active = true;
     private IConstructSpatialHashRepository _spatialHashRepo;
     private IClusterClient _orleans;
@@ -58,6 +57,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var targetSpan = DateTime.UtcNow - context.TargetSelectedTime;
         if (targetSpan < TimeSpan.FromSeconds(10))
         {
+            context.TargetMovePosition = await GetTargetMovePosition(context);
+            
             return;
         }
 
@@ -149,6 +150,9 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             return;
         }
 
+        
+        context.TargetMovePosition = await GetTargetMovePosition(context);
+        
         var constructElementsGrain = _orleans.GetConstructElementsGrain(context.TargetConstructId.Value);
         var elements = (await constructElementsGrain.GetElementsOfType<ConstructElement>()).ToList();
         
@@ -194,5 +198,21 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         {
             _logger.LogError(e, "Failed to Identity Target");
         }
+    }
+
+    private async Task<Vec3> GetTargetMovePosition(BehaviorContext context)
+    {
+        if (!context.TargetConstructId.HasValue)
+        {
+            return new Vec3();
+        }
+        
+        var targetConstructInfoGrain = _orleans.GetConstructInfoGrain(context.TargetConstructId.Value);
+        var targetConstructInfo = await targetConstructInfoGrain.Get();
+        
+        var distanceGoal = prefab.DefinitionItem.TargetDistance;
+        var offset = new Vec3 { y = distanceGoal };
+        
+        return targetConstructInfo.rData.position + offset;
     }
 }

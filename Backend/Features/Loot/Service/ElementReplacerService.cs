@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BotLib.Generated;
+using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Loot.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
@@ -14,6 +15,7 @@ namespace Mod.DynamicEncounters.Features.Loot.Service;
 public class ElementReplacerService(IServiceProvider provider) : IElementReplacerService
 {
     private readonly IClusterClient _orleans = provider.GetOrleans();
+    private readonly ILogger<ElementReplacerService> _logger = provider.CreateLogger<ElementReplacerService>();
 
     public async Task ReplaceSingleElementAsync(ulong constructId, string elementTypeName, string withElementTypeName)
     {
@@ -22,6 +24,7 @@ public class ElementReplacerService(IServiceProvider provider) : IElementReplace
 
         if (elementDef == null)
         {
+            _logger.LogError("Element Def NULL");
             return;
         }
         
@@ -29,6 +32,7 @@ public class ElementReplacerService(IServiceProvider provider) : IElementReplace
 
         if (replaceElDef == null)
         {
+            _logger.LogError("Replace Element Def NULL");
             return;
         }
 
@@ -37,6 +41,7 @@ public class ElementReplacerService(IServiceProvider provider) : IElementReplace
 
         if (elementIds.Count == 0)
         {
+            _logger.LogError("Element IDS COUNT = 0");
             return;
         }
         
@@ -45,6 +50,7 @@ public class ElementReplacerService(IServiceProvider provider) : IElementReplace
 
         if (element == null)
         {
+            _logger.LogError("Element is NULL");
             return;
         }
 
@@ -68,6 +74,8 @@ public class ElementReplacerService(IServiceProvider provider) : IElementReplace
                 ]
             }
         );
+        
+        _logger.LogInformation("Added Item to the Bot Inventory");
 
         var inventory = await ModBase.Bot.Req.InventoryGet();
         var item = inventory.content
@@ -75,6 +83,8 @@ public class ElementReplacerService(IServiceProvider provider) : IElementReplace
 
         var playerId = await GetPlayerWithRightsOnConstruct(constructId);
         var elementManagementGrain = _orleans.GetElementManagementGrain();
+        
+        _logger.LogInformation("Construct Owner Player Id = {Id}", playerId);
         
         await ModBase.Bot.Req.ElementAdd(
             new ElementDeploy
@@ -94,6 +104,8 @@ public class ElementReplacerService(IServiceProvider provider) : IElementReplace
                 }
             }
         );
+        
+        _logger.LogInformation("Added Element");
 
         var elInConstruct = new ElementInConstruct
         {
@@ -102,6 +114,8 @@ public class ElementReplacerService(IServiceProvider provider) : IElementReplace
         };
 
         await elementManagementGrain.ElementDestroy(playerId, elInConstruct);
+        
+        _logger.LogInformation("Destroyed Replaced Element");
     }
 
     private async Task<ulong> GetPlayerWithRightsOnConstruct(ulong constructId)
