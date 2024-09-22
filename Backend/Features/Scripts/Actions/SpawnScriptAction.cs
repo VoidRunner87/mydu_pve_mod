@@ -153,7 +153,7 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to Create Snapshot of Spawned Construct");
+            _logger.LogError(e, "Failed to Create Snapshot of Spawned Construct {Construct}", constructId);
         }
 
         _logger.LogInformation("Spawned Construct [{Name}]({Id}) at ::pos{{0,0,{Pos}}}", resultName, constructId, spawnPosition);
