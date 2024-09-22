@@ -19,7 +19,13 @@ public class RunScriptAction(ScriptActionItem actionItem) : IScriptAction
         var provider = context.ServiceProvider;
         var scriptService = provider.GetRequiredService<IScriptService>();
 
-        return scriptService.ExecuteScriptAsync(actionItem.Script, context);
+        return scriptService.ExecuteScriptAsync(
+            actionItem.Script, 
+            new ScriptContext(provider, context.FactionId, context.PlayerIds, context.Sector)
+            {
+                ConstructId = context.ConstructId
+            }
+        );
     }
 
     public string GetKey() => Name;
