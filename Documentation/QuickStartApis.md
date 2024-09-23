@@ -8,7 +8,7 @@ Run the mod with extra environment variables:
 
 ```yaml
   mod_dynamic_encounters:
-    image: dynamic_encounters
+    image: voidrunner7891/dynamic_encounters:latest
     ports:
       - "8080:8080"
     environment:
