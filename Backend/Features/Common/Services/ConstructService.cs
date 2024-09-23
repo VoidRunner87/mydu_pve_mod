@@ -83,4 +83,9 @@ public class ConstructService(IServiceProvider provider) : IConstructService
 
         return new Velocities(result.velocity, result.angVelocity);
     }
+
+    public Task DeleteAsync(ulong constructId)
+    {
+        return _orleans.GetConstructGCGrain().DeleteConstruct(constructId);
+    }
 }

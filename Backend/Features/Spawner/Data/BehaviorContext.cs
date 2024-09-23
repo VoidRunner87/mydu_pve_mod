@@ -50,6 +50,8 @@ public class BehaviorContext(
 
     public ConcurrentDictionary<string, bool> PublishedEvents = [];
     public IPrefab Prefab { get; set; } = prefab;
+    public List<Waypoint> Waypoints { get; set; } = [];
+    public Waypoint? TargetWaypoint { get; set; }
 
     public DateTime? TargetSelectedTime { get; set; }
 
@@ -62,7 +64,7 @@ public class BehaviorContext(
         // TODO for custom events
         return Task.CompletedTask;
     }
-    
+
     public async Task NotifyCoreStressHighAsync(BehaviorEventArgs eventArgs)
     {
         if (PublishedEvents.ContainsKey(nameof(NotifyCoreStressHighAsync)))
@@ -99,9 +101,9 @@ public class BehaviorContext(
         // send event for all players piloting constructs
         // TODO #limitation = not considering gunners and boarders
         var logger = eventArgs.Context.ServiceProvider.CreateLogger<BehaviorContext>();
-        
+
         logger.LogInformation("NPC Defeated by players: {Players}", string.Join(", ", eventArgs.Context.PlayerIds));
-        
+
         var tasks = eventArgs.Context.PlayerIds.Select(id =>
             eventService.PublishAsync(
                 new PlayerDefeatedNpcEvent(
@@ -113,7 +115,7 @@ public class BehaviorContext(
                 )
             )
         );
-        
+
         taskList.AddRange(tasks);
 
         var scriptExecutionTask = Prefab.Events.OnDestruction.ExecuteAsync(
@@ -131,7 +133,7 @@ public class BehaviorContext(
         taskList.Add(scriptExecutionTask);
 
         await Task.WhenAll(taskList);
-        
+
         var featureService = ServiceProvider.GetRequiredService<IFeatureReaderService>();
 
         if (await featureService.GetBoolValueAsync("ResetNPCCombatLockOnDestruction", false))
@@ -139,7 +141,7 @@ public class BehaviorContext(
             var constructService = ServiceProvider.GetRequiredService<IConstructService>();
             await constructService.ResetConstructCombatLock(eventArgs.ConstructId);
         }
-        
+
         PublishedEvents.TryAdd(nameof(NotifyConstructDestroyedAsync), true);
     }
 
@@ -213,7 +215,7 @@ public class BehaviorContext(
     {
         var name = typeof(T).FullName;
         var key = $"{name}_FINISHED";
-        
+
         if (!ExtraProperties.TryAdd(key, false))
         {
             ExtraProperties[key] = false;
@@ -224,7 +226,7 @@ public class BehaviorContext(
     {
         return IsBehaviorActive(typeof(T));
     }
-    
+
     public bool IsBehaviorActive(Type type)
     {
         var name = type.FullName;

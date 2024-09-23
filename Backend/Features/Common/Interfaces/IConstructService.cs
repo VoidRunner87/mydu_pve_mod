@@ -10,4 +10,5 @@ public interface IConstructService
     Task ResetConstructCombatLock(ulong constructId);
     Task SetDynamicWreckAsync(ulong constructId, bool isDynamicWreck);
     Task<Velocities> GetConstructVelocities(ulong constructId);
+    Task DeleteAsync(ulong constructId);
 }
