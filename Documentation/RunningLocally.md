@@ -1,5 +1,7 @@
 # Running the Mod Code on Local PC
 
+This is ONLY if you're running the CODE locally. Not the image on your local env.
+
 Expose these ports on your docker compose. Below is my docker compose for reference:
 
 ```yaml
