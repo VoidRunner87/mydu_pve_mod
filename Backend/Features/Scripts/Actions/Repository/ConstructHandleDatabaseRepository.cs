@@ -16,9 +16,9 @@ namespace Mod.DynamicEncounters.Features.Scripts.Actions.Repository;
 public class ConstructHandleDatabaseRepository(IServiceProvider provider) : IConstructHandleRepository
 {
     private readonly IPostgresConnectionFactory _factory = provider.GetRequiredService<IPostgresConnectionFactory>();
-    
+
     private const string NpcConstructHandleTable = "mod_npc_construct_handle";
-    
+
     public async Task AddAsync(ConstructHandleItem item)
     {
         using var db = _factory.Create();
@@ -67,10 +67,11 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         db.Open();
 
         var result = (await db.QueryAsync<DbRow>(
-           """
-           SELECT * FROM public.mod_npc_construct_handle WHERE id = @key
-           """,
-           new {key}
+            """
+            SELECT * FROM public.mod_npc_construct_handle 
+            WHERE id = @key AND deleted_at IS NULL
+            """,
+            new { key }
         )).ToList();
 
         if (result.Count == 0)
@@ -80,7 +81,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
 
         return MapToModel(result[0]);
     }
-    
+
     public async Task<ConstructHandleItem?> FindByConstructIdAsync(ulong constructId)
     {
         using var db = _factory.Create();
@@ -88,9 +89,11 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
 
         var result = (await db.QueryAsync<DbRow>(
             """
-            SELECT * FROM public.mod_npc_construct_handle WHERE construct_id = @constructId LIMIT 1
+            SELECT * FROM public.mod_npc_construct_handle 
+            WHERE construct_id = @constructId AND deleted_at IS NULL 
+            LIMIT 1
             """,
-            new {constructId = (long)constructId}
+            new { constructId = (long)constructId }
         )).ToList();
 
         if (result.Count == 0)
@@ -136,6 +139,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
                 CD.content as def_content
             FROM public.mod_npc_construct_handle CH
             INNER JOIN public.mod_construct_def CD ON (CD.id = CH.construct_def_id)
+            WHERE deleted_at IS NULL
             """
         )).ToList();
 
@@ -149,7 +153,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
 
         return await db.ExecuteScalarAsync<long>(
             """
-            SELECT COUNT(0) FROM public.mod_npc_construct_handle
+            SELECT COUNT(0) FROM public.mod_npc_construct_handle WHERE deleted_at IS NULL
             """
         );
     }
@@ -161,7 +165,9 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
 
         await db.ExecuteAsync(
             """
-            DELETE FROM public.mod_npc_construct_handle WHERE id = @key
+            UPDATE public.mod_npc_construct_handle 
+                SET deleted_at = NOW() 
+            WHERE id = @key
             """,
             new { key }
         );
@@ -181,7 +187,8 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             $"""
              SELECT * FROM public.mod_npc_construct_handle 
                 WHERE sector_x = @x AND sector_y = @y AND sector_z = @z AND
-                json_properties->'Tags' @> @tag::jsonb 
+                json_properties->'Tags' @> @tag::jsonb AND
+                deleted_at IS NULL
              """,
             new
             {
@@ -203,7 +210,8 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         var result = (await db.QueryAsync<DbRow>(
             $"""
              SELECT * FROM public.mod_npc_construct_handle WHERE
-             sector_x = @x AND sector_y = @y AND sector_z = @z
+             sector_x = @x AND sector_y = @y AND sector_z = @z AND
+             deleted_at IS NULL
              """,
             new
             {
@@ -219,16 +227,17 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
     public async Task<IEnumerable<ConstructHandleItem>> FindExpiredAsync(int minutes, Vec3 sector)
     {
         minutes = Math.Clamp(minutes, 5, 120);
-        
+
         using var db = _factory.Create();
         db.Open();
 
         var result = (await db.QueryAsync<DbRow>(
             $"""
-            SELECT * FROM public.mod_npc_construct_handle 
-            WHERE last_controlled_at + INTERVAL '{minutes} minutes' < NOW() AND
-            sector_x = @x AND sector_y = @y AND sector_z = @z
-            """,
+             SELECT * FROM public.mod_npc_construct_handle 
+             WHERE last_controlled_at + INTERVAL '{minutes} minutes' < NOW() AND
+             sector_x = @x AND sector_y = @y AND sector_z = @z AND
+             deleted_at IS NULL
+             """,
             new
             {
                 sector.x,
@@ -264,7 +273,11 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         db.Open();
 
         await db.ExecuteAsync(
-            "DELETE FROM public.mod_npc_construct_handle WHERE construct_id = @constructId",
+            """
+            UPDATE public.mod_npc_construct_handle
+            SET deleted_at = NOW() 
+            WHERE construct_id = @constructId
+            """,
             new { constructId = (long)constructId }
         );
     }
@@ -283,7 +296,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         {
             properties = JsonConvert.DeserializeObject<ConstructHandleProperties>(row.json_properties);
         }
-        
+
         return new ConstructHandleItem
         {
             Id = row.id,
