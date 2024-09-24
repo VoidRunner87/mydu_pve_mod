@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Nullable>annotations</Nullable>
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>12</LangVersion>
+        <PackageId>Mod.DynamicEncounters</PackageId>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="NQutils"/>
+        <Reference Include="Backend"/>
+        <Reference Include="Backend.PubSub"/>
+        <Reference Include="Interfaces"/>
+        <Reference Include="Router.Orleans"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Orleans.Core" Version="3.6.5"/>
+        <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="3.6.5"/>
+        <PackageReference Include="prometheus-net" Version="6.0.0"/>
+        <PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0"/>
+    </ItemGroup>
+    <ItemGroup>
+        <None Remove="Resources\code-editor.html"/>
+        <EmbeddedResource Include="Resources\code-editor.html"/>
+        <None Remove="Resources\file-uploader.js"/>
+        <None Remove="Resources\common.js"/>
+        <EmbeddedResource Include="Resources\common.js"/>
+        <None Remove="Resources\babel.js"/>
+        <None Remove="Resources\react.js"/>
+        <None Remove="Resources\react-dom.js"/>
+        <None Remove="Resources\npc-app.js" />
+        <EmbeddedResource Include="Resources\npc-app.js" />
+        <None Remove="Resources\create-root-div.js" />
+        <EmbeddedResource Include="Resources\create-root-div.js" />
+        <None Remove="Resources\npc-app.css" />
+        <EmbeddedResource Include="Resources\npc-app.css" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Overrides\" />
+    </ItemGroup>
+
+    <!-- https://github.com/dotnet/efcore/issues/15047 -->
+    <Target Name="AddAssemblyAliasToReactiveAsync" AfterTargets="ResolveAssemblyReferences">
+        <ItemGroup>
+            <ReferencePath Condition=" '%(FileName)' == 'System.Interactive.Async' ">
+                <Aliases>reactive</Aliases>
+            </ReferencePath>
+        </ItemGroup>
+    </Target>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="../../../Mods"/>
+    </Target>
+</Project>
