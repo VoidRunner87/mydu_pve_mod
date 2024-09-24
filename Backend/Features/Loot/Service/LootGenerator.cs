@@ -18,6 +18,7 @@ public class LootGeneratorService(IServiceProvider provider) : ILootGeneratorSer
     private readonly ILootDefinitionRepository _repository = provider.GetRequiredService<ILootDefinitionRepository>();
     private readonly IGameplayBank _bank = provider.GetGameplayBank();
     private readonly ILogger<LootGeneratorService> _logger = provider.CreateLogger<LootGeneratorService>();
+    private readonly IElementReplacerService _replacerService = provider.GetRequiredService<IElementReplacerService>();
 
     public async Task<ItemBagData> GenerateAsync(LootGenerationArgs args)
     {
@@ -30,7 +31,8 @@ public class LootGeneratorService(IServiceProvider provider) : ILootGeneratorSer
 
         var itemBag = new ItemBagData(args.MaxBudget);
 
-        var allItemRules = lootDefinitionItems.SelectMany(x => x.ItemRules)
+        var allItemRules = lootDefinitionItems
+            .SelectMany(x => x.ItemRules)
             .ToArray();
 
         random.Shuffle(allItemRules);
@@ -71,10 +73,40 @@ public class LootGeneratorService(IServiceProvider provider) : ILootGeneratorSer
 
             if (!stillWithinBudget)
             {
-                return itemBag;
+                break;
             }
         }
 
+        var allElementRules = lootDefinitionItems
+            .SelectMany(x => x.ElementRules)
+            .Where(x => x.IsValid())
+            .ToArray();
+
+        foreach (var elementRule in allElementRules)
+        {
+            elementRule.Sanitize();
+            
+            var roll100 = random.NextDouble();
+            var itemMinChanceRoll = 1 - elementRule.Chance;
+            
+            if (roll100 < itemMinChanceRoll)
+            {
+                continue;
+            }
+            
+            var randomQuantity = random.NextInt64(elementRule.MinQuantity, elementRule.MaxQuantity);
+            
+            itemBag.ElementsToReplace.Add(
+                new ItemBagData.ElementReplace(
+                    elementRule.FindElement,
+                    elementRule.ReplaceElement,
+                    randomQuantity
+                )
+            );
+            
+            _logger.LogInformation("Replacing {Quantity}x {Item} with {Replacement}", randomQuantity, elementRule.FindElement, elementRule.ReplaceElement);
+        }
+        
         return itemBag;
     }
 }

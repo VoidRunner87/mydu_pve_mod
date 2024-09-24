@@ -18,6 +18,7 @@ using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Stubs;
+using Newtonsoft.Json;
 using NQ.Router;
 using NQ.Visibility;
 using NQutils;
@@ -79,6 +80,12 @@ public class ModBase
     /// Setup everything, must be called once at startup
     public static async Task Setup(IServiceCollection services)
     {
+        JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            DefaultValueHandling = DefaultValueHandling.Ignore
+        };
+        
         //services.RegisterCoreServices();
         var queueingUrl = Environment.GetEnvironmentVariable("QUEUEING");
         if (string.IsNullOrEmpty(queueingUrl))

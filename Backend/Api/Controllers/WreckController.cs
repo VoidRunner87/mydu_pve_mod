@@ -23,7 +23,7 @@ public class WreckController(IServiceProvider provider) : Controller
     private readonly AddWreckRequestValidator _validator = new();
 
     [SwaggerOperation("Adds a wreck prefab and script to the system")]
-    [HttpPut]
+    [HttpPost]
     [Route("")]
     public async Task<IActionResult> Add([FromBody] AddWreckRequest request)
     {

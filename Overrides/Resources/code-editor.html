@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #container {
+            display: flex;
+            height: calc(100% - 50px); /* Account for the button bar height */
+        }
+
+        #editor-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #editor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .CodeMirror {
+            height: 100%;
+            background-color: #272822;
+        }
+
+        #output {
+            width: 300px;
+            background-color: #1e1e1e;
+            color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        #output h2 {
+            margin-top: 0;
+        }
+
+        #button-bar {
+            height: 50px;
+            background-color: #333;
+            color: white;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        button {
+            background-color: #444;
+            color: white;
+            border: none;
+            padding: 10px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+    </style>
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
+</head>
+
+<body>
+<div id="button-bar">
+    <button id="run-btn">Run Code</button>
+    <button id="clear-btn">Clear Output</button>
+</div>
+
+<div id="container">
+    <!-- CodeMirror TextArea -->
+    <div id="editor-container">
+        <textarea id="editor">console.log("AAA");</textarea>
+    </div>
+
+    <!-- Output Panel -->
+    <div id="output">
+        <h2>Output:</h2>
+        <pre id="output-content">Your output will appear here...</pre>
+    </div>
+</div>
+
+<!-- CodeMirror JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+
+<script>
+    // Initialize CodeMirror editor
+    const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+        lineNumbers: true,        // Show line numbers
+        mode: 'javascript',       // Set the syntax highlighting mode
+        theme: 'monokai',         // Set the theme, can be changed to others
+    });
+
+    // Set the editor to cover the entire page
+    editor.setSize('100%', '100%');
+
+    function captureConsole() {
+        const originalConsoleLog = console.log;
+        const outputContent = document.getElementById('output-content');
+        console.log = function(message) {
+            outputContent.textContent += message + '\n';
+            originalConsoleLog.apply(console, arguments);
+        };
+    }
+
+    captureConsole();
+
+    document.getElementById('run-btn').addEventListener('click', function() {
+        const code = editor.getValue();
+        try {
+            // Clear output panel before running the code
+            document.getElementById('output-content').textContent = '';
+
+            // Evaluate the code written in the CodeMirror editor
+            eval(code);
+        } catch (error) {
+            document.getElementById('output-content').textContent += 'Error: ' + error.message + '\n';
+        }
+    });
+
+    document.getElementById('clear-btn').addEventListener('click', function() {
+        document.getElementById('output-content').textContent = '';
+    });
+</script>
+</body>
+
+</html>

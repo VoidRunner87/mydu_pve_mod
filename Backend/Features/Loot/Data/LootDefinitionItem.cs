@@ -10,9 +10,45 @@ public class LootDefinitionItem
     public string Name { get; set; }
     public IEnumerable<string> Tags { get; set; }
     public IEnumerable<LootItemRule> ItemRules { get; set; }
+    public IEnumerable<ElementReplacementRule> ElementRules { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
+    public class ElementReplacementRule
+    {
+        public double Chance { get; set; } = 1;
+        public long MinQuantity { get; set; } = 1;
+        public long MaxQuantity { get; set; } = 1;
+        public string FindElement { get; set; } = "";
+        public string ReplaceElement { get; set; } = "";
+
+        public bool IsValid() => !string.IsNullOrEmpty(FindElement) && !string.IsNullOrEmpty(ReplaceElement);
+        
+        public void Sanitize()
+        {
+            var quantityRange = SanitizeMinMax(MinQuantity, MaxQuantity);
+            MinQuantity = quantityRange.Min;
+            MaxQuantity = quantityRange.Max;
+
+            Chance = Math.Clamp(Chance, 0, 1);
+        }
+        
+        private Range<long> SanitizeMinMax(long min, long max)
+        {
+            if (min > max)
+            {
+                min = max;
+            }
+
+            if (max < min)
+            {
+                max = min;
+            }
+
+            return new Range<long>(min, max);
+        }
+    }
+    
     public class LootItemRule(string itemName)
     {
         public string ItemName { get; set; } = itemName;

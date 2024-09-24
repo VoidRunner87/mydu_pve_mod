@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Backend;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
+using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
-using Mod.DynamicEncounters.Helpers.DU;
 using NQ;
 using NQ.Interfaces;
 using NQutils.Def;
@@ -30,6 +31,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
     private ElementId _coreUnitElementId;
     
     private bool _active = true;
+    private bool _pveVoxelDamageEnabled;
 
     public bool IsActive() => _active;
 
@@ -66,6 +68,10 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         context.IsAlive = _coreUnitElementId.elementId > 0;
         _active = context.IsAlive;
         
+        _pveVoxelDamageEnabled = await context.ServiceProvider
+            .GetRequiredService<IFeatureReaderService>()
+            .GetBoolValueAsync("PVEVoxelDamage", false);
+        
         _logger = provider.CreateLogger<AggressiveBehavior>();
     }
 
@@ -85,11 +91,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         
         var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
 
-        if (coreUnit.IsCoreStressHigh())
-        {
-            await context.NotifyCoreStressHighAsync(new BehaviorEventArgs(constructId, prefab, context));
-        }
-        
         var provider = context.ServiceProvider;
 
         var constructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
@@ -112,21 +113,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             context.PlayerIds.TryAdd(targetInfo.mutableData.pilot.Value, targetInfo.mutableData.pilot.Value);
         }
 
-        if (constructInfo.IsShieldLowerThanHalf())
-        {
-            await context.NotifyShieldHpHalfAsync(new BehaviorEventArgs(constructId, prefab, context));
-        }
-        
-        if (constructInfo.IsShieldLowerThan25())
-        {
-            await context.NotifyShieldHpLowAsync(new BehaviorEventArgs(constructId, prefab, context));
-        }
-        
-        if (constructInfo.IsShieldDown())
-        {
-            await context.NotifyShieldHpDownAsync(new BehaviorEventArgs(constructId, prefab, context));
-        }
-        
         var random = provider.GetRandomProvider()
             .GetRandom();
 
@@ -207,9 +193,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         
         var handle = context.WeaponHandle;
 
-        // TODO check if weapon is destroyed
-        var elementInfo = await _constructElementsGrain.GetElement(handle.ElementInfo.elementId);
-
         var w = handle.Unit;
         var mod = prefab.DefinitionItem.Mods;
         var cycleTime = w.baseCycleTime * mod.Weapon.CycleTime;
@@ -240,6 +223,16 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         var ammoItem = random.PickOneAtRandom(prefab.DefinitionItem.AmmoItems);
         var weaponItem = random.PickOneAtRandom(prefab.DefinitionItem.WeaponItems);
 
+        // var targetConstructInfoGrain = _orleans.GetConstructInfoGrain(context.TargetConstructId);
+        // var targetConstructInfo = await targetConstructInfoGrain.Get();
+        
+        context.HitPosition = _pveVoxelDamageEnabled
+            ? random.PickOneAtRandom(context.BehaviorContext.TargetElementPositions)
+            : context.HitPosition;
+
+        var sw = new Stopwatch();
+        sw.Start();
+        
         await context.NpcShotGrain.Fire(
             w.displayName,
             context.ConstructPosition,
@@ -270,5 +263,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             5,
             context.HitPosition
         );
+        
+        _logger.LogInformation("Shot Weapon. Took: {Time}ms {Weapon} / {Ammo}",sw.Elapsed.TotalMilliseconds, weaponItem, ammoItem);
     }
 }

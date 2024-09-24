@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,6 +58,10 @@ public class Startup(IServiceCollection rootServices)
             options.InputFormatters.Add(new YamlInputFormatter(deserializer));  
             options.OutputFormatters.Add(new YamlOutputFormatter(serializer));  
             options.FormatterMappings.SetMediaTypeMappingForFormat("yaml", MediaTypeHeaderValues.ApplicationYaml); 
+        }).AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions
+                .DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault | JsonIgnoreCondition.WhenWritingNull;
         });
 
         services.AddLogging(logging => logging.Setup(logWebHostInfo: true));

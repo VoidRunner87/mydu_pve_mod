@@ -27,7 +27,6 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
     private bool _featureEnabled;
     private readonly ConcurrentDictionary<ulong, ConstructHandleItem> _constructHandles = [];
-    // private readonly ConcurrentDictionary<ulong, BehaviorContext> _behaviorContexts = [];
     
     private static readonly object ListLock = new();
 
@@ -147,22 +146,20 @@ public class ConstructBehaviorLoop : HighTickModLoop
         
         var constructDef = _constructDefinitionFactory.Create(handleItem.ConstructDefinitionItem);
 
-        var finalBehaviors = new List<IConstructBehavior>
-        {
-            new AliveCheckBehavior(handleItem.ConstructId, constructDef)
-                .WithErrorHandler(),
-            new SelectTargetBehavior(handleItem.ConstructId, constructDef)
-                .WithErrorHandler()
-        };
+        var finalBehaviors = new List<IConstructBehavior>();
 
-        var behaviors = _behaviorFactory.CreateBehaviors(handleItem.ConstructId, constructDef);
+        var behaviors = _behaviorFactory.CreateBehaviors(
+            handleItem.ConstructId, 
+            constructDef,
+            handleItem.JsonProperties.Behaviors
+        );
 
         finalBehaviors.AddRange(behaviors);
         finalBehaviors.Add(new UpdateLastControlledDateBehavior(handleItem.ConstructId).WithErrorHandler());
 
         if (!_inMemoryContextRepo.TryGetValue(handleItem.ConstructId, out var context))
         {
-            context = new BehaviorContext(handleItem.Sector, Bot, _provider, constructDef);
+            context = new BehaviorContext(handleItem.FactionId, handleItem.Sector, Bot, _provider, constructDef);
             _inMemoryContextRepo.Set(handleItem.ConstructId, context);
             
             _logger.LogInformation("NEW CONTEXT {Construct}", handleItem.ConstructId);

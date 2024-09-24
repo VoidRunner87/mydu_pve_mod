@@ -9,6 +9,7 @@ public class ConstructHandleItem
     public Guid Id { get; set; }
     public ulong ConstructId { get; set; }
     public Vec3 Sector { get; set; }
+    public long FactionId { get; set; }
     public Guid ConstructDefinitionId { get; set; }
     
     public ulong OriginalOwnerPlayerId { get; set; }

@@ -19,10 +19,10 @@ public class NpcController(IServiceProvider provider) : Controller
     private readonly IPrefabItemRepository _repository =
         provider.GetRequiredService<IPrefabItemRepository>();
 
-    private readonly AddNpcRequestValidator _validator = new(); 
+    private readonly AddNpcRequestValidator _validator = new();
 
     [SwaggerOperation("Adds an NPC prefab and script to the system")]
-    [HttpPut]
+    [HttpPost]
     [Route("")]
     public async Task<IActionResult> Add([FromBody] AddNpcRequest request)
     {
@@ -31,9 +31,9 @@ public class NpcController(IServiceProvider provider) : Controller
         {
             return BadRequest(validationResult);
         }
-        
+
         request.Sanitize();
-        
+
         var guid = Guid.NewGuid();
 
         var giveQuantaAction = new ScriptActionItem
@@ -42,7 +42,7 @@ public class NpcController(IServiceProvider provider) : Controller
             Value = request.QuantaReward * 100,
             Message = "Kill Reward"
         };
-        
+
         var prefab = new PrefabItem
         {
             Folder = request.Folder,
@@ -64,7 +64,7 @@ public class NpcController(IServiceProvider provider) : Controller
                 IsDynamicWreck = false
             }
         };
-        
+
         await _repository.AddAsync(prefab);
 
         var scriptActionItemRepository = provider.GetRequiredService<IScriptActionItemRepository>();
@@ -77,6 +77,28 @@ public class NpcController(IServiceProvider provider) : Controller
                 Value = x.Budget
             })
             .ToList();
+
+        var onLoadActions = new List<ScriptActionItem>
+        {
+            new()
+            {
+                Type = "for-each-handle-with-tag",
+                Tags = ["pod"],
+                Actions =
+                [
+                    new ScriptActionItem()
+                    {
+                        Type = "delete"
+                    }
+                ]
+            },
+            new()
+            {
+                Type = "expire-sector"
+            }
+        };
+        
+        onLoadActions.AddRange(lootActions);
         
         var scriptGuid = Guid.NewGuid();
 
@@ -88,10 +110,10 @@ public class NpcController(IServiceProvider provider) : Controller
             Prefab = request.Name,
             Events =
             {
-                OnLoad = lootActions
+                OnLoad = onLoadActions
             }
         };
-        
+
         await scriptActionItemRepository.AddAsync(script);
 
         return Ok(new

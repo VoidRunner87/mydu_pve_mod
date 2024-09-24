@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Backend;
@@ -135,6 +136,26 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
             provider.GetRequiredService<IPlanetList>()
         ))[0];
 
+        try
+        {
+            var blueprintGrain = orleans.GetBlueprintGrain();
+            await blueprintGrain.Snapshot(
+                new BlueprintCreate
+                {
+                    constructId = constructId,
+                    enableDRM = true
+                },
+                ModBase.Bot.PlayerId,
+                true
+            );
+            
+            _logger.LogInformation("Snapshot Created for Construct {Construct}", constructId);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to Create Snapshot of Spawned Construct {Construct}", constructId);
+        }
+
         _logger.LogInformation("Spawned Construct [{Name}]({Id}) at ::pos{{0,0,{Pos}}}", resultName, constructId, spawnPosition);
 
         var clusterClient = provider.GetRequiredService<IClusterClient>();
@@ -144,7 +165,8 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
         var shields = await constructElementsGrain.GetElementsOfType<ShieldGeneratorUnit>();
 
         var constructGrain = orleans.GetConstructGrain(constructId);
-        if (!constructDef.DefinitionItem.ServerProperties.IsDynamicWreck && shields.Count > 0)
+        var isWreck = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck;
+        if (!isWreck && shields.Count > 0)
         {
             var sql = provider.GetRequiredService<ISql>();
             await sql.SetShieldEnabled(constructId, true);
@@ -160,6 +182,14 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
             });
         }
 
+        var behaviorList = new List<string>();
+
+        if (!isWreck)
+        {
+            behaviorList.AddRange(["alive", "select-target", "notifier"]);
+            behaviorList.AddRange(constructDefItem.InitialBehaviors);
+        }
+        
         // Keeping track of what this script instance spawned
         await constructHandleRepo.AddAsync(
             new ConstructHandleItem
@@ -171,9 +201,11 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
                 ConstructDefinitionItem = constructDef.DefinitionItem,
                 OriginalOwnerPlayerId = constructDef.DefinitionItem.OwnerId,
                 OriginalOrganizationId = 0,
+                FactionId = context.FactionId ?? 1,
                 JsonProperties = new ConstructHandleProperties
                 {
-                    Tags = actionItem.Tags
+                    Tags = actionItem.Tags,
+                    Behaviors = behaviorList,
                 },
                 OnCleanupScript = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck
                     ? "despawn-wreck"

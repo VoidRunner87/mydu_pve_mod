@@ -11,23 +11,48 @@ public class ConstructBehaviorFactory : IConstructBehaviorFactory
     {
         switch (behavior)
         {
+            case "alive":
+                return new AliveCheckBehavior(constructId, prefab).WithErrorHandler();
+            case "select-target":
+                return new SelectTargetBehavior(constructId, prefab).WithErrorHandler();
             case "aggressive":
                 return new AggressiveBehavior(constructId, prefab).WithErrorHandler();
             case "follow-target":
                 return new FollowTargetBehaviorV2(constructId, prefab).WithErrorHandler();
+            case "follow-waypoints":
+                return new WaypointMoveBehavior(constructId, prefab).WithErrorHandler();
+            case "notifier":
+                return new NotifierBehavior(constructId, prefab).WithErrorHandler();
             default:
                 return new WreckBehavior().WithErrorHandler();
         }
     }
 
-    public IEnumerable<IConstructBehavior> CreateBehaviors(ulong constructId, IPrefab prefab)
+    public IEnumerable<IConstructBehavior> CreateBehaviors(
+        ulong constructId, 
+        IPrefab prefab,
+        IEnumerable<string> behaviors
+    )
     {
         if (prefab.DefinitionItem.InitialBehaviors.Count == 0)
         {
             return [new WreckBehavior()];
         }
+
+        var behaviorList = behaviors.ToList();
+        var finalBehaviors = new List<string>();
         
-        return prefab.DefinitionItem.InitialBehaviors
-            .Select(x => Create(constructId, prefab, x));
+        // for compatibility
+        if (!behaviorList.Any())
+        {
+            finalBehaviors.Add("alive");
+            finalBehaviors.Add("select-target");
+            finalBehaviors.Add("notifier");
+            finalBehaviors.AddRange(prefab.DefinitionItem.InitialBehaviors);
+        }
+        
+        finalBehaviors.AddRange(behaviorList);
+        
+        return finalBehaviors.Select(x => Create(constructId, prefab, x));
     }
 }

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
+using Mod.DynamicEncounters.Common.Vector;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Events.Data;
 using Mod.DynamicEncounters.Features.Events.Interfaces;
@@ -36,19 +36,19 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
     private readonly ILogger<SectorPoolManager> _logger = serviceProvider.CreateLogger<SectorPoolManager>();
 
-    public async Task<IEnumerable<SectorInstance>> GenerateSectors(SectorGenerationArgs args)
+    public async Task GenerateSectors(SectorGenerationArgs args)
     {
-        var count = await _sectorInstanceRepository.GetCountAsync();
+        var count = await _sectorInstanceRepository.GetCountWithTagAsync(args.Tag);
         var missingQuantity = args.Quantity - count;
 
         if (missingQuantity <= 0)
         {
-            return await _sectorInstanceRepository.GetAllAsync();
+            return;
         }
 
         var allSectorInstances = await _sectorInstanceRepository.GetAllAsync();
         var sectorInstanceMap = allSectorInstances
-            .Select(k => k.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap))
+            .Select(k => k.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap).ToLongVector3())
             .ToHashSet();
 
         var random = _randomProvider.GetRandom();
@@ -61,7 +61,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             {
                 continue;
             }
-            
+
             var encounter = random.PickOneAtRandom(args.Encounters);
 
             // TODO
@@ -82,13 +82,19 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 position = position.GridSnap(SectorGridSnap);
 
                 interactions++;
-            } while (interactions < maxInteractions ||
-                     sectorInstanceMap.Contains(position.GridSnap(SectorGridSnap * args.SectorMinimumGap)));
+            } while (
+                interactions < maxInteractions ||
+                sectorInstanceMap
+                    .Contains(
+                        position.GridSnap(SectorGridSnap * args.SectorMinimumGap).ToLongVector3()
+                    )
+            );
 
             var instance = new SectorInstance
             {
                 Id = Guid.NewGuid(),
                 Sector = position,
+                FactionId = args.FactionId,
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow + encounter.Properties.ExpirationTimeSpan +
                             TimeSpan.FromMinutes(randomMinutes * i),
@@ -98,11 +104,9 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
             await _sectorInstanceRepository.AddAsync(instance);
         }
-
-        return await _sectorInstanceRepository.GetAllAsync();
     }
 
-    public async Task LoadUnloadedSectors(Client client)
+    public async Task LoadUnloadedSectors()
     {
         var scriptService = serviceProvider.GetRequiredService<IScriptService>();
         var unloadedSectors = (await _sectorInstanceRepository.FindUnloadedAsync()).ToList();
@@ -121,7 +125,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     sector.OnLoadScript,
                     new ScriptContext(
                         serviceProvider,
-                        new HashSet<ulong>(),
+                        sector.FactionId,
+                        [],
                         sector.Sector
                     )
                 );
@@ -140,7 +145,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         }
     }
 
-    public async Task ExecuteSectorCleanup(Client client, SectorGenerationArgs args)
+    public async Task ExecuteSectorCleanup()
     {
         var expiredSectors = await _sectorInstanceRepository.FindExpiredAsync();
 
@@ -155,7 +160,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 continue;
             }
 
-            await _constructHandleManager.CleanupConstructHandlesInSectorAsync(client, sector.Sector);
+            await _constructHandleManager.CleanupConstructHandlesInSectorAsync(ModBase.Bot, sector.Sector);
         }
 
         await _sectorInstanceRepository.DeleteExpiredAsync();
@@ -182,7 +187,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         );
     }
 
-    public async Task ActivateEnteredSectors(Client client)
+    public async Task ActivateEnteredSectors()
     {
         var sectorsToActivate = (await _sectorInstanceRepository.FindSectorsRequiringStartupAsync()).ToList();
 
@@ -202,7 +207,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         foreach (var sectorInstance in sectorsToActivate)
         {
             var constructs = (await spatialHashRepository
-                .FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
+                    .FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
                 .ToList();
 
             if (constructs.Count == 0)
@@ -216,7 +221,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             {
                 var queryPilotsTasks = constructs
                     .Select(x => orleans.GetConstructInfoGrain(x)).Select(x => x.Get());
-                
+
                 playerIds = (await Task.WhenAll(queryPilotsTasks))
                     .Select(x => x.mutableData.pilot)
                     .Where(x => x.HasValue)
@@ -230,7 +235,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             }
 
             _logger.LogInformation(
-                "Starting up sector({Sector}) encounter: '{Encounter}'",
+                "Starting up sector F({Faction}) ({Sector}) encounter: '{Encounter}'",
+                sectorInstance.FactionId,
                 sectorInstance.Sector,
                 sectorInstance.OnSectorEnterScript
             );
@@ -241,7 +247,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     sectorInstance.OnSectorEnterScript,
                     new ScriptContext(
                         serviceProvider,
-                        new HashSet<ulong>(),
+                        sectorInstance.FactionId,
+                        [],
                         sectorInstance.Sector
                     )
                     {
@@ -289,15 +296,5 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
     private Task ExpireSector(SectorInstance instance)
     {
         return _sectorInstanceRepository.DeleteAsync(instance.Id);
-    }
-
-    private struct ConstructSectorRow
-    {
-        public ulong id { get; set; }
-        public double sector_x { get; set; }
-        public double sector_y { get; set; }
-        public double sector_z { get; set; }
-
-        public Vec3 SectorToVec3() => new() { x = sector_x, y = sector_y, z = sector_z };
     }
 }

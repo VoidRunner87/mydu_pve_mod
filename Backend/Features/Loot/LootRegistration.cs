@@ -12,5 +12,6 @@ public static class LootRegistration
         services.AddSingleton<IItemSpawnerService, ItemSpawnerService>();
         services.AddSingleton<ILootDefinitionRepository, LootDefinitionRepository>();
         services.AddSingleton<ILootGeneratorService, LootGeneratorService>();
+        services.AddSingleton<IElementReplacerService, ElementReplacerService>();
     }
 }

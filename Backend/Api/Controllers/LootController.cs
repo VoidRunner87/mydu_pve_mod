@@ -49,7 +49,8 @@ public class LootController : Controller
                 {
                     x.ItemName,
                     Quantity = x.Quantity.GetRawQuantity()
-                })
+                }),
+            Elements = itemBag.ElementsToReplace
         });
     }
 

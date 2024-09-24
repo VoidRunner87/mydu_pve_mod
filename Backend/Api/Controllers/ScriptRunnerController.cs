@@ -4,14 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Helpers;
 using NQ;
+using NQ.Interfaces;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("script")]
 public class ScriptRunnerController : Controller
 {
-    [HttpPut]
+    [HttpPost]
     [Route("run/{name}")]
     public async Task<IActionResult> RunScript(string name, [FromBody] RunScriptContextRequest request)
     {
@@ -22,11 +24,12 @@ public class ScriptRunnerController : Controller
             name,
             new ScriptContext(
                 provider,
+                request.FactionId,
                 [..request.PlayerIds],
                 request.Sector
             )
             {
-                ConstructId = request.ConstructId
+                ConstructId = request.ConstructId,
             }
         );
 
@@ -43,5 +46,6 @@ public class ScriptRunnerController : Controller
         public List<ulong> PlayerIds { get; set; } = [];
         public Vec3 Sector { get; set; }
         public ulong? ConstructId { get; set; }
+        public long FactionId { get; set; } = 1;
     }
 }

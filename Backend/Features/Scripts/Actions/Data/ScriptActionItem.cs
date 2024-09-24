@@ -33,6 +33,7 @@ public class ScriptActionItem
     public Vec3? Sector { get; set; } = new();
     public TimeSpan TimeSpan { get; set; } = TimeSpan.Zero;
     public double Value { get; set; }
+    public long? FactionId { get; set; }
     public ScriptActionOverrides Override { get; set; } = new();
     
     /// <summary>

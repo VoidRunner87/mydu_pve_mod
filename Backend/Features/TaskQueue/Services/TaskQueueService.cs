@@ -45,6 +45,7 @@ public class TaskQueueService(IServiceProvider provider) : ITaskQueueService
                     taskList.Add(scriptAction.ExecuteAsync(
                         new ScriptContext(
                             provider,
+                            scriptActionItem.FactionId,
                             new HashSet<ulong>(),
                             scriptActionItem.Sector ?? new Vec3()
                         )

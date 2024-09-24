@@ -8,6 +8,14 @@ public class ItemBagData(double maxBudget)
     public double MaxBudget { get; set; } = maxBudget;
     public double CurrentCost { get; set; } = 0;
     private IList<ItemAndQuantity> _entries { get; init; } = [];
+    public IList<ElementReplace> ElementsToReplace { get; set; } = [];
+    
+    public readonly struct ElementReplace(string elementName, string replaceElementName, long quantity)
+    {
+        public string ElementName { get; } = elementName;
+        public string ReplaceElementName { get; } = replaceElementName;
+        public long Quantity { get; } = quantity;
+    }
     
     public readonly struct ItemAndQuantity(string itemName, IQuantity quantity)
     {

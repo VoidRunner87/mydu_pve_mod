@@ -8,6 +8,7 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Helpers;
+using Newtonsoft.Json;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
@@ -45,6 +46,28 @@ public class SpawnLootForConstruct(ScriptActionItem actionItem) : IScriptAction
         );
         
         logger.LogInformation("Spawned Loot for Construct {Construct}", context.ConstructId);
+
+        try
+        {
+            var elementReplacer = provider.GetRequiredService<IElementReplacerService>();
+            foreach (var replace in itemBagData.ElementsToReplace)
+            {
+                for (var i = 0; i < replace.Quantity; i++)
+                {
+                    await elementReplacer.ReplaceSingleElementAsync(
+                        context.ConstructId.Value,
+                        replace.ElementName,
+                        replace.ReplaceElementName
+                    );
+                }
+            }
+        
+            logger.LogInformation("Processed Element Replacements");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to Replace Elements. Rule {Rule}", JsonConvert.SerializeObject(itemBagData.ElementsToReplace));
+        }
 
         return ScriptActionResult.Successful();
     }

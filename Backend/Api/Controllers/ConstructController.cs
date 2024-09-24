@@ -2,17 +2,30 @@
 using BotLib.Generated;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Features.Loot.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
 using NQ.Visibility;
-using Vec3 = NQ.Vec3;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("construct")]
 public class ConstructController : Controller
 {
+    [HttpPost]
+    [Route("{constructId:long}/replace/{elementTypeName}/with/{replaceElementTypeName}")]
+    public async Task<IActionResult> ReplaceElement(long constructId, string elementTypeName, string replaceElementTypeName)
+    {
+        var provider = ModBase.ServiceProvider;
+        var elementReplacerService = provider.GetRequiredService<IElementReplacerService>();
+
+        await elementReplacerService.ReplaceSingleElementAsync((ulong)constructId, elementTypeName, replaceElementTypeName);
+
+        return Ok();
+    }
+    
     [HttpPost]
     [Route("enginepower/{constructId:long}/elementid/{elementId}")]
     public async Task<IActionResult> SetEnginePower(long constructId, long elementId)
@@ -61,7 +74,7 @@ public class ConstructController : Controller
     }
 
     [HttpPost]
-    [Route("pos/add/{constructId:long}")]
+    [Route("{constructId:long}/forward")]
     public async Task<IActionResult> AddPosition(long constructId)
     {
         var provider = ModBase.ServiceProvider;
@@ -70,12 +83,24 @@ public class ConstructController : Controller
         var constructInfoGrain = orleans.GetConstructInfoGrain((ulong)constructId);
         var constructInfo = await constructInfoGrain.Get();
 
+        var forward = constructInfo.rData.rotation
+            .ToQuat()
+            .Forward();
+
+        const float accel = 100 * 9.81f;
+        var offset = accel * forward * 1000;
+        
+        provider.CreateLogger<ConstructController>()
+            .LogInformation("{V}", offset);
+        
         await ModBase.Bot.Req.ConstructUpdate(
             new ConstructUpdate
             {
                 constructId = (ulong)constructId,
                 rotation = constructInfo.rData.rotation,
-                position = constructInfo.rData.position + new Vec3 { x = 1000 },
+                position = constructInfo.rData.position + offset.ToNqVec3(),
+                worldAbsoluteVelocity = offset.ToNqVec3(),
+                worldRelativeVelocity = offset.ToNqVec3(),
                 pilotId = 10000,
                 time = TimePoint.Now()
             }
@@ -135,5 +160,18 @@ public class ConstructController : Controller
                 angVelocity
             }
         );
+    }
+
+    [HttpDelete]
+    [Route("{constructId:long}")]
+    public async Task<IActionResult> Delete(long constructId)
+    {
+        var provider = ModBase.ServiceProvider;
+        var orleans = provider.GetOrleans();
+
+        var gcGrain = orleans.GetConstructGCGrain();
+        await gcGrain.DeleteConstruct((ulong)constructId);
+
+        return Ok();
     }
 }

@@ -44,6 +44,7 @@ public class LootDefinitionRepository(IServiceProvider provider) : ILootDefiniti
         {
             Id = row.id,
             Name = row.name,
+            ElementRules = JsonConvert.DeserializeObject<IEnumerable<LootDefinitionItem.ElementReplacementRule>>(row.elements),
             ItemRules = JsonConvert.DeserializeObject<IEnumerable<LootDefinitionItem.LootItemRule>>(row.items),
             Tags = JsonConvert.DeserializeObject<IEnumerable<string>>(row.tags),
             CreatedAt = row.created_at,
@@ -57,6 +58,7 @@ public class LootDefinitionRepository(IServiceProvider provider) : ILootDefiniti
         public string name { get; set; }
         public string tags { get; set; }
         public string items { get; set; }
+        public string elements { get; set; }
         public DateTime created_at { get; set; }
         public DateTime updated_at { get; set; }
         public bool active { get; set; }

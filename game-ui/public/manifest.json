@@ -1,0 +1,13 @@
+{
+    "short_name": "Cohtml React App",
+    "name": "Create React App Sample for Cohtml",
+    "icons": [
+        {
+            "src": "Master_stroke_black.png"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#000000",
+    "background_color": "#ffffff"
+}

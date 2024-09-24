@@ -53,6 +53,7 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
                     taskList.Add(scriptAction.ExecuteAsync(
                         new ScriptContext(
                             provider,
+                            handle.FactionId,
                             new HashSet<ulong>(),
                             handle.Sector
                         )
@@ -111,7 +112,8 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
                     taskListActionExec.Add(scriptAction.ExecuteAsync(
                         new ScriptContext(
                             provider,
-                            new HashSet<ulong>(),
+                            handle.FactionId,
+                            [],
                             handle.Sector
                         )
                         {
