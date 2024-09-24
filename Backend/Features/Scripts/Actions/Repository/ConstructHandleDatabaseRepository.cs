@@ -119,6 +119,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             INNER JOIN public.mod_construct_def CD ON (CD.id = CH.construct_def_id)
             INNER JOIN public.construct C ON (C.id = CH.construct_id)
             WHERE NOT (CD.content->'InitialBehaviors' @> '"wreck"') AND
+            	CH.deleted_at IS NULL AND 
             	C.deleted_at IS NULL
             """
         )).ToList();
@@ -139,7 +140,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
                 CD.content as def_content
             FROM public.mod_npc_construct_handle CH
             INNER JOIN public.mod_construct_def CD ON (CD.id = CH.construct_def_id)
-            WHERE deleted_at IS NULL
+            WHERE CH.deleted_at IS NULL
             """
         )).ToList();
 
