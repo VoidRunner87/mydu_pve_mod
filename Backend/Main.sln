@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mod.DynamicEncounters", "Mo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mod.DynamicEncounters.Tests", "..\Backend.Tests\Mod.DynamicEncounters.Tests\Mod.DynamicEncounters.Tests.csproj", "{83F9D783-DB41-40E0-96B9-5A86F87F8F2D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mod.DynamicEncounters.Overrides", "..\Overrides\Mod.DynamicEncounters.Overrides.csproj", "{BEDBBAEA-4619-49D3-BAE6-E8BA833DC5DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{83F9D783-DB41-40E0-96B9-5A86F87F8F2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83F9D783-DB41-40E0-96B9-5A86F87F8F2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83F9D783-DB41-40E0-96B9-5A86F87F8F2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEDBBAEA-4619-49D3-BAE6-E8BA833DC5DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEDBBAEA-4619-49D3-BAE6-E8BA833DC5DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEDBBAEA-4619-49D3-BAE6-E8BA833DC5DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEDBBAEA-4619-49D3-BAE6-E8BA833DC5DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

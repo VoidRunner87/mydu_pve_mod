@@ -2,7 +2,7 @@ import './App.css';
 import logo from './assets/Gameface_white.png'
 import { pm } from 'postmessage-polyfill';
 import { fetch as fetchPolyfill } from 'whatwg-fetch';
-import QuestList from "./Components/QuestList";
+import QuestList from "./Components/quest-list";
 
 const originalInterval = window.setInterval;
 window.setInterval = function(callback, delay = 0) {

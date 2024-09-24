@@ -1,8 +1,9 @@
-namespace Mod.DynamicEncounters;
+namespace Mod.DynamicEncounters.Overrides;
 
 public enum ModActionType
 {
     None = 0,
     LoadNPCApp = 1000000,
-    Callback = 1000001,
+    CloseNPCApp = 1000002,
+    Callback = 1999999
 }

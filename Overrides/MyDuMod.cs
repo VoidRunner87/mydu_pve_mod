@@ -4,7 +4,9 @@ using Backend;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters;
-using Mod.DynamicEncounters.Common;
+using Mod.DynamicEncounters.Overrides;
+using Mod.DynamicEncounters.Overrides.Common;
+using Newtonsoft.Json;
 using NQ;
 using NQutils;
 using Orleans;
@@ -62,13 +64,16 @@ public class MyDuMod : IMod
         switch ((ModActionType)action.actionId)
         {
             case ModActionType.LoadNPCApp:
+                await UploadJson(playerId, "faction-quests", new object[]{
+                    new { faction = 3, title = "Wetwork", description = "" }
+                });
                 await InjectJs(playerId, Resources.CommonJs);
-                await Task.Delay(500);
                 await InjectJs(playerId, Resources.CreateRootDivJs);
-                await Task.Delay(500);
                 await InjectCss(playerId, Resources.NpcAppCss);
-                await Task.Delay(500);
                 await InjectJs(playerId, Resources.NpcAppJs);
+                break;
+            case ModActionType.CloseNPCApp:
+                await InjectJs(playerId, "modApi.removeAppRoot()");
                 break;
         }
     }
@@ -86,6 +91,18 @@ public class MyDuMod : IMod
                     eventPayload = code
                 }
             )
+        );
+    }
+    
+    private Task UploadJson(ulong playerId, string key, object data)
+    {
+        var jsonString = JsonConvert.SerializeObject(data);
+        
+        return InjectJs(
+            playerId,
+            $"""
+            modApi.setResourceContents(`{key}`, `application/json`, `{jsonString}`);
+            """
         );
     }
     

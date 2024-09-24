@@ -19,20 +19,10 @@
         <PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0"/>
     </ItemGroup>
     <ItemGroup>
-        <None Remove="Resources\code-editor.html"/>
-        <EmbeddedResource Include="Resources\code-editor.html"/>
-        <None Remove="Resources\file-uploader.js"/>
-        <None Remove="Resources\common.js"/>
-        <EmbeddedResource Include="Resources\common.js"/>
-        <None Remove="Resources\babel.js"/>
-        <None Remove="Resources\react.js"/>
-        <None Remove="Resources\react-dom.js"/>
-        <None Remove="Resources\npc-app.js" />
-        <EmbeddedResource Include="Resources\npc-app.js" />
-        <None Remove="Resources\create-root-div.js" />
+        <EmbeddedResource Include="Resources\common.js" />
         <EmbeddedResource Include="Resources\create-root-div.js" />
-        <None Remove="Resources\npc-app.css" />
         <EmbeddedResource Include="Resources\npc-app.css" />
+        <EmbeddedResource Include="Resources\npc-app.js" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Overrides\" />

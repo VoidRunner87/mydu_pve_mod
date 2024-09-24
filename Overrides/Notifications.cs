@@ -4,7 +4,7 @@ using Backend;
 using Microsoft.Extensions.DependencyInjection;
 using NQutils;
 
-namespace Mod.DynamicEncounters;
+namespace Mod.DynamicEncounters.Overrides;
 
 public class Notifications
 {

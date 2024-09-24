@@ -7,7 +7,7 @@ let global_resources = {};
 
 let modApi = {};
 modApi.cb = (data) => {
-    CPPMod.sendModAction("Mod.DynamicEncounters", 1000001, [], JSON.stringify(data));
+    CPPMod.sendModAction("Mod.DynamicEncounters", 1999999, [], JSON.stringify(data));
 };
 
 modApi.setResourceContents = (name, contentType, contents) => {
@@ -52,6 +52,10 @@ modApi.addJs = (type, text) => {
     script.type = type;
     script.textContent = text;
     document.body.appendChild(script);
+}
+
+modApi.removeAppRoot = () => {
+    document.getElementById("root").remove();
 }
 
 window.modApi = modApi;

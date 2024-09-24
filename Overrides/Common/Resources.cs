@@ -1,13 +1,14 @@
-﻿namespace Mod.DynamicEncounters.Common;
+﻿namespace Mod.DynamicEncounters.Overrides.Common;
 
 public static class Resources
 {
+    private const string Namespace = "Mod.DynamicEncounters.Overrides.Resources"; 
     public static string CommonJs => ResourceLoader
-        .GetStringContents("Mod.DynamicEncounters.Resources.common.js");
+        .GetStringContents($"{Namespace}.common.js");
     public static string CreateRootDivJs => ResourceLoader
-        .GetStringContents("Mod.DynamicEncounters.Resources.create-root-div.js");
+        .GetStringContents($"{Namespace}.create-root-div.js");
     public static string NpcAppJs => ResourceLoader
-        .GetStringContents("Mod.DynamicEncounters.Resources.npc-app.js");
+        .GetStringContents($"{Namespace}.npc-app.js");
     public static string NpcAppCss => ResourceLoader
-        .GetStringContents("Mod.DynamicEncounters.Resources.npc-app.css");
+        .GetStringContents($"{Namespace}.npc-app.css");
 }
