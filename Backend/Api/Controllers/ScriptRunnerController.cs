@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,7 +27,8 @@ public class ScriptRunnerController : Controller
                 provider,
                 request.FactionId,
                 [..request.PlayerIds],
-                request.Sector
+                request.Sector,
+                request.TerritoryId
             )
             {
                 ConstructId = request.ConstructId,
@@ -47,5 +49,6 @@ public class ScriptRunnerController : Controller
         public Vec3 Sector { get; set; }
         public ulong? ConstructId { get; set; }
         public long FactionId { get; set; } = 1;
+        public Guid? TerritoryId { get; set; }
     }
 }

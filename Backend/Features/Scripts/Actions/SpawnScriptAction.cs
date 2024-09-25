@@ -10,6 +10,7 @@ using Backend.Fixture.Construct;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
@@ -143,7 +144,7 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
                 new BlueprintCreate
                 {
                     constructId = constructId,
-                    enableDRM = true
+                    enableDRM = true,
                 },
                 ModBase.Bot.PlayerId,
                 true
@@ -173,13 +174,21 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
             await constructGrain.UpdateConstructInfo(new ConstructInfoUpdate
             {
+                constructId = constructId,
                 shieldState = new ShieldState
                 {
                     hasShield = true,
                     isActive = true,
                     shieldHpRatio = 1
-                }
+                },
             });
+        }
+        else
+        {
+            // TODO obtain time span from territory
+            // TODO add territory to sector instance
+            await provider.GetRequiredService<IConstructService>()
+                .SetAutoDeleteFromNow(constructId, TimeSpan.FromHours(3));
         }
 
         var behaviorList = new List<string>();

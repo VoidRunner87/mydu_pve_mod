@@ -98,6 +98,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow + encounter.Properties.ExpirationTimeSpan +
                             TimeSpan.FromMinutes(randomMinutes * i),
+                TerritoryId = encounter.TerritoryId,
                 OnLoadScript = encounter.OnLoadScript,
                 OnSectorEnterScript = encounter.OnSectorEnterScript,
             };
@@ -127,13 +128,14 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                         serviceProvider,
                         sector.FactionId,
                         [],
-                        sector.Sector
+                        sector.Sector,
+                        sector.TerritoryId
                     )
                 );
 
                 await _sectorInstanceRepository.SetLoadedAsync(sector.Id, true);
 
-                _logger.LogInformation("Loaded Sector {Id}({Sector})", sector.Id, sector.Sector);
+                _logger.LogInformation("Loaded Sector {Id}({Sector}) Territory = {Territory}", sector.Id, sector.Sector, sector.TerritoryId);
             }
             catch (Exception e)
             {
@@ -249,7 +251,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                         serviceProvider,
                         sectorInstance.FactionId,
                         [],
-                        sectorInstance.Sector
+                        sectorInstance.Sector,
+                        sectorInstance.TerritoryId
                     )
                     {
                         PlayerIds = playerIds

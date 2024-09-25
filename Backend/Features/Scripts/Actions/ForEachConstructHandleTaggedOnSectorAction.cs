@@ -41,7 +41,8 @@ public class ForEachConstructHandleTaggedOnSectorAction(
                 context.ServiceProvider,
                 context.FactionId,
                 context.PlayerIds,
-                context.Sector
+                context.Sector,
+                context.TerritoryId
             )
             {
                 ConstructId = handleItem.ConstructId

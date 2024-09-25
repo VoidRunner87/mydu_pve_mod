@@ -47,7 +47,8 @@ public class TaskQueueService(IServiceProvider provider) : ITaskQueueService
                             provider,
                             scriptActionItem.FactionId,
                             new HashSet<ulong>(),
-                            scriptActionItem.Sector ?? new Vec3()
+                            scriptActionItem.Sector ?? new Vec3(),
+                            scriptActionItem.TerritoryId
                         )
                     ));
                     taskList.Add(_repository.DeleteAsync(message.Id));

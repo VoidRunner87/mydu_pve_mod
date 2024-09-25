@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Mod.DynamicEncounters.Features.Common.Data;
 using NQ;
 
@@ -11,4 +12,5 @@ public interface IConstructService
     Task SetDynamicWreckAsync(ulong constructId, bool isDynamicWreck);
     Task<Velocities> GetConstructVelocities(ulong constructId);
     Task DeleteAsync(ulong constructId);
+    Task SetAutoDeleteFromNow(ulong constructId, TimeSpan timeSpan);
 }

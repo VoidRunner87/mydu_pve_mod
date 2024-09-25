@@ -25,8 +25,8 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
 
         await db.ExecuteAsync(
             """
-            INSERT INTO public.mod_sector_instance (id, faction_id, sector_x, sector_y, sector_z, expires_at, on_load_script, on_sector_enter_script, force_expire_at)
-            VALUES (@Id, @FactionId, @PosX, @PosY, @PosZ, @ExpiresAt, @OnLoadScript, @OnSectorEnterScript, NOW() + INTERVAL '6 hours');
+            INSERT INTO public.mod_sector_instance (id, faction_id, sector_x, sector_y, sector_z, expires_at, on_load_script, on_sector_enter_script, force_expire_at, territory_id)
+            VALUES (@Id, @FactionId, @PosX, @PosY, @PosZ, @ExpiresAt, @OnLoadScript, @OnSectorEnterScript, NOW() + INTERVAL '6 hours', @TerritoryId);
             """,
             new
             {
@@ -37,7 +37,8 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
                 PosZ = item.Sector.z,
                 item.ExpiresAt,
                 item.OnLoadScript,
-                item.OnSectorEnterScript
+                item.OnSectorEnterScript,
+                item.TerritoryId
             }
         );
     }
@@ -85,6 +86,7 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
             OnLoadScript = first.on_load_script,
             OnSectorEnterScript = first.on_sector_enter_script,
             StartedAt = first.started_at,
+            TerritoryId = first.territory_id,
             Sector = new Vec3
             {
                 x = first.sector_x,
@@ -301,5 +303,6 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         public DateTime expires_at { get; set; }
         public DateTime? force_expire_at { get; set; }
         public DateTime? started_at { get; set; }
+        public Guid territory_id { get; set; }
     }
 }

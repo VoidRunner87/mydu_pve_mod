@@ -20,6 +20,7 @@ namespace Mod.DynamicEncounters.Features.Spawner.Data;
 
 public class BehaviorContext(
     long factionId,
+    Guid? territoryId,
     Vec3 sector,
     Client client,
     IServiceProvider serviceProvider,
@@ -44,6 +45,7 @@ public class BehaviorContext(
     public Quat Rotation { get; set; }
     public ConcurrentDictionary<ulong, ulong> PlayerIds { get; set; } = new();
     public long FactionId { get; } = factionId;
+    public Guid? TerritoryId { get; } = territoryId;
     public Vec3 Sector { get; } = sector;
     public IServiceProvider ServiceProvider { get; init; } = serviceProvider;
     public Client Client { get; set; } = client;
@@ -77,7 +79,8 @@ public class BehaviorContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.FactionId,
                 eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
-                eventArgs.Context.Sector
+                eventArgs.Context.Sector,
+                eventArgs.Context.TerritoryId
             )
             {
                 ConstructId = eventArgs.ConstructId
@@ -123,7 +126,8 @@ public class BehaviorContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.FactionId,
                 eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
-                eventArgs.Context.Sector
+                eventArgs.Context.Sector,
+                eventArgs.Context.TerritoryId
             )
             {
                 ConstructId = eventArgs.ConstructId
@@ -157,7 +161,8 @@ public class BehaviorContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.FactionId,
                 eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
-                eventArgs.Context.Sector
+                eventArgs.Context.Sector,
+                eventArgs.Context.TerritoryId
             )
             {
                 ConstructId = eventArgs.ConstructId
@@ -179,7 +184,8 @@ public class BehaviorContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.FactionId,
                 eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
-                eventArgs.Context.Sector
+                eventArgs.Context.Sector,
+                eventArgs.Context.TerritoryId
             )
             {
                 ConstructId = eventArgs.ConstructId
@@ -201,7 +207,8 @@ public class BehaviorContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.FactionId,
                 eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
-                eventArgs.Context.Sector
+                eventArgs.Context.Sector,
+                eventArgs.Context.TerritoryId
             )
             {
                 ConstructId = eventArgs.ConstructId

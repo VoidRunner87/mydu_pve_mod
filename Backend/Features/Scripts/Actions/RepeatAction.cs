@@ -30,7 +30,8 @@ public class RepeatAction(ScriptActionItem actionItem) : IScriptAction
                     provider,
                     context.FactionId,
                     context.PlayerIds,
-                    context.Sector
+                    context.Sector,
+                    context.TerritoryId
                 )
                 {
                     ConstructId = context.ConstructId

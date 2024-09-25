@@ -79,7 +79,8 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
                 T.spawn_min_radius,
                 T.spawn_max_radius,
                 T.spawn_expiration_span,
-                T.active territory_active
+                T.active territory_active,
+                T.id territory_id
             FROM public.mod_sector_encounter AS E
             INNER JOIN public.mod_territory AS T ON (T.id = E.territory_id)
             """
@@ -123,7 +124,8 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
                 T.spawn_min_radius,
                 T.spawn_max_radius,
                 T.spawn_expiration_span,
-                T.active territory_active
+                T.active territory_active,
+                T.id territory_id
             FROM public.mod_sector_encounter AS E
             INNER JOIN public.mod_territory AS T ON (T.id = E.territory_id)
             WHERE E.active IS TRUE AND E.faction_id = @factionId AND

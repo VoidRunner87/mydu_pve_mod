@@ -31,6 +31,7 @@ public class ScriptActionItem
     public ulong ConstructId { get; set; }
     public Vec3? Position { get; set; } = new();
     public Vec3? Sector { get; set; } = new();
+    public Guid? TerritoryId { get; set; }
     public TimeSpan TimeSpan { get; set; } = TimeSpan.Zero;
     public double Value { get; set; }
     public long? FactionId { get; set; }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Backend;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
+using NQutils.Def;
 using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Common.Services;
@@ -17,7 +19,7 @@ public class ConstructService(IServiceProvider provider) : IConstructService
 {
     private readonly ILogger<ConstructService> _logger = provider.CreateLogger<ConstructService>();
     private readonly IPostgresConnectionFactory _factory = provider.GetRequiredService<IPostgresConnectionFactory>();
-    private IClusterClient _orleans = provider.GetOrleans();
+    private readonly IClusterClient _orleans = provider.GetOrleans();
 
     public async Task<ConstructInfo?> GetConstructInfoAsync(ulong constructId)
     {
@@ -65,14 +67,14 @@ public class ConstructService(IServiceProvider provider) : IConstructService
 
         var value = isDynamicWreck ? "true" : "false";
         const string dynamicWreckProp = "{serverProperties,isDynamicWreck}";
-        
+
         await db.ExecuteAsync(
             $"""
-            UPDATE public.construct
-            SET json_properties = jsonb_set(json_properties, '{dynamicWreckProp}', '{value}')
-            WHERE id = @id;
-            """,
-            new {id = (long)constructId}
+             UPDATE public.construct
+             SET json_properties = jsonb_set(json_properties, '{dynamicWreckProp}', '{value}')
+             WHERE id = @id;
+             """,
+            new { id = (long)constructId }
         );
     }
 
@@ -87,5 +89,26 @@ public class ConstructService(IServiceProvider provider) : IConstructService
     public Task DeleteAsync(ulong constructId)
     {
         return _orleans.GetConstructGCGrain().DeleteConstruct(constructId);
+    }
+
+    public async Task SetAutoDeleteFromNow(ulong constructId, TimeSpan timeSpan)
+    {
+        var bank = provider.GetGameplayBank();
+        var gcConfig = bank.GetBaseObject<ConstructGCConfig>();
+        var deleteHours = gcConfig.abandonedConstructDeleteDelayHours;
+        
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            $"""
+            UPDATE public.construct SET abandoned_at = NOW() - INTERVAL '{deleteHours} HOURS' + INTERVAL '{timeSpan.ToPostgresInterval()}'
+            WHERE id = @constructId
+            """
+            , new
+            {
+                constructId = (long)constructId
+            }
+        );
     }
 }

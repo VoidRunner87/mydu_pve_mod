@@ -9,6 +9,7 @@ public class EventTriggerItem(string eventName, string onTriggerScript)
     public long? FactionId { get; set; }
     public double MinTriggerValue { get; set; } = 0;
     public string OnTriggerScript { get; set; } = onTriggerScript;
+    public Guid? TerritoryId { get; set; }
 
     public bool ShouldTrigger(double value)
     {

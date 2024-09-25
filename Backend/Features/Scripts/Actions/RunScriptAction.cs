@@ -21,7 +21,7 @@ public class RunScriptAction(ScriptActionItem actionItem) : IScriptAction
 
         return scriptService.ExecuteScriptAsync(
             actionItem.Script,
-            new ScriptContext(provider, context.FactionId, context.PlayerIds, context.Sector)
+            new ScriptContext(provider, context.FactionId, context.PlayerIds, context.Sector, context.TerritoryId)
             {
                 ConstructId = context.ConstructId
             }

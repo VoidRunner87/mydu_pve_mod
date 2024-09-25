@@ -14,9 +14,11 @@ using BotLib.Protocols;
 using BotLib.Protocols.Queuing;
 using FluentMigrator.Runner;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Helpers;
 using Mod.DynamicEncounters.Stubs;
 using Newtonsoft.Json;
 using NQ.Router;
@@ -159,14 +161,16 @@ public class ModBase
 
     public virtual async Task Start()
     {
+        var logger = ServiceProvider.CreateLogger<ModBase>();
+        
         try
         {
             await Loop();
         }
         catch (Exception e)
         {
-            Console.WriteLine($"{e}");
-            throw;
+            logger.LogError(e, "Failed to run Loop {Name}", GetType().Name);
+            await Task.Delay(5000);
         }
     }
     

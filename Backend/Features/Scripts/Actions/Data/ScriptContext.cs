@@ -8,7 +8,8 @@ public class ScriptContext(
     IServiceProvider serviceProvider,
     long? factionId,
     HashSet<ulong> playerIds, 
-    Vec3 sector 
+    Vec3 sector,
+    Guid? territoryId
 )
 {
     public IServiceProvider ServiceProvider { get; set; } = serviceProvider;
@@ -16,10 +17,11 @@ public class ScriptContext(
     public HashSet<ulong> PlayerIds { get; set; } = playerIds;
     public Vec3 Sector { get; set; } = sector;
     public ulong? ConstructId { get; set; }
+    public Guid? TerritoryId { get; set; } = territoryId;
 
     public ScriptContext WithConstructId(ulong constructId)
     {
-        return new ScriptContext(ServiceProvider, FactionId, PlayerIds, Sector)
+        return new ScriptContext(ServiceProvider, FactionId, PlayerIds, Sector, TerritoryId)
         {
             ConstructId = constructId
         };

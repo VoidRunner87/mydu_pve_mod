@@ -55,7 +55,8 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
                             provider,
                             handle.FactionId,
                             new HashSet<ulong>(),
-                            handle.Sector
+                            handle.Sector,
+                            null // TODO TerritoryId
                         )
                     ));
                 }
@@ -114,7 +115,8 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
                             provider,
                             handle.FactionId,
                             [],
-                            handle.Sector
+                            handle.Sector,
+                            null // TODO TerritoryId
                         )
                         {
                             ConstructId = handle.ConstructId

@@ -33,18 +33,19 @@ public class SectorLoop : ModBase
         while (true)
         {
             await Task.Delay(3000);
-            var isEnabled = await featureService.GetEnabledValue<SectorLoop>(false);
 
-            if (isEnabled)
+            try
             {
-                try
+                var isEnabled = await featureService.GetEnabledValue<SectorLoop>(false);
+
+                if (isEnabled)
                 {
                     await ExecuteAction();
                 }
-                catch (Exception e)
-                {
-                    _logger.LogError(e, "Failed to execute {Name}", nameof(SectorLoop));
-                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to execute {Name}", nameof(SectorLoop));
             }
         }
     }
@@ -55,19 +56,19 @@ public class SectorLoop : ModBase
         sw.Start();
 
         var factionRepository = ServiceProvider.GetRequiredService<IFactionRepository>();
-        
+
         await _sectorPoolManager.ExecuteSectorCleanup();
-        
+
         var factionSectorPrepTasks = (await factionRepository.GetAllAsync())
             .Select(PrepareSector);
         await Task.WhenAll(factionSectorPrepTasks);
-        
+
         await _sectorPoolManager.LoadUnloadedSectors();
         await _sectorPoolManager.ActivateEnteredSectors();
 
         _logger.LogDebug("Action took {Time}ms", sw.ElapsedMilliseconds);
     }
-    
+
     private async Task PrepareSector(FactionItem faction)
     {
         // TODO sector encounters becomes tied to a territory
@@ -77,7 +78,7 @@ public class SectorLoop : ModBase
         var sectorEncountersRepository = ServiceProvider.GetRequiredService<ISectorEncounterRepository>();
         var encounters = (await sectorEncountersRepository.FindActiveByFactionAsync(faction.Id))
             .ToList();
-        
+
         if (encounters.Count == 0)
         {
             _logger.LogDebug("No Encounters for Faction: {Faction}({Id})", faction.Name, faction.Id);
@@ -91,7 +92,7 @@ public class SectorLoop : ModBase
             FactionId = faction.Id,
             Tag = faction.Tag
         };
-        
+
         await _sectorPoolManager.GenerateSectors(generationArgs);
     }
 }

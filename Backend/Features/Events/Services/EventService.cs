@@ -72,6 +72,7 @@ public class EventService(IServiceProvider provider) : IEventService
                     continue;
                 }
                 
+                // TODO TerritoryId to trigger
                 var task = RunTriggerAsync(trigger, playerIds, sector, constructId);
 
                 taskList.Add(task);
@@ -102,7 +103,7 @@ public class EventService(IServiceProvider provider) : IEventService
 
             await _scriptService.ExecuteScriptAsync(
                 triggerItem.OnTriggerScript,
-                new ScriptContext(provider, triggerItem.FactionId, playerIds, sector)
+                new ScriptContext(provider, triggerItem.FactionId, playerIds, sector, triggerItem.TerritoryId)
                 {
                     ConstructId = constructId
                 }
