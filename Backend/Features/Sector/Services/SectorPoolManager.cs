@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Common.Vector;
+using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Events.Data;
 using Mod.DynamicEncounters.Features.Events.Interfaces;
@@ -293,6 +295,54 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             {
                 _logger.LogError(e, "Failed to publish {Event}", nameof(SectorActivatedEvent));
             }
+        }
+    }
+
+    public async Task UpdateExpirationNames()
+    {
+        var constructHandleRepository = serviceProvider.GetRequiredService<IConstructHandleRepository>();
+        var poiMap = await constructHandleRepository.GetPoiConstructExpirationTimeSpansAsync();
+        var orleans = serviceProvider.GetOrleans();
+        
+        _logger.LogInformation("Update Expiration Names found: {Count}", poiMap.Count);
+
+        using var db = serviceProvider.GetRequiredService<IPostgresConnectionFactory>().Create();
+        db.Open();
+        
+        foreach (var kvp in poiMap)
+        {
+            // if (kvp.Value.TotalMinutes > 60)
+            // {
+            //     continue;
+            // }
+            
+            var constructInfoGrain = orleans.GetConstructInfoGrain(kvp.Key);
+            var constructInfo = await constructInfoGrain.Get();
+            var constructName = constructInfo.rData.name;
+
+            var pieces = constructName.Split('|', StringSplitOptions.RemoveEmptyEntries);
+            if (pieces.Length == 0)
+            {
+                continue;
+            }
+
+            var firstPiece = pieces[0].Trim();
+            var newName = $"{firstPiece} | [{(int)kvp.Value.TotalMinutes}m]";
+
+            // await constructInfoGrain.Update(new ConstructInfoUpdate
+            // {
+            //     constructId = kvp.Key,
+            //     name = newName,
+            // });
+            
+            // TODO move this to a service or repo
+            await db.ExecuteAsync("UPDATE public.construct SET name = @name WHERE id = @id", new
+            {
+                name = newName,
+                id = (long)kvp.Key
+            });
+            
+            _logger.LogInformation("Construct {Construct} Name Updated to: {Name}", kvp.Key, newName);
         }
     }
 

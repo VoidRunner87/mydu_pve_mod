@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Faction.Data;
@@ -18,7 +19,6 @@ public class SectorLoop : ModBase
 {
     private ILogger<SectorLoop> _logger;
     private ISectorPoolManager _sectorPoolManager;
-    private const string SectorsToGenerateFeatureName = "SectorsToGenerate";
 
     public override async Task Loop()
     {
@@ -29,6 +29,24 @@ public class SectorLoop : ModBase
         _sectorPoolManager = ServiceProvider.GetRequiredService<ISectorPoolManager>();
 
         await spawnerService.LoadAllFromDatabase();
+
+        try
+        {
+            var updateExpirationNameTimer = new Timer(TimeSpan.FromSeconds(30));
+            updateExpirationNameTimer.Elapsed += async (sender, args) =>
+            {
+                if (await featureService.GetEnabledValue<SectorLoop>(false))
+                {
+                    await _sectorPoolManager.UpdateExpirationNames();
+                }
+            };
+            updateExpirationNameTimer.Start();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to execute {Name} Timer", nameof(SectorLoop));
+        }
+        
 
         while (true)
         {

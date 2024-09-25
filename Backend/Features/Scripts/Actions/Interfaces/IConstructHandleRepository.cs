@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Mod.DynamicEncounters.Common.Repository;
@@ -16,4 +17,6 @@ public interface IConstructHandleRepository : IRepository<ConstructHandleItem>
 
     Task UpdateLastControlledDateAsync(HashSet<ulong> constructIds);
     Task RemoveHandleAsync(ulong constructId);
+
+    Task<Dictionary<ulong, TimeSpan>> GetPoiConstructExpirationTimeSpansAsync();
 }

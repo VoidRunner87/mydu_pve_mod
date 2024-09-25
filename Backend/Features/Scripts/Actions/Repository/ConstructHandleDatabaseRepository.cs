@@ -283,6 +283,27 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         );
     }
 
+    public async Task<Dictionary<ulong, TimeSpan>> GetPoiConstructExpirationTimeSpansAsync()
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var result = (await db.QueryAsync<ConstructTimeSpanRow>(
+            """
+            SELECT CH.construct_id, SI.expires_at - NOW() time_span FROM public.mod_npc_construct_handle CH
+            INNER JOIN public.mod_sector_instance SI ON (SI.sector_x = CH.sector_x AND SI.sector_y = CH.sector_y AND SI.sector_z = CH.sector_z)
+            INNER JOIN public.construct C ON (C.id = CH.construct_id)
+            WHERE CH.json_properties->'Tags' @> '"poi"' AND
+            	CH.deleted_at IS NULL AND
+            	C.owner_entity_id IS NULL
+            """)).ToList();
+
+        return result.ToDictionary(
+            k => (ulong)k.construct_id,
+            v => v.time_span
+        );
+    }
+
     private ConstructHandleItem MapToModel(DbRow row)
     {
         PrefabItem? constructDefinition = null;
@@ -316,6 +337,12 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             JsonProperties = properties,
             ConstructDefinitionItem = constructDefinition
         };
+    }
+
+    private struct ConstructTimeSpanRow
+    {
+        public long construct_id { get; set; }
+        public TimeSpan time_span { get; set; }
     }
 
     private struct DbRow
