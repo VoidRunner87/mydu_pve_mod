@@ -8,6 +8,7 @@ using Mod.DynamicEncounters.Overrides;
 using Mod.DynamicEncounters.Overrides.Common;
 using Newtonsoft.Json;
 using NQ;
+using NQ.Interfaces;
 using NQutils;
 using Orleans;
 
@@ -59,13 +60,17 @@ public class MyDuMod : IMod
 
     public async Task TriggerAction(ulong playerId, ModAction action)
     {
-        _logger.LogInformation("Received Trigger Action: {Id}", action.actionId);
+        _logger.LogInformation("Received Trigger Action: {Id} | {Content}", action.actionId, action.payload);
 
         switch ((ModActionType)action.actionId)
         {
             case ModActionType.LoadNPCApp:
                 await UploadJson(playerId, "faction-quests", new object[]{
-                    new { faction = 3, title = "Wetwork", description = "" }
+                    new { faction = 3, title = "Disrupt UEF Supplies", description = "" },
+                    new { faction = 3, title = "Disrupt UEF Supplies", description = "" },
+                    new { faction = 3, title = "Disrupt UEF Supplies", description = "" },
+                    new { faction = 3, title = "Disrupt UEF Supplies", description = "" },
+                    new { faction = 3, title = "Disrupt UEF Supplies", description = "" },
                 });
                 await InjectJs(playerId, Resources.CommonJs);
                 await InjectJs(playerId, Resources.CreateRootDivJs);

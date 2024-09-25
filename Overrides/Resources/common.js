@@ -3,7 +3,9 @@
 //     CPPMod.sendModAction("Mod.Honjo.Server", 1000001, [], JSON.stringify({ hello: "world" }));
 // }, 1000);
 
-let global_resources = {};
+if (!window.global_resources) {
+    window.global_resources = {};
+}
 
 let modApi = {};
 modApi.cb = (data) => {
@@ -12,11 +14,12 @@ modApi.cb = (data) => {
 
 modApi.setResourceContents = (name, contentType, contents) => {
     const blob = new Blob([contents], {type: contentType});
-    global_resources[name] = URL.createObjectURL(blob);
+    const blobUrl = URL.createObjectURL(blob);
+    window.global_resources[name] = blobUrl;
     
-    modApi.cb(`Set Resource ${name} as ${contentType}`);
+    modApi.cb(`Set Resource ${name} as ${contentType} to ${blobUrl}`);
     
-    return global_resources[name];
+    return window.global_resources[name];
 };
 
 modApi.appendIframe = (id, url) => {
