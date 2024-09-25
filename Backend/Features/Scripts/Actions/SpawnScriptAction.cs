@@ -139,22 +139,33 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
         try
         {
-            if (fixture.blueprints.Count > 0)
+            if (fixture.blueprints.Count == 0)
             {
-                var blueprintGrain = orleans.GetBlueprintGrain();
-                await blueprintGrain.Snapshot(
-                    new BlueprintCreate
-                    {
-                        constructId = constructId,
-                        enableDRM = true,
-                        box = fixture.blueprints.First().Model.Bounds,
-                    },
-                    ModBase.Bot.PlayerId,
-                    true
-                );
-
-                _logger.LogInformation("Snapshot Created for Construct {Construct}", constructId);
+                _logger.LogWarning("No Blueprints from Fixture");
+                
             }
+
+            var constructInfoGrain = orleans.GetConstructInfoGrain(constructId);
+            var constructInfo = await constructInfoGrain.Get();
+            var size = constructInfo.rData.geometry.size;
+            
+            var blueprintGrain = orleans.GetBlueprintGrain();
+            await blueprintGrain.Snapshot(
+                new BlueprintCreate
+                {
+                    constructId = constructId,
+                    enableDRM = true,
+                    box = new BoundingBox
+                    {
+                        min = new Vec3(),   
+                        max = new Vec3{x = size, y = size, z = size}
+                    }
+                },
+                constructDef.DefinitionItem.OwnerId,
+                true
+            );
+
+            _logger.LogInformation("Snapshot Created for Construct {Construct}", constructId);
         }
         catch (Exception e)
         {

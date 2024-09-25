@@ -326,12 +326,6 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 var firstPiece = pieces[0].Trim();
                 var newName = $"{firstPiece} | [{(int)kvp.Value.TotalMinutes}m]";
 
-                // await constructInfoGrain.Update(new ConstructInfoUpdate
-                // {
-                //     constructId = kvp.Key,
-                //     name = newName,
-                // });
-            
                 // TODO move this to a service or repo
                 await db.ExecuteAsync("UPDATE public.construct SET name = @name WHERE id = @id", new
                 {
@@ -339,7 +333,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     id = (long)kvp.Key
                 });
             
-                _logger.LogInformation("Construct {Construct} Name Updated to: {Name}", kvp.Key, newName);
+                _logger.LogDebug("Construct {Construct} Name Updated to: {Name}", kvp.Key, newName);
             }
             catch (Exception e)
             {
