@@ -139,18 +139,22 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
         try
         {
-            var blueprintGrain = orleans.GetBlueprintGrain();
-            await blueprintGrain.Snapshot(
-                new BlueprintCreate
-                {
-                    constructId = constructId,
-                    enableDRM = true,
-                },
-                ModBase.Bot.PlayerId,
-                true
-            );
-            
-            _logger.LogInformation("Snapshot Created for Construct {Construct}", constructId);
+            if (fixture.blueprints.Count > 0)
+            {
+                var blueprintGrain = orleans.GetBlueprintGrain();
+                await blueprintGrain.Snapshot(
+                    new BlueprintCreate
+                    {
+                        constructId = constructId,
+                        enableDRM = true,
+                        box = fixture.blueprints.First().Model.Bounds,
+                    },
+                    ModBase.Bot.PlayerId,
+                    true
+                );
+
+                _logger.LogInformation("Snapshot Created for Construct {Construct}", constructId);
+            }
         }
         catch (Exception e)
         {

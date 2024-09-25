@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
@@ -35,36 +36,71 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
             return;
         }
         
-        var constructInfoGrain = await _constructService.GetConstructInfoAsync(constructId);
+        var npcInfo = await _constructService.GetConstructInfoAsync(constructId);
 
-        if (constructInfoGrain == null)
+        if (npcInfo == null)
         {
             return;
         }
 
-        var npcPos = constructInfoGrain.rData.position;
+        var npcPos = npcInfo.rData.position;
         
         if (!context.TargetConstructId.HasValue)
         {
             context.TargetMovePosition = context.Sector;
             return;
         }
+        
+        var targetConstructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
 
-        if (constructInfoGrain.IsShieldLowerThan25() || constructInfoGrain.IsShieldDown())
+        if (targetConstructInfo == null)
         {
-            var targetConstructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
+            context.TargetMovePosition = context.Sector;
+            return;
+        }
+        
+        var targetPos = targetConstructInfo.rData.position;
 
-            if (targetConstructInfo == null)
+        if (npcInfo.IsShieldLowerThan25() || npcInfo.IsShieldDown())
+        {
+            var retreatDirection = (npcPos - targetPos).NormalizeSafe();
+            var npcVel = await _constructService.GetConstructVelocities(constructId);
+            var targetVel = await _constructService.GetConstructVelocities(context.TargetConstructId.Value);
+
+            var npcVelDir = npcVel.Linear.NormalizeSafe();
+            var targetVelDir = targetVel.Linear.NormalizeSafe();
+            
+            var alreadySomewhatFast = npcVel.Linear.Size() > 10000;
+            var oppositeVelocities = npcVelDir.Dot(targetVelDir) < -0.4;
+
+            // _logger.LogInformation("Dot {Dot} | {VelLen}", npcVelDir.Dot(targetVelDir), npcVel.Linear.Size());
+            
+            if (oppositeVelocities)
+            {   
+                retreatDirection *= -1; // reverse
+            }
+            
+            context.TargetMovePosition = npcPos + retreatDirection * 10 * DistanceHelpers.OneSuInMeters;
+        }
+
+        var isPrettyFar = Math.Abs(targetPos.Dist(npcPos)) > 1.7 * DistanceHelpers.OneSuInMeters;
+        
+        var shouldVentShields = npcInfo.IsShieldDown() || 
+                                (npcInfo.IsShieldLowerThan25() && isPrettyFar) ||
+                                (npcInfo.IsShieldLowerThanHalf() && isPrettyFar);
+
+        context.TryGetProperty("ShieldVentTimer", out var shieldVentTimer, 0d);
+        shieldVentTimer += context.DeltaTime;
+        
+        if (shouldVentShields)
+        {
+            if (shieldVentTimer > 5)
             {
-                context.TargetMovePosition = context.Sector;
-                return;
+                await _constructService.TryVentShieldsAsync(constructId);
+                shieldVentTimer = 0;
             }
 
-            var targetPos = targetConstructInfo.rData.position;
-
-            var retreatDirection = (npcPos - targetPos).NormalizeSafe();
-
-            context.TargetMovePosition = npcPos + retreatDirection * 10 * 200000; // 10 su
+            context.SetProperty("ShieldVentTimer", shieldVentTimer);
         }
     }
 }
