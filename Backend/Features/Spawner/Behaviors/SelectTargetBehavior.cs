@@ -149,7 +149,6 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         {
             return;
         }
-
         
         context.TargetMovePosition = await GetTargetMovePosition(context);
         

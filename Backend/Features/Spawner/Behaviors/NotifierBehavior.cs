@@ -2,7 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Backend;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
@@ -27,6 +29,7 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
     private ElementId _coreUnitElementId;
     
     private bool _active = true;
+    private IConstructService _constructService;
 
     public bool IsActive() => _active;
 
@@ -47,6 +50,7 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
         _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
 
         _constructGrain = _orleans.GetConstructGrain(constructId);
+        _constructService = provider.GetRequiredService<IConstructService>();
         
         context.ExtraProperties.TryAdd("CORE_ID", _coreUnitElementId);
         
@@ -58,8 +62,6 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
 
     public async Task TickAsync(BehaviorContext context)
     {
-        var provider = context.ServiceProvider;
-
         var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
 
         if (coreUnit.IsCoreStressHigh())
@@ -79,33 +81,21 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
         {
             await context.NotifyShieldHpLowAsync(new BehaviorEventArgs(constructId, prefab, context));
         }
-        
+
+        context.TryGetProperty("ShieldVentTimer", out var shieldVentTimer, 0d);
+        shieldVentTimer += context.DeltaTime;
+
         if (constructInfo.IsShieldDown())
         {
-            // var constructElementGrain = _orleans.GetConstructElementsGrain(constructId);
-            // var shieldElementId = (await constructElementGrain.GetElementsOfType<ShieldGeneratorUnit>()).First();
-            //
-            // await constructElementGrain.RepairElement(shieldElementId, 1);
-            //
-            // foreach (var we in _weaponsElements)
-            // {
-            //     await constructElementGrain.RepairElement(we, 1);
-            // }
+            if (shieldVentTimer > 5)
+            {
+                await _constructService.TryVentShieldsAsync(constructId);
+                shieldVentTimer = 0;
+            }
 
-            // _constructGrain = _orleans.GetConstructGrain(constructId);
-            // await _constructGrain.UpdateConstructInfo(new ConstructInfoUpdate
-            // {
-            //     constructId = constructId,
-            //     shieldState = new ShieldState
-            //     {
-            //         hasShield = true,
-            //         isVenting = true
-            //     },
-            // });
-            // var constructFightGrain = _orleans.GetConstructFightGrain(constructId);
-            // await constructFightGrain.StartVenting(ModBase.Bot.PlayerId);
-            
             await context.NotifyShieldHpDownAsync(new BehaviorEventArgs(constructId, prefab, context));
         }
+        
+        context.SetProperty("ShieldVentTimer", shieldVentTimer);
     }
 }

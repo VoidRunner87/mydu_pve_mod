@@ -3,6 +3,7 @@ using BotLib.Generated;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Loot.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
@@ -173,5 +174,16 @@ public class ConstructController : Controller
         await gcGrain.DeleteConstruct((ulong)constructId);
 
         return Ok();
+    }
+
+    [Route("{constructId:long}/shield/vent-start")]
+    [HttpPost]
+    public async Task<IActionResult> StartShieldVent(long constructId)
+    {
+        var provider = ModBase.ServiceProvider;
+        var constructService = provider.GetRequiredService<IConstructService>();
+        var result = await constructService.TryVentShieldsAsync((ulong)constructId);
+        
+        return Ok(result);
     }
 }

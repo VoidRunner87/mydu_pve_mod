@@ -246,4 +246,24 @@ public class BehaviorContext(
 
         return true;
     }
+
+    public bool TryGetProperty<T>(string name, out T value, T defaultValue)
+    {
+        if (ExtraProperties.TryGetValue(name, out var objVal))
+        {
+            value = (T)objVal;
+            return true;
+        }
+
+        value = defaultValue;
+        return false;
+    }
+
+    public void SetProperty<T>(string name, T value)
+    {
+        if (!ExtraProperties.TryAdd(name, value))
+        {
+            ExtraProperties[name] = value;
+        }
+    }
 }

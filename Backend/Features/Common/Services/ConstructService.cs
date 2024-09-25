@@ -91,7 +91,7 @@ public class ConstructService(IServiceProvider provider) : IConstructService
         return _orleans.GetConstructGCGrain().DeleteConstruct(constructId);
     }
 
-    public async Task SetAutoDeleteFromNow(ulong constructId, TimeSpan timeSpan)
+    public async Task SetAutoDeleteFromNowAsync(ulong constructId, TimeSpan timeSpan)
     {
         var bank = provider.GetGameplayBank();
         var gcConfig = bank.GetBaseObject<ConstructGCConfig>();
@@ -110,5 +110,33 @@ public class ConstructService(IServiceProvider provider) : IConstructService
                 constructId = (long)constructId
             }
         );
+    }
+
+    public async Task<bool> TryVentShieldsAsync(ulong constructId)
+    {
+        try
+        {
+            var constructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
+            var constructInfo = await constructInfoGrain.Get();
+            if (constructInfo.mutableData.shieldState.isVenting)
+            {
+                _logger.LogInformation("Construct {Construct} Already Venting. Shield at {Percent}", 
+                    constructId,
+                    constructInfo.mutableData.shieldState.shieldHpRatio * 100
+                );
+                return true;
+            }
+            
+            var constructFightGrain = _orleans.GetConstructFightGrain((ulong)constructId);
+            await constructFightGrain.StartVenting(4);
+
+            return true;
+        }
+        catch (Exception)
+        {
+            _logger.LogWarning("Could not vent shields. Likely on Cooldown");
+            
+            return false;
+        }
     }
 }

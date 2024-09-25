@@ -188,7 +188,7 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
             // TODO obtain time span from territory
             // TODO add territory to sector instance
             await provider.GetRequiredService<IConstructService>()
-                .SetAutoDeleteFromNow(constructId, TimeSpan.FromHours(3));
+                .SetAutoDeleteFromNowAsync(constructId, TimeSpan.FromHours(3));
         }
 
         var behaviorList = new List<string>();
