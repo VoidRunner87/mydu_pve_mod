@@ -127,6 +127,23 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         return result.Select(MapToModel);
     }
 
+    public async Task<object> FindAllBuggedPOIConstructsAsync()
+    {
+        await Task.Yield();
+        
+        /**
+SELECT C.id, C.name, CH.deleted_at FROM construct C
+LEFT JOIN mod_npc_construct_handle CH ON (C.id = CH.construct_id)
+WHERE (CH.id IS NULL OR CH.deleted_at IS NOT NULL) AND
+	C.deleted_at IS NULL AND
+	C.owner_entity_id IS NULL AND
+	C.json_properties->'serverProperties'->>'isDynamicWreck' = 'true' AND
+	C.json_properties->'kind' = '4'
+         */
+
+        return null;
+    }
+    
     public async Task<IEnumerable<ConstructHandleItem>> GetAllAsync()
     {
         using var db = _factory.Create();
@@ -295,7 +312,8 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             INNER JOIN public.construct C ON (C.id = CH.construct_id)
             WHERE CH.json_properties->'Tags' @> '"poi"' AND
             	CH.deleted_at IS NULL AND
-            	C.owner_entity_id IS NULL
+            	C.owner_entity_id IS NULL AND
+            	C.deleted_at IS NULL
             """)).ToList();
 
         return result.ToDictionary(

@@ -46,6 +46,7 @@ public static class Program
 
             var taskList = new List<Task>
             {
+                new CachingLoop(TimeSpan.FromSeconds(5)).Start(),
                 new SectorLoop().Start(),
                 new ConstructBehaviorLoop(30).Start(),
                 new TaskQueueLoop().Start()

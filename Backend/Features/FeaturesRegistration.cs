@@ -29,6 +29,7 @@ public static class FeaturesRegistration
         services.AddSingleton<IFeatureWriterService, FeatureService>();
         services.AddSingleton<IScriptLoaderService, FileSystemScriptLoaderService>();
         services.AddSingleton<IConstructSpatialHashRepository, ConstructSpatialHashRepository>();
+        services.AddSingleton<ISectorSpatialHashCacheService, SectorSpatialHashCacheServiceService>();
         services.AddSingleton<IConstructService, ConstructService>();
         services.AddSingleton<IErrorRepository, ErrorRepository>();
         services.AddSingleton<IErrorService, ErrorService>();

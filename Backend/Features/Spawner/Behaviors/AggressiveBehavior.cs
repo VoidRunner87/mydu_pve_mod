@@ -29,7 +29,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
     private IConstructElementsGrain _constructElementsGrain;
 
     private ElementId _coreUnitElementId;
-    
+
     private bool _active = true;
     private bool _pveVoxelDamageEnabled;
 
@@ -62,16 +62,16 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
 
         _constructGrain = _orleans.GetConstructGrain(constructId);
-        
+
         context.ExtraProperties.TryAdd("CORE_ID", _coreUnitElementId);
-        
+
         context.IsAlive = _coreUnitElementId.elementId > 0;
         _active = context.IsAlive;
-        
+
         _pveVoxelDamageEnabled = await context.ServiceProvider
             .GetRequiredService<IFeatureReaderService>()
             .GetBoolValueAsync("PVEVoxelDamage", false);
-        
+
         _logger = provider.CreateLogger<AggressiveBehavior>();
     }
 
@@ -80,7 +80,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         if (!context.IsAlive)
         {
             _active = false;
-            
+
             return;
         }
 
@@ -88,7 +88,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         {
             return;
         }
-        
+
         var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
 
         var provider = context.ServiceProvider;
@@ -103,11 +103,12 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         {
             return;
         }
-        
-        var targetInfoGrain = _orleans.GetConstructInfoGrain(new ConstructId{constructId = context.TargetConstructId.Value});
+
+        var targetInfoGrain =
+            _orleans.GetConstructInfoGrain(new ConstructId { constructId = context.TargetConstructId.Value });
         var targetInfo = await targetInfoGrain.Get();
         var targetSize = targetInfo.rData.geometry.size;
-        
+
         if (targetInfo.mutableData.pilot.HasValue)
         {
             context.PlayerIds.TryAdd(targetInfo.mutableData.pilot.Value, targetInfo.mutableData.pilot.Value);
@@ -162,7 +163,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
     }
 
     private const string ShotTotalDeltaTimePropName = $"{nameof(AggressiveBehavior)}_ShotTotalDeltaTime";
-    
+
     private double GetShootTotalDeltaTime(BehaviorContext context)
     {
         if (context.ExtraProperties.TryGetValue(ShotTotalDeltaTimePropName, out var value))
@@ -185,12 +186,12 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
     {
         var random = context.BehaviorContext.ServiceProvider.GetRequiredService<IRandomProvider>()
             .GetRandom();
-        
+
         var totalDeltaTime = GetShootTotalDeltaTime(context.BehaviorContext);
         totalDeltaTime += context.BehaviorContext.DeltaTime;
-        
+
         SetShootTotalDeltaTime(context.BehaviorContext, totalDeltaTime);
-        
+
         var handle = context.WeaponHandle;
 
         var w = handle.Unit;
@@ -207,7 +208,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         {
             return;
         }
-        
+
         SetShootTotalDeltaTime(context.BehaviorContext, 0);
 
         if (prefab.DefinitionItem.AmmoItems.Count == 0)
@@ -225,14 +226,14 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
         // var targetConstructInfoGrain = _orleans.GetConstructInfoGrain(context.TargetConstructId);
         // var targetConstructInfo = await targetConstructInfoGrain.Get();
-        
+
         context.HitPosition = _pveVoxelDamageEnabled
             ? random.PickOneAtRandom(context.BehaviorContext.TargetElementPositions)
             : context.HitPosition;
 
         var sw = new Stopwatch();
         sw.Start();
-        
+
         await context.NpcShotGrain.Fire(
             w.displayName,
             context.ConstructPosition,
@@ -263,7 +264,12 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             5,
             context.HitPosition
         );
-        
-        _logger.LogInformation("Shot Weapon. Took: {Time}ms {Weapon} / {Ammo}",sw.Elapsed.TotalMilliseconds, weaponItem, ammoItem);
+
+        _logger.LogInformation("Construct {Construct} Shot Weapon. Took: {Time}ms {Weapon} / {Ammo}",
+            constructId,
+            sw.Elapsed.TotalMilliseconds,
+            weaponItem,
+            ammoItem
+        );
     }
 }

@@ -19,6 +19,11 @@ public struct LongVector3(long x, long y, long z)
     public LongVector3(Vec3 vec3) : this((long)vec3.x, (long)vec3.y, (long)vec3.z)
     {
     }
+    
+    public static LongVector3 operator +(LongVector3 a, LongVector3 b)
+    {
+        return new LongVector3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+    }
 
     public static LongVector3 operator -(LongVector3 a, LongVector3 b)
     {
@@ -34,4 +39,6 @@ public struct LongVector3(long x, long y, long z)
     {
         return new LongVector3(a.X * scalar, a.Y * scalar, a.Z * scalar);
     }
+
+    public override string ToString() => $"{X}, {Y}, {Z}";
 }

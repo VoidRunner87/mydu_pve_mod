@@ -137,33 +137,39 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
             provider.GetRequiredService<IPlanetList>()
         ))[0];
 
-        try
-        {
-            var constructInfoGrain = orleans.GetConstructInfoGrain(constructId);
-            var constructInfo = await constructInfoGrain.Get();
-            var size = constructInfo.rData.geometry.size;
-            
-            var blueprintGrain = orleans.GetBlueprintGrain();
-            await blueprintGrain.Snapshot(
-                new BlueprintCreate
-                {
-                    constructId = constructId,
-                    enableDRM = true,
-                    box = new BoundingBox
-                    {
-                        min = new Vec3(),   
-                        max = new Vec3{x = size, y = size, z = size}
-                    }
-                },
-                constructDef.DefinitionItem.OwnerId,
-                true
-            );
+        var snapshotEnabled = false;
 
-            _logger.LogInformation("Snapshot Created for Construct {Construct}", constructId);
-        }
-        catch (Exception e)
+        // Disabled. It takes too long for the game to create a snapshot
+        if (snapshotEnabled)
         {
-            _logger.LogError(e, "Failed to Create Snapshot of Spawned Construct {Construct}", constructId);
+            try
+            {
+                var constructInfoGrain = orleans.GetConstructInfoGrain(constructId);
+                var constructInfo = await constructInfoGrain.Get();
+                var size = constructInfo.rData.geometry.size;
+
+                var blueprintGrain = orleans.GetBlueprintGrain();
+                await blueprintGrain.Snapshot(
+                    new BlueprintCreate
+                    {
+                        constructId = constructId,
+                        enableDRM = true,
+                        box = new BoundingBox
+                        {
+                            min = new Vec3(),
+                            max = new Vec3 { x = size, y = size, z = size }
+                        }
+                    },
+                    constructDef.DefinitionItem.OwnerId,
+                    false
+                );
+
+                _logger.LogInformation("Snapshot Created for Construct {Construct}", constructId);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to Create Snapshot of Spawned Construct {Construct}", constructId);
+            }
         }
 
         _logger.LogInformation("Spawned Construct [{Name}]({Id}) at ::pos{{0,0,{Pos}}}", resultName, constructId, spawnPosition);

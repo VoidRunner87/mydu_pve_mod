@@ -43,7 +43,13 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
             return;
         }
 
-        var npcPos = npcInfo.rData.position;
+        // first time initialize position
+        if (!context.Position.HasValue)
+        {
+            context.Position = npcInfo.rData.position;
+        }
+        
+        var npcPos = context.Position.Value;
         
         if (!context.TargetConstructId.HasValue)
         {

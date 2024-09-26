@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Common.Vector;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
+using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Services;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
@@ -38,7 +41,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         _logger = provider.CreateLogger<SelectTargetBehavior>();
         _constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
         _constructGrain = _orleans.GetConstructGrain(constructId);
-
+        
         var radarElementId = (await _constructElementsGrain.GetElementsOfType<RadarPvPSpace>()).FirstOrDefault();
         var gunnerSeatElementId = (await _constructElementsGrain.GetElementsOfType<PVPSeatUnit>()).FirstOrDefault();
 
@@ -65,14 +68,29 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var sw = new Stopwatch();
         sw.Start();
 
-        _logger.LogInformation("Selecting a new Target");
+        _logger.LogInformation("Construct {Construct} Selecting a new Target", constructId);
 
-        var npcConstructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
-        var npcConstructInfo = await npcConstructInfoGrain.Get();
-        var npcPos = npcConstructInfo.rData.position;
+        if (!context.Position.HasValue)
+        {
+            var npcConstructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
+            var npcConstructInfo = await npcConstructInfoGrain.Get();
+            context.Position = npcConstructInfo.rData.position;
+        }
+        
+        var npcPos = context.Position.Value;
+
         var sectorPos = npcPos.GridSnap(SectorPoolManager.SectorGridSnap);
+        var sectorGrid = new LongVector3(sectorPos);
 
-        var constructsOnSector = await _spatialHashRepo.FindPlayerLiveConstructsOnSector(sectorPos);
+        var foundValue = SectorGridConstructCache.Data.TryGetValue(sectorGrid, out var constructsOnSectorBag);
+        if (!foundValue)
+        {
+            constructsOnSectorBag = [];
+        }
+
+        var constructsOnSector = constructsOnSectorBag.ToHashSet();
+        
+        // var constructsOnSector = await _spatialHashRepo.FindPlayerLiveConstructsOnSector(sectorPos);
 
         var result = new List<ConstructInfo>();
         foreach (var id in constructsOnSector)
@@ -87,16 +105,15 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             }
         }
 
-        _logger.LogInformation("Found {Count} constructs around", result.Count);
-
-        // TODO remove hardcoded
         var playerConstructs = result
             .Where(r => r.mutableData.ownerId.IsPlayer() || r.mutableData.ownerId.IsOrg())
             .ToList();
 
-        _logger.LogInformation("Found {Count} PLAYER constructs around {List}",
+        _logger.LogInformation("Construct {Construct} Found {Count} PLAYER constructs around {List}. Time = {Time}ms",
+            constructId,
             playerConstructs.Count,
-            string.Join(", ", playerConstructs.Select(x => x.rData.constructId))
+            string.Join(", ", playerConstructs.Select(x => x.rData.constructId)),
+            sw.ElapsedMilliseconds
         );
 
         ulong targetId = 0;
@@ -104,7 +121,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         int maxIterations = 10;
         int counter = 0;
 
-        var targetingDistance = 5 * 200000;
+        var targetingDistance = 5 * DistanceHelpers.OneSuInMeters;
 
         foreach (var construct in playerConstructs)
         {
@@ -126,7 +143,11 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
             var delta = Math.Abs(pos.Distance(npcPos));
 
-            _logger.LogInformation("Construct {Construct} Distance: {Distance}m", construct.rData.constructId, delta);
+            _logger.LogInformation("Construct {Construct} Distance: {Distance}su. Time = {Time}ms", 
+                construct.rData.constructId, 
+                delta / DistanceHelpers.OneSuInMeters,
+                sw.ElapsedMilliseconds
+            );
 
             if (delta > targetingDistance)
             {
@@ -150,16 +171,12 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             return;
         }
         
-        context.TargetMovePosition = await GetTargetMovePosition(context);
-        
-        var constructElementsGrain = _orleans.GetConstructElementsGrain(context.TargetConstructId.Value);
-        var elements = (await constructElementsGrain.GetElementsOfType<ConstructElement>()).ToList();
-        
-        var elementInfoListTasks = elements
-            .Select(constructElementsGrain.GetElement);
+        var targetMovePositionTask = GetTargetMovePosition(context);
+        var cacheTargetElementPositionsTask = CacheTargetElementPositions(context);
 
-        var elementInfoList = await Task.WhenAll(elementInfoListTasks);
-        context.TargetElementPositions = elementInfoList.Select(x => x.position);
+        await Task.WhenAll([targetMovePositionTask, cacheTargetElementPositionsTask]);
+
+        context.TargetMovePosition = await targetMovePositionTask;
         
         _logger.LogInformation("Selected a new Target: {Target}; {Time}ms", targetId, sw.ElapsedMilliseconds);
 
@@ -178,7 +195,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             var constructInfoGrain = _orleans.GetConstructInfoGrain(context.TargetConstructId.Value);
             var constructInfo = await constructInfoGrain.Get();
 
-            await _orleans.GetRadarGrain(radarElementId)
+            var identifyTask = _orleans.GetRadarGrain(radarElementId)
                 .IdentifyStart(ModBase.Bot.PlayerId, new RadarIdentifyTarget
                 {
                     playerId = constructInfo.mutableData.pilot ?? 0,
@@ -188,14 +205,38 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                     sourceSeatElementId = seatElementId
                 });
 
-            if (!await _constructGrain.IsBeingControlled())
-            {
-                await _constructGrain.PilotingTakeOver(ModBase.Bot.PlayerId, true);
-            }
+            var pilotTakeOverTask = PilotingTakeOverAsync();
+
+            await Task.WhenAll([identifyTask, pilotTakeOverTask]);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to Identity Target");
+        }
+    }
+
+    private async Task CacheTargetElementPositions(BehaviorContext context)
+    {
+        if (!context.TargetConstructId.HasValue)
+        {
+            return;
+        }
+        
+        var constructElementsGrain = _orleans.GetConstructElementsGrain(context.TargetConstructId.Value);
+        var elements = (await constructElementsGrain.GetElementsOfType<ConstructElement>()).ToList();
+        
+        var elementInfoListTasks = elements
+            .Select(constructElementsGrain.GetElement);
+
+        var elementInfoList = await Task.WhenAll(elementInfoListTasks);
+        context.TargetElementPositions = elementInfoList.Select(x => x.position);
+    }
+
+    private async Task PilotingTakeOverAsync()
+    {
+        if (!await _constructGrain.IsBeingControlled())
+        {
+            await _constructGrain.PilotingTakeOver(ModBase.Bot.PlayerId, true);
         }
     }
 
