@@ -108,24 +108,15 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);
         var velocity = context.Velocity;
 
-        Vec3 position;
-        // if (distance > distanceGoal * 1.25)
-        // {
-            position = VelocityHelper.LinearInterpolateWithVelocity(
-                npcPos,
-                context.TargetMovePosition,
-                ref velocity,
-                accelV,
-                context.DeltaTime
-            );
-        // }
-        // else
-        // {
-        //     position = npcPos + velocity * context.DeltaTime;
-        // }
+        var position = VelocityHelper.LinearInterpolateWithVelocity(
+            npcPos,
+            context.TargetMovePosition,
+            ref velocity,
+            accelV,
+            context.DeltaTime
+        );
         
         // context.Velocity = velocity;
-
         // Make the ship point to where it's accelerating
         var accelerationFuturePos = npcPos + moveDirection * 200000;
 
