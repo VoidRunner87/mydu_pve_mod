@@ -11,14 +11,12 @@ using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
-using NQ.Interfaces;
 using NQutils.Exceptions;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
 public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstructBehavior
 {
-    private IConstructInfoGrain _constructInfoGrain;
     private IConstructService _constructService;
     private ILogger<WaypointMoveBehavior> _logger;
     private IConstructHandleRepository _constructHandleService;
@@ -28,11 +26,9 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
         await Task.Yield();
 
         var provider = context.ServiceProvider;
-        var orleans = provider.GetOrleans();
 
         _constructService = provider.GetRequiredService<IConstructService>();
         _constructHandleService = provider.GetRequiredService<IConstructHandleRepository>();
-        _constructInfoGrain = orleans.GetConstructInfoGrain(constructId);
         _logger = provider.CreateLogger<WaypointMoveBehavior>();
     }
 
@@ -57,7 +53,11 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
             }
         }
         
-        var npcConstructInfo = await _constructInfoGrain.Get();
+        var npcConstructInfo = await _constructService.GetConstructInfoAsync(constructId);
+        if (npcConstructInfo == null)
+        {
+            return;
+        }
         var npcPos = npcConstructInfo.rData.position;
 
         // Arrived Near Destination

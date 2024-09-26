@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Database.Services;
@@ -30,10 +31,24 @@ public static class FeaturesRegistration
         services.AddSingleton<IScriptLoaderService, FileSystemScriptLoaderService>();
         services.AddSingleton<IConstructSpatialHashRepository, ConstructSpatialHashRepository>();
         services.AddSingleton<ISectorSpatialHashCacheService, SectorSpatialHashCacheServiceService>();
-        services.AddSingleton<IConstructService, ConstructService>();
+        services.AddSingleton<IConstructService>(p =>
+            new CachedConstructService(
+                new ConstructService(p),
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(10)
+            )
+        );
+        services.AddSingleton<IConstructElementsService>(p =>
+            new CachedConstructElementsService(
+                new ConstructElementsService(p),
+                TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(10)
+            )
+        );
         services.AddSingleton<IErrorRepository, ErrorRepository>();
         services.AddSingleton<IErrorService, ErrorService>();
-            
+        services.AddSingleton<IErrorService, ErrorService>();
+
         services.RegisterSectorGeneration();
         services.RegisterSpawnerScripts();
         services.RegisterTaskQueue();

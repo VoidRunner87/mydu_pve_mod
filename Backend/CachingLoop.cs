@@ -28,6 +28,8 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
         var provider = ServiceProvider;
         var logger = provider.CreateLogger<CachingLoop>();
         var spatialHashCacheService = provider.GetRequiredService<ISectorSpatialHashCacheService>();
+        var constructService = provider.GetRequiredService<IConstructService>();
+        var constructElementsService = provider.GetRequiredService<IConstructElementsService>();
 
         var sw = new Stopwatch();
         sw.Start();
@@ -56,6 +58,9 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
                 logger.LogDebug("Sector: {Sector} | Construct: {Construct}", kvp.Key, constructId);
             }
         }
+
+        constructService.Invalidate();
+        constructElementsService.Invalidate();
         
         logger.LogInformation("CacheLoop Took: {Time}ms", sw.ElapsedMilliseconds);
     }

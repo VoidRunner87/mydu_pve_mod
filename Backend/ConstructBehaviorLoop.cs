@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
@@ -113,6 +114,9 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
         var taskList = new List<Task>();
 
+        var sw = new Stopwatch();
+        sw.Start();
+        
         lock (ListLock)
         {
             foreach (var kvp in _constructHandles)
@@ -123,6 +127,8 @@ public class ConstructBehaviorLoop : HighTickModLoop
         }
 
         await Task.WhenAll(taskList);
+        
+        // _logger.LogInformation("Behavior Loop Count({Count}) Took: {Time}ms", taskList.Count, sw.ElapsedMilliseconds);
     }
 
     private async Task RunIsolatedAsync(Func<Task> taskFn)

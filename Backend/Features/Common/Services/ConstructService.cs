@@ -149,4 +149,13 @@ public class ConstructService(IServiceProvider provider) : IConstructService
             return false;
         }
     }
+
+    public Task<bool> IsBeingControlled(ulong constructId)
+    {
+        return _orleans.GetConstructGrain(constructId).IsBeingControlled();
+    }
+
+    public void Invalidate()
+    {
+    }
 }

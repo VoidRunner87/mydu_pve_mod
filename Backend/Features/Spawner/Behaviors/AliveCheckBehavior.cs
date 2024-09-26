@@ -1,9 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
-using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
@@ -20,10 +18,10 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
 {
     private IClusterClient _orleans;
     private IConstructElementsGrain _constructElementsGrain;
-    private IConstructInfoGrain _constructInfoGrain;
     private ElementId _coreUnitElementId;
     
     private IConstructHandleRepository _handleRepository;
+    private IConstructService _constructService;
 
     public async Task InitializeAsync(BehaviorContext context)
     {
@@ -31,7 +29,7 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
         _orleans = provider.GetOrleans();
 
         _handleRepository = provider.GetRequiredService<IConstructHandleRepository>();
-        _constructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
+        _constructService = provider.GetRequiredService<IConstructService>();
         _constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
         _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
     }
@@ -51,7 +49,11 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
         }
         
         var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
-        var constructInfo = await _constructInfoGrain.Get();
+        var constructInfo = await _constructService.GetConstructInfoAsync(constructId);
+        if (constructInfo == null)
+        {
+            return;
+        }
 
         if (coreUnit.IsCoreDestroyed() || constructInfo.IsAbandoned())
         {

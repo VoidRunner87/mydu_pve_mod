@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Mod.DynamicEncounters.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Data;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Common.Interfaces;
 
-public interface IConstructService
+public interface IConstructService : IExpireCache
 {
     Task<ConstructInfo?> GetConstructInfoAsync(ulong constructId);
     Task ResetConstructCombatLock(ulong constructId);
@@ -14,4 +15,5 @@ public interface IConstructService
     Task DeleteAsync(ulong constructId);
     Task SetAutoDeleteFromNowAsync(ulong constructId, TimeSpan timeSpan);
     Task<bool> TryVentShieldsAsync(ulong constructId);
+    Task<bool> IsBeingControlled(ulong constructId);
 }

@@ -6,6 +6,7 @@ using Backend;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
@@ -20,18 +21,19 @@ namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
 public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructBehavior
 {
-    private List<ElementId> _weaponsElements;
+    private IEnumerable<ElementId> _weaponsElements;
     private List<WeaponHandle> _weaponUnits;
     private IClusterClient _orleans;
     private IGameplayBank _bank;
     private IConstructGrain _constructGrain;
     private ILogger<AggressiveBehavior> _logger;
-    private IConstructElementsGrain _constructElementsGrain;
+    private IConstructService _constructService;
 
     private ElementId _coreUnitElementId;
 
     private bool _active = true;
     private bool _pveVoxelDamageEnabled;
+    private IConstructElementsService _constructElementsService;
 
     public bool IsActive() => _active;
 
@@ -46,27 +48,29 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         var provider = context.ServiceProvider;
         _orleans = provider.GetOrleans();
 
-        _constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
-
+        _constructElementsService = provider.GetRequiredService<IConstructElementsService>();
+        
         _bank = provider.GetGameplayBank();
 
-        _weaponsElements = await _constructElementsGrain.GetElementsOfType<WeaponUnit>();
+        _weaponsElements = await _constructElementsService.GetWeaponUnits(constructId);
         var elementInfos = await Task.WhenAll(
-            _weaponsElements.Select(_constructElementsGrain.GetElement)
+            _weaponsElements.Select(id => _constructElementsService.GetElement(constructId, id))
         );
         _weaponUnits = elementInfos
             .Select(ei => new WeaponHandle(ei, _bank.GetBaseObject<WeaponUnit>(ei)!))
             .Where(w => w.Unit is not StasisWeaponUnit) // TODO Implement Stasis later
             .ToList();
 
-        _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
+        _coreUnitElementId = await _constructElementsService.GetCoreUnit(constructId);
 
         _constructGrain = _orleans.GetConstructGrain(constructId);
 
+        _constructService = provider.GetRequiredService<IConstructService>();
+
         context.ExtraProperties.TryAdd("CORE_ID", _coreUnitElementId);
 
-        context.IsAlive = _coreUnitElementId.elementId > 0;
-        _active = context.IsAlive;
+        // context.IsAlive = _coreUnitElementId.elementId > 0;
+        // _active = context.IsAlive;
 
         _pveVoxelDamageEnabled = await context.ServiceProvider
             .GetRequiredService<IFeatureReaderService>()
@@ -89,14 +93,16 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             return;
         }
 
-        var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
-
         var provider = context.ServiceProvider;
 
-        var constructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
         var npcShotGrain = _orleans.GetNpcShotGrain();
 
-        var constructInfo = await constructInfoGrain.Get();
+        var constructInfo = await _constructService.GetConstructInfoAsync(constructId);;
+        if (constructInfo == null)
+        {
+            return;
+        }
+        
         var constructPos = constructInfo.rData.position;
 
         if (context.TargetConstructId is null or 0)
@@ -104,9 +110,12 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             return;
         }
 
-        var targetInfoGrain =
-            _orleans.GetConstructInfoGrain(new ConstructId { constructId = context.TargetConstructId.Value });
-        var targetInfo = await targetInfoGrain.Get();
+        var targetInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
+        if (targetInfo == null)
+        {
+            return;
+        }
+        
         var targetSize = targetInfo.rData.geometry.size;
 
         if (targetInfo.mutableData.pilot.HasValue)
@@ -223,9 +232,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
         var ammoItem = random.PickOneAtRandom(prefab.DefinitionItem.AmmoItems);
         var weaponItem = random.PickOneAtRandom(prefab.DefinitionItem.WeaponItems);
-
-        // var targetConstructInfoGrain = _orleans.GetConstructInfoGrain(context.TargetConstructId);
-        // var targetConstructInfo = await targetConstructInfoGrain.Get();
 
         context.HitPosition = _pveVoxelDamageEnabled
             ? random.PickOneAtRandom(context.BehaviorContext.TargetElementPositions)
