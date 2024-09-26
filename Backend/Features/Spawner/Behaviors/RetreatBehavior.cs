@@ -75,10 +75,10 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
 
             // _logger.LogInformation("Dot {Dot} | {VelLen}", npcVelDir.Dot(targetVelDir), npcVel.Linear.Size());
             
-            if (oppositeVelocities)
-            {   
-                retreatDirection *= -1; // reverse
-            }
+            // if (oppositeVelocities)
+            // {   
+            //     retreatDirection *= -1; // reverse
+            // }
             
             context.TargetMovePosition = npcPos + retreatDirection * 10 * DistanceHelpers.OneSuInMeters;
         }

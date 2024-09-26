@@ -79,9 +79,15 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         {
             return;
         }
+        
+        // first time initialize position
+        if (!context.Position.HasValue)
+        {
+            context.Position = npcConstructInfo.rData.position;
+        }
 
         var targetPos = targetConstructInfo.rData.position;
-        var npcPos = npcConstructInfo.rData.position;
+        var npcPos = context.Position.Value;
         var targetDirection = targetPos - npcPos;
 
         var moveDirection = (context.TargetMovePosition - npcPos).NormalizeSafe();
@@ -117,8 +123,8 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         // {
         //     position = npcPos + velocity * context.DeltaTime;
         // }
-
-        context.Velocity = velocity;
+        
+        // context.Velocity = velocity;
 
         // Make the ship point to where it's accelerating
         var accelerationFuturePos = npcPos + moveDirection * 200000;
@@ -141,8 +147,11 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
         _timePoint = TimePoint.Now();
 
+        context.Velocity = (position - npcPos) / context.DeltaTime; 
+        
         try
         {
+            context.Position = position;
             var cUpdate = new ConstructUpdate
             {
                 pilotId = ModBase.Bot.PlayerId,

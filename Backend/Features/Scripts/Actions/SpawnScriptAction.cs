@@ -139,12 +139,6 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
         try
         {
-            if (fixture.blueprints.Count == 0)
-            {
-                _logger.LogWarning("No Blueprints from Fixture");
-                
-            }
-
             var constructInfoGrain = orleans.GetConstructInfoGrain(constructId);
             var constructInfo = await constructInfoGrain.Get();
             var size = constructInfo.rData.geometry.size;

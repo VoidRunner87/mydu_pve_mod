@@ -41,7 +41,7 @@ public class BehaviorContext(
     public Dictionary<string, object> ExtraProperties = new();
 
     public Vec3 Velocity { get; set; }
-    public Vec3 Position { get; set; }
+    public Vec3? Position { get; set; }
     public Quat Rotation { get; set; }
     public ConcurrentDictionary<ulong, ulong> PlayerIds { get; set; } = new();
     public long FactionId { get; } = factionId;

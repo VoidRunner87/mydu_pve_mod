@@ -47,7 +47,7 @@ public static class Program
             var taskList = new List<Task>
             {
                 new SectorLoop().Start(),
-                new ConstructBehaviorLoop(10).Start(),
+                new ConstructBehaviorLoop(30).Start(),
                 new TaskQueueLoop().Start()
             };
 

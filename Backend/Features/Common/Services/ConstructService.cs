@@ -118,11 +118,21 @@ public class ConstructService(IServiceProvider provider) : IConstructService
         {
             var constructInfoGrain = _orleans.GetConstructInfoGrain(constructId);
             var constructInfo = await constructInfoGrain.Get();
+
+            if (!constructInfo.mutableData.shieldState.hasShield)
+            {
+                return false;
+            }
+            
+            var shieldPercent = constructInfo.mutableData.shieldState.shieldHpRatio * 100;
+            
+            _logger.LogInformation("Construct {Construct} Shield Percent {Percent}", constructId, shieldPercent);
+            
             if (constructInfo.mutableData.shieldState.isVenting)
             {
                 _logger.LogInformation("Construct {Construct} Already Venting. Shield at {Percent}", 
                     constructId,
-                    constructInfo.mutableData.shieldState.shieldHpRatio * 100
+                    shieldPercent
                 );
                 return true;
             }
@@ -134,7 +144,7 @@ public class ConstructService(IServiceProvider provider) : IConstructService
         }
         catch (Exception)
         {
-            _logger.LogWarning("Could not vent shields. Likely on Cooldown");
+            _logger.LogWarning("Could not vent shields. On Cooldown or Destroyed");
             
             return false;
         }
