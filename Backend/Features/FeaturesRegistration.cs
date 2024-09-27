@@ -42,7 +42,7 @@ public static class FeaturesRegistration
             new CachedConstructElementsService(
                 new ConstructElementsService(p),
                 TimeSpan.FromSeconds(10),
-                TimeSpan.FromSeconds(10)
+                TimeSpan.FromSeconds(1)
             )
         );
         services.AddSingleton<IErrorRepository, ErrorRepository>();

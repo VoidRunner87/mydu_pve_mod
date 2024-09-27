@@ -40,6 +40,11 @@ public class ConstructElementsService(IServiceProvider provider) : IConstructEle
         return (await _orleans.GetConstructElementsGrain(constructId).GetElementsOfType<CoreUnit>()).SingleOrDefault();
     }
 
+    public IConstructElementsService NoCache()
+    {
+        return this;
+    }
+
     public void Invalidate()
     {
     }

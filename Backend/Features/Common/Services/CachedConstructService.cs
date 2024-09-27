@@ -57,4 +57,9 @@ public class CachedConstructService(
             () => service.IsBeingControlled(constructId)
         );
     }
+
+    public IConstructService NoCache()
+    {
+        return service;
+    }
 }

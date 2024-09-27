@@ -15,4 +15,5 @@ public interface IConstructService
     Task SetAutoDeleteFromNowAsync(ulong constructId, TimeSpan timeSpan);
     Task<bool> TryVentShieldsAsync(ulong constructId);
     Task<bool> IsBeingControlled(ulong constructId);
+    IConstructService NoCache();
 }

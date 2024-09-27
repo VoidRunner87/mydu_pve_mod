@@ -155,6 +155,11 @@ public class ConstructService(IServiceProvider provider) : IConstructService
         return _orleans.GetConstructGrain(constructId).IsBeingControlled();
     }
 
+    public IConstructService NoCache()
+    {
+        return this;
+    }
+
     public void Invalidate()
     {
     }

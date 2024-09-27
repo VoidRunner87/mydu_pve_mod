@@ -63,4 +63,9 @@ public class CachedConstructElementsService(
             () => service.GetCoreUnit(constructId)
         );
     }
+
+    public IConstructElementsService NoCache()
+    {
+        return service;
+    }
 }

@@ -12,4 +12,5 @@ public interface IConstructElementsService
     Task<ElementInfo> GetElement(ulong constructId, ElementId elementId);
 
     Task<ElementId> GetCoreUnit(ulong constructId);
+    IConstructElementsService NoCache();
 }
