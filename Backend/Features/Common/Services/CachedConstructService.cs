@@ -57,9 +57,4 @@ public class CachedConstructService(
             () => service.IsBeingControlled(constructId)
         );
     }
-
-    public void Invalidate()
-    {
-        _constructInfos.Invalidate();
-    }
 }

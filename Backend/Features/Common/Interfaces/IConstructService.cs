@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Mod.DynamicEncounters.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Data;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Common.Interfaces;
 
-public interface IConstructService : IExpireCache
+public interface IConstructService
 {
     Task<ConstructInfo?> GetConstructInfoAsync(ulong constructId);
     Task ResetConstructCombatLock(ulong constructId);

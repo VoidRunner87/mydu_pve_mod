@@ -9,18 +9,16 @@ using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
-using Mod.DynamicEncounters.Features.Spawner.Behaviors;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 
 namespace Mod.DynamicEncounters;
 
-public class ConstructBehaviorLoop : HighTickModLoop
+public class ConstructMovementBehaviorLoop : HighTickModLoop
 {
     private readonly IServiceProvider _provider;
-    private readonly ILogger<ConstructBehaviorLoop> _logger;
-    private readonly IConstructInMemoryBehaviorContextRepository _inMemoryContextRepo;
+    private readonly ILogger<ConstructMovementBehaviorLoop> _logger;
     private readonly IConstructHandleRepository _constructHandleRepository;
     private readonly IConstructBehaviorFactory _behaviorFactory;
     private readonly IConstructDefinitionFactory _constructDefinitionFactory;
@@ -31,11 +29,10 @@ public class ConstructBehaviorLoop : HighTickModLoop
     
     private static readonly object ListLock = new();
 
-    public ConstructBehaviorLoop(int framesPerSecond) : base(framesPerSecond)
+    public ConstructMovementBehaviorLoop(int framesPerSecond) : base(framesPerSecond)
     {
         _provider = ServiceProvider;
-        _logger = _provider.CreateLogger<ConstructBehaviorLoop>();
-        _inMemoryContextRepo = _provider.GetRequiredService<IConstructInMemoryBehaviorContextRepository>();
+        _logger = _provider.CreateLogger<ConstructMovementBehaviorLoop>();
 
         _constructHandleRepository = _provider.GetRequiredService<IConstructHandleRepository>();
         _behaviorFactory = _provider.GetRequiredService<IConstructBehaviorFactory>();
@@ -49,23 +46,8 @@ public class ConstructBehaviorLoop : HighTickModLoop
         return Task.WhenAll(
             CheckFeatureEnabledTask(),
             UpdateConstructHandleListTask(),
-            ExpireBehaviorContexts(),
             base.Start()
         );
-    }
-
-    private Task ExpireBehaviorContexts()
-    {
-        var taskCompletionSource = new TaskCompletionSource();
-
-        var timer = new Timer(10000);
-        timer.Elapsed += (_, _) =>
-        {
-            _inMemoryContextRepo.Cleanup();
-        };
-        timer.Start();
-
-        return taskCompletionSource.Task;
     }
 
     private Task CheckFeatureEnabledTask()
@@ -75,7 +57,7 @@ public class ConstructBehaviorLoop : HighTickModLoop
         var timer = new Timer(10000);
         timer.Elapsed += async (_, _) =>
         {
-            _featureEnabled = await _featureService.GetEnabledValue<ConstructBehaviorLoop>(false);
+            _featureEnabled = await _featureService.GetEnabledValue<ConstructMovementBehaviorLoop>(false);
         };
         timer.Start();
 
@@ -128,7 +110,7 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
         await Task.WhenAll(taskList);
         
-        // _logger.LogInformation("Behavior Loop Count({Count}) Took: {Time}ms", taskList.Count, sw.ElapsedMilliseconds);
+        _logger.LogInformation("Behavior Loop Count({Count}) Took: {Time}ms", taskList.Count, sw.ElapsedMilliseconds);
     }
 
     private async Task RunIsolatedAsync(Func<Task> taskFn)
@@ -161,17 +143,15 @@ public class ConstructBehaviorLoop : HighTickModLoop
         );
 
         finalBehaviors.AddRange(behaviors);
-        finalBehaviors.Add(new UpdateLastControlledDateBehavior(handleItem.ConstructId).WithErrorHandler());
 
-        if (!_inMemoryContextRepo.TryGetValue(handleItem.ConstructId, out var context))
-        {
-            // TODO TerritoryId
-            context = new BehaviorContext(handleItem.FactionId, null, handleItem.Sector, Bot, _provider, constructDef);
-            _inMemoryContextRepo.Set(handleItem.ConstructId, context);
-            
-            _logger.LogInformation("NEW CONTEXT {Construct}", handleItem.ConstructId);
-        }
-        context!.DeltaTime = deltaTime.TotalSeconds;
+        // TODO TerritoryId
+        var context = await ConstructBehaviorContextCache.Data
+            .TryGetValue(
+                handleItem.ConstructId,
+                () => Task.FromResult(new BehaviorContext(handleItem.FactionId, null, handleItem.Sector, Bot, _provider, constructDef))
+            );
+        
+        context.DeltaTime = deltaTime.TotalSeconds;
 
         foreach (var behavior in finalBehaviors)
         {

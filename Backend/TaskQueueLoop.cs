@@ -40,7 +40,7 @@ public class HighTickModLoop(int framesPerSecond) : ModBase
         var fpsSeconds = 1d / framesPerSecond;
         if (deltaTime.TotalSeconds < fpsSeconds)
         {
-            var waitSeconds = fpsSeconds - deltaTime.TotalSeconds;
+            var waitSeconds = Math.Max(0, fpsSeconds - deltaTime.TotalSeconds);
             await Task.Delay(TimeSpan.FromSeconds(waitSeconds));
         }
             

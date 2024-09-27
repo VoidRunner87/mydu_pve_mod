@@ -69,9 +69,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
         context.ExtraProperties.TryAdd("CORE_ID", _coreUnitElementId);
 
-        // context.IsAlive = _coreUnitElementId.elementId > 0;
-        // _active = context.IsAlive;
-
         _pveVoxelDamageEnabled = await context.ServiceProvider
             .GetRequiredService<IFeatureReaderService>()
             .GetBoolValueAsync("PVEVoxelDamage", false);
@@ -133,7 +130,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
         if (_weaponUnits.Count == 0)
         {
-            _logger.LogInformation("Construct {Construct} has no Weapons. Aborting Shoot", constructId);
             return;
         }
         

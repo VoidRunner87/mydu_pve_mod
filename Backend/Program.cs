@@ -48,7 +48,8 @@ public static class Program
             {
                 new CachingLoop(TimeSpan.FromSeconds(5)).Start(),
                 new SectorLoop().Start(),
-                new ConstructBehaviorLoop(30).Start(),
+                new ConstructTargetingBehaviorLoop(1).Start(),
+                new ConstructMovementBehaviorLoop(30).Start(),
                 new TaskQueueLoop().Start()
             };
 

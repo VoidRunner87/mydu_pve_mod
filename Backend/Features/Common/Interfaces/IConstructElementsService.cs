@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Mod.DynamicEncounters.Common.Interfaces;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Common.Interfaces;
 
-public interface IConstructElementsService : IExpireCache
+public interface IConstructElementsService
 {
     Task<IEnumerable<ElementId>> GetPvpRadarElements(ulong constructId);
     Task<IEnumerable<ElementId>> GetPvpSeatElements(ulong constructId);

@@ -14,7 +14,7 @@ public interface IConstructHandleRepository : IRepository<ConstructHandleItem>
     Task<IEnumerable<ConstructHandleItem>> FindExpiredAsync(int minutes, Vec3 sector);
     Task<ConstructHandleItem?> FindByConstructIdAsync(ulong constructId);
     Task<IEnumerable<ConstructHandleItem>> FindActiveHandlesAsync();
-    Task<object> FindAllBuggedPOIConstructsAsync();
+    Task<IEnumerable<ulong>> FindAllBuggedPoiConstructsAsync();
 
     Task UpdateLastControlledDateAsync(HashSet<ulong> constructIds);
     Task RemoveHandleAsync(ulong constructId);

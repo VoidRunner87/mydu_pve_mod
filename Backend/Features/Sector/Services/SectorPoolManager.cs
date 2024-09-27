@@ -164,10 +164,11 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 continue;
             }
 
-            await _constructHandleManager.CleanupConstructHandlesInSectorAsync(ModBase.Bot, sector.Sector);
+            await _constructHandleManager.CleanupConstructHandlesInSectorAsync(sector.Sector);
         }
 
         await _sectorInstanceRepository.DeleteExpiredAsync();
+        await _constructHandleManager.CleanupConstructsThatFailedSectorCleanupAsync();
 
         _logger.LogDebug("Executed Sector Cleanup");
     }

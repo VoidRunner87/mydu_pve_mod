@@ -20,12 +20,6 @@ public class CachedConstructElementsService(
     private readonly TemporaryMemoryCache<ulong, ElementId> _coreUnits = new(coreUnitCacheTimeSpan);
     private readonly TemporaryMemoryCache<ulong, ElementInfo> _elementInfos = new(expirationTimeSpan);
 
-    public void Invalidate()
-    {
-        _pvpRadarUnits.Invalidate();
-        _pvpSeatUnits.Invalidate();
-    }
-
     public Task<IEnumerable<ElementId>> GetPvpRadarElements(ulong constructId)
     {
         return _pvpRadarUnits.TryGetValue(
@@ -37,7 +31,7 @@ public class CachedConstructElementsService(
 
     public Task<IEnumerable<ElementId>> GetPvpSeatElements(ulong constructId)
     {
-        return _pvpRadarUnits.TryGetValue(
+        return _pvpSeatUnits.TryGetValue(
             constructId,
             () => service.GetPvpSeatElements(constructId),
             ids => !ids.Any()

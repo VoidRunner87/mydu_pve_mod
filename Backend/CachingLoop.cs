@@ -61,9 +61,6 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
                 }
             }
 
-            constructService.Invalidate();
-            constructElementsService.Invalidate();
-        
             logger.LogInformation("CacheLoop Took: {Time}ms", sw.ElapsedMilliseconds);
         }
         catch (Exception e)

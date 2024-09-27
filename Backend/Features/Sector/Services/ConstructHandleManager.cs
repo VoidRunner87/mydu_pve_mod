@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Interfaces;
@@ -26,7 +25,7 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
     private readonly ILogger<ConstructHandleManager> _logger =
         provider.CreateLogger<ConstructHandleManager>();
     
-    public async Task CleanupExpiredConstructHandlesAsync(Client client, Vec3 sector)
+    public async Task CleanupExpiredConstructHandlesAsync(Vec3 sector)
     {
         var expirationMinutes = await _featureReaderService
             .GetIntValueAsync(ConstructHandleExpirationMinutesFeatureName, 360);
@@ -89,7 +88,7 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
         
     }
 
-    public async Task CleanupConstructHandlesInSectorAsync(Client client, Vec3 sector)
+    public async Task CleanupConstructHandlesInSectorAsync(Vec3 sector)
     {
         var expiredHandles = (await _repository.FindInSectorAsync(sector)).ToList();
         var scriptActionFactory = provider.GetRequiredService<IScriptActionFactory>();
@@ -149,6 +148,36 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to perform a series of cleanups on Construct Handle");
+        }
+    }
+
+    public async Task CleanupConstructsThatFailedSectorCleanupAsync()
+    {
+        var scriptActionFactory = provider.GetRequiredService<IScriptActionFactory>();
+        
+        var constructIds = await _repository.FindAllBuggedPoiConstructsAsync();
+
+        foreach (var constructId in constructIds)
+        {
+            var scriptAction = scriptActionFactory.Create(
+                new ScriptActionItem
+                {
+                    Type = "delete",
+                    ConstructId = constructId
+                }
+            );
+
+            try
+            {
+                await scriptAction.ExecuteAsync(
+                    new ScriptContext(provider, null, [], new Vec3(), null)
+                        .WithConstructId(constructId)
+                );
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to cleanup bugged construct {Construct}", constructId);
+            }
         }
     }
 }
