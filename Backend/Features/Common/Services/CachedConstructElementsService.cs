@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using NQ;
@@ -29,7 +30,8 @@ public class CachedConstructElementsService(
     {
         return _pvpRadarUnits.TryGetValue(
             constructId,
-            () => service.GetPvpRadarElements(constructId)
+            () => service.GetPvpRadarElements(constructId),
+            ids => !ids.Any()
         );
     }
 
@@ -37,7 +39,8 @@ public class CachedConstructElementsService(
     {
         return _pvpRadarUnits.TryGetValue(
             constructId,
-            () => service.GetPvpSeatElements(constructId)
+            () => service.GetPvpSeatElements(constructId),
+            ids => !ids.Any()
         );
     }
 
@@ -45,7 +48,8 @@ public class CachedConstructElementsService(
     {
         return _weaponUnits.TryGetValue(
             constructId,
-            () => service.GetWeaponUnits(constructId)
+            () => service.GetWeaponUnits(constructId),
+            ids => !ids.Any()
         );
     }
 
@@ -53,7 +57,8 @@ public class CachedConstructElementsService(
     {
         return _elementInfos.TryGetValue(
             constructId,
-            () => service.GetElement(constructId, elementId)
+            () => service.GetElement(constructId, elementId),
+            info => info == null
         );
     }
 

@@ -131,6 +131,12 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         var constructSize = (ulong)constructInfo.rData.geometry.size;
         var targetPos = targetInfo.rData.position;
 
+        if (_weaponUnits.Count == 0)
+        {
+            _logger.LogInformation("Construct {Construct} has no Weapons. Aborting Shoot", constructId);
+            return;
+        }
+        
         var weapon = random.PickOneAtRandom(_weaponUnits);
 
         await ShootAndCycleAsync(

@@ -1,14 +1,18 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Backend;
 using BotLib.Generated;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Loot.Interfaces;
+using Mod.DynamicEncounters.Features.Spawner.Behaviors;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
 using NQ.Visibility;
+using NQutils.Def;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
@@ -185,5 +189,30 @@ public class ConstructController : Controller
         var result = await constructService.TryVentShieldsAsync((ulong)constructId);
         
         return Ok(result);
+    }
+
+    [Route("{constructId:long}/weapons")]
+    [HttpGet]
+    public async Task<IActionResult> GetWeapons(long constructId)
+    {
+        var provider = ModBase.ServiceProvider;
+        var constructElementsService = provider.GetRequiredService<IConstructElementsService>();
+        var bank = provider.GetGameplayBank();
+
+        var weaponsElements = await constructElementsService.GetWeaponUnits((ulong)constructId);
+        var elementInfos = await Task.WhenAll(
+            weaponsElements.Select(id => constructElementsService.GetElement((ulong)constructId, id))
+        );
+        
+        var weaponUnits = elementInfos
+            .Select(ei => new AggressiveBehavior.WeaponHandle(ei, bank.GetBaseObject<WeaponUnit>(ei)!))
+            .Where(w => w.Unit is not StasisWeaponUnit)
+            .ToList()
+            .Select(x => new
+            {
+                x.ElementInfo.elementId
+            });
+
+        return Ok(weaponUnits);
     }
 }
