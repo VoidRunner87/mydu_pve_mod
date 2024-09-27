@@ -14,6 +14,8 @@ public class ErrorHandlerBehavior(IConstructBehavior constructBehavior) : IConst
 
     public bool IsActive() => _active;
 
+    public BehaviorTaskCategory Category => constructBehavior.Category;
+
     public async Task InitializeAsync(BehaviorContext context)
     {
         _logger = context.ServiceProvider.CreateLogger<ErrorHandlerBehavior>();

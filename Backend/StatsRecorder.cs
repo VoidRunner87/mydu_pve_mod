@@ -1,20 +1,25 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 
 namespace Mod.DynamicEncounters;
 
 public static class StatsRecorder
 {
-    private class Stat
+    public class Stat
     {
         public long MinTime { get; private set; } = long.MaxValue;
         public long MaxTime { get; private set; } = long.MinValue;
+        public double Average => _times.Average();
+        
         private readonly Queue<long> _times = new(50);
 
         // Method to add new time occurrence
         public void AddTime(long time)
         {
-            if (_times.Count == 50) 
+            if (_times.Count == 50)
             {
                 // Discard the oldest time
                 _times.Dequeue();
@@ -30,7 +35,7 @@ public static class StatsRecorder
 
         // Returns the 50 time occurrences
         public IEnumerable<long> GetTimes() => _times;
-        
+
         public void Clear()
         {
             _times.Clear();
@@ -40,36 +45,33 @@ public static class StatsRecorder
     }
 
     // Static members to store stats for Movement and Targeting
-    private static readonly Stat MovementStats = new();
-    private static readonly Stat TargetingStats = new();
+    private static readonly ConcurrentDictionary<BehaviorTaskCategory, Stat> Stats = new();
 
     // Methods to record movement stats
-    public static void RecordMovement(long time)
+    public static void Record(BehaviorTaskCategory category, long time)
     {
-        MovementStats.AddTime(time);
+        Stats.AddOrUpdate(
+            category,
+            _ =>
+            {
+                var stat = new Stat();
+                stat.AddTime(time);
+                return stat;
+            },
+            (taskCategory, stat) =>
+            {
+                stat.AddTime(time);
+                return stat;
+            });
     }
 
-    // Methods to record targeting stats
-    public static void RecordTargeting(long time)
+    public static ConcurrentDictionary<BehaviorTaskCategory, Stat> GetStats() => Stats;
+    
+    public static void ClearAll()
     {
-        TargetingStats.AddTime(time);
-    }
-
-    // Method to get movement statistics
-    public static (long MinTime, long MaxTime, IEnumerable<long> Occurrences) GetMovementStats()
-    {
-        return (MovementStats.MinTime, MovementStats.MaxTime, MovementStats.GetTimes());
-    }
-
-    // Method to get targeting statistics
-    public static (long MinTime, long MaxTime, IEnumerable<long> Occurrences) GetTargetingStats()
-    {
-        return (TargetingStats.MinTime, TargetingStats.MaxTime, TargetingStats.GetTimes());
-    }
-
-    public static void Clear()
-    {
-        MovementStats.Clear();
-        TargetingStats.Clear();
+        foreach (var kvp in Stats)
+        {
+            kvp.Value.Clear();
+        }
     }
 }

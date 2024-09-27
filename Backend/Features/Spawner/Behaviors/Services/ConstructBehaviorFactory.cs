@@ -48,13 +48,12 @@ public class ConstructBehaviorFactory : IConstructBehaviorFactory
         if (!behaviorList.Any())
         {
             finalBehaviors.Add("alive");
-            // finalBehaviors.Add("select-target");
+            finalBehaviors.Add("select-target");
             finalBehaviors.Add("notifier");
             finalBehaviors.AddRange(prefab.DefinitionItem.InitialBehaviors);
         }
         
         finalBehaviors.AddRange(behaviorList);
-        finalBehaviors.Remove("select-target"); // Separate logic created
         
         return finalBehaviors.Select(x => Create(constructId, prefab, x));
     }

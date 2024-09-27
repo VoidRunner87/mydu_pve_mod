@@ -21,6 +21,8 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
     private ILogger<WaypointMoveBehavior> _logger;
     private IConstructHandleRepository _constructHandleService;
 
+    public BehaviorTaskCategory Category => BehaviorTaskCategory.HighPriority;
+
     public async Task InitializeAsync(BehaviorContext context)
     {
         await Task.Yield();

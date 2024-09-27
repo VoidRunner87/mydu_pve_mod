@@ -31,6 +31,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
     public bool IsActive() => _active;
 
+    public BehaviorTaskCategory Category => BehaviorTaskCategory.MediumPriority;
+
     public async Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;

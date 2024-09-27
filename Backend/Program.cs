@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Mod.DynamicEncounters.Api;
+using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using NQutils.Config;
 
 namespace Mod.DynamicEncounters;
@@ -48,8 +49,9 @@ public static class Program
             {
                 new CachingLoop(TimeSpan.FromSeconds(5)).Start(),
                 new SectorLoop().Start(),
-                new ConstructTargetingBehaviorLoop(1).Start(),
-                new ConstructMovementBehaviorLoop(30).Start(),
+                new ConstructBehaviorLoop(1, BehaviorTaskCategory.MediumPriority).Start(),
+                new ConstructBehaviorLoop(10, BehaviorTaskCategory.HighPriority).Start(),
+                new ConstructBehaviorLoop(30, BehaviorTaskCategory.MovementPriority).Start(),
                 new TaskQueueLoop().Start()
             };
 

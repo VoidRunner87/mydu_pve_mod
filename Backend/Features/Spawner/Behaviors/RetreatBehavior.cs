@@ -19,6 +19,8 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
     private IClusterClient _orleans;
     private IConstructService _constructService;
 
+    public BehaviorTaskCategory Category => BehaviorTaskCategory.HighPriority;
+
     public Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;

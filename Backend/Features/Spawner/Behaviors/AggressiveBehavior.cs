@@ -43,6 +43,8 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         public WeaponUnit Unit { get; } = unit;
     }
 
+    public BehaviorTaskCategory Category => BehaviorTaskCategory.HighPriority;
+
     public async Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;

@@ -20,15 +20,17 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
     private bool _active = true;
     private IConstructService _constructService;
-    private ILogger<FollowTargetBehavior> _logger;
+    private ILogger<FollowTargetBehaviorV2> _logger;
 
     public bool IsActive() => _active;
+
+    public BehaviorTaskCategory Category => BehaviorTaskCategory.MovementPriority;
 
     public Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;
         
-        _logger = provider.CreateLogger<FollowTargetBehavior>();
+        _logger = provider.CreateLogger<FollowTargetBehaviorV2>();
         _constructService = provider.GetRequiredService<IConstructService>();
 
         return Task.CompletedTask;

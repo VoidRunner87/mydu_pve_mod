@@ -5,6 +5,7 @@ namespace Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 
 public interface IConstructBehavior
 {
+    public BehaviorTaskCategory Category { get; }
     Task InitializeAsync(BehaviorContext context);
     Task TickAsync(BehaviorContext context);
 }

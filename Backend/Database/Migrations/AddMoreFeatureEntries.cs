@@ -68,7 +68,7 @@ public class AddMoreFeatureEntries : Migration
             .InSchema("public")
             .Row(new
             {
-                name = $"{nameof(ConstructMovementBehaviorLoop)}Enabled",
+                name = $"{nameof(ConstructBehaviorLoop)}Enabled",
                 type = "bool",
                 value = "false"
             });

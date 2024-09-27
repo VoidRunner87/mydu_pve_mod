@@ -17,6 +17,8 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
     private IConstructService _constructService;
     private IConstructElementsService _constructElementsService;
 
+    public BehaviorTaskCategory Category => BehaviorTaskCategory.HighPriority;
+
     public async Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;
