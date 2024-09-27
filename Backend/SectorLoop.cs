@@ -89,6 +89,8 @@ public class SectorLoop : ModBase
 
     private async Task PrepareSector(FactionItem faction)
     {
+        _logger.LogDebug("Preparing Sector for {Faction}", faction.Name);
+        
         // TODO sector encounters becomes tied to a territory
         // a territory has center, max and min radius
         // a territory is owned by a faction

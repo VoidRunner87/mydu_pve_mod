@@ -104,13 +104,14 @@ public class ConstructTargetingBehaviorLoop : HighTickModLoop
                 if (kvp.Value.ConstructDefinitionItem == null) continue;
                 if (!kvp.Value.ConstructDefinitionItem.InitialBehaviors.Contains("follow-target")) continue;
                 
-                var task = RunIsolatedAsync(() => TickConstructHandle(deltaTime, kvp.Value));
+                var task = Task.Run(() => RunIsolatedAsync(() => TickConstructHandle(deltaTime, kvp.Value)));
                 taskList.Add(task);
             }
         }
 
         await Task.WhenAll(taskList);
         
+        StatsRecorder.RecordTargeting(sw.ElapsedMilliseconds);
         // _logger.LogInformation("Behavior Loop Count({Count}) Took: {Time}ms", taskList.Count, sw.ElapsedMilliseconds);
     }
 

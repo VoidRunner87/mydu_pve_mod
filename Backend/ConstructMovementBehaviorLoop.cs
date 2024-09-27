@@ -26,7 +26,7 @@ public class ConstructMovementBehaviorLoop : HighTickModLoop
 
     private bool _featureEnabled;
     private readonly ConcurrentDictionary<ulong, ConstructHandleItem> _constructHandles = [];
-    
+
     private static readonly object ListLock = new();
 
     public ConstructMovementBehaviorLoop(int framesPerSecond) : base(framesPerSecond)
@@ -98,19 +98,20 @@ public class ConstructMovementBehaviorLoop : HighTickModLoop
 
         var sw = new Stopwatch();
         sw.Start();
-        
+
         lock (ListLock)
         {
             foreach (var kvp in _constructHandles)
             {
-                var task = RunIsolatedAsync(() => TickConstructHandle(deltaTime, kvp.Value));
+                var task = Task.Run(() => RunIsolatedAsync(() => TickConstructHandle(deltaTime, kvp.Value)));
                 taskList.Add(task);
             }
         }
 
         await Task.WhenAll(taskList);
-        
-        _logger.LogInformation("Behavior Loop Count({Count}) Took: {Time}ms", taskList.Count, sw.ElapsedMilliseconds);
+
+        StatsRecorder.RecordMovement(sw.ElapsedMilliseconds);
+        // _logger.LogInformation("Behavior Loop Count({Count}) Took: {Time}ms", taskList.Count, sw.ElapsedMilliseconds);
     }
 
     private async Task RunIsolatedAsync(Func<Task> taskFn)
@@ -131,13 +132,13 @@ public class ConstructMovementBehaviorLoop : HighTickModLoop
         {
             return;
         }
-        
+
         var constructDef = _constructDefinitionFactory.Create(handleItem.ConstructDefinitionItem);
 
         var finalBehaviors = new List<IConstructBehavior>();
 
         var behaviors = _behaviorFactory.CreateBehaviors(
-            handleItem.ConstructId, 
+            handleItem.ConstructId,
             constructDef,
             handleItem.JsonProperties.Behaviors
         );
@@ -148,9 +149,10 @@ public class ConstructMovementBehaviorLoop : HighTickModLoop
         var context = await ConstructBehaviorContextCache.Data
             .TryGetValue(
                 handleItem.ConstructId,
-                () => Task.FromResult(new BehaviorContext(handleItem.FactionId, null, handleItem.Sector, Bot, _provider, constructDef))
+                () => Task.FromResult(new BehaviorContext(handleItem.FactionId, null, handleItem.Sector, Bot, _provider,
+                    constructDef))
             );
-        
+
         context.DeltaTime = deltaTime.TotalSeconds;
 
         foreach (var behavior in finalBehaviors)

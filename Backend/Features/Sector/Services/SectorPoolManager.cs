@@ -45,6 +45,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
         if (missingQuantity <= 0)
         {
+            _logger.LogDebug("No Sectors Missing. Missing {Missing} of {Total}", missingQuantity, args.Quantity);
             return;
         }
 
@@ -168,7 +169,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         }
 
         await _sectorInstanceRepository.DeleteExpiredAsync();
-        await _constructHandleManager.CleanupConstructsThatFailedSectorCleanupAsync();
+        // await _constructHandleManager.CleanupConstructsThatFailedSectorCleanupAsync();
 
         _logger.LogDebug("Executed Sector Cleanup");
     }
