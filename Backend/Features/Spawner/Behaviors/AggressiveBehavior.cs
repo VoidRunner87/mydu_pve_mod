@@ -172,7 +172,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         public ulong TargetConstructId { get; set; } = targetConstructId;
         public Vec3 TargetPosition { get; set; } = targetPosition;
         public Vec3 HitPosition { get; set; } = hitPosition;
-        public int QuantityModifier { get; } = quantityModifier;
+        public int QuantityModifier { get; set; } = quantityModifier;
     }
 
     private const string ShotTotalDeltaTimePropName = $"{nameof(AggressiveBehavior)}_ShotTotalDeltaTime";
@@ -197,6 +197,16 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
     private async Task ShootAndCycleAsync(ShotContext context)
     {
+        var functionalWeaponCount = await _constructElementsService.GetFunctionalDamageWeaponCount(constructId);
+        if (functionalWeaponCount <= 0)
+        {
+            return;
+        }
+        
+        _logger.LogDebug("Construct {Construct} Functional Weapon Count {Count}", constructId, functionalWeaponCount);
+
+        context.QuantityModifier = functionalWeaponCount;
+        
         var random = context.BehaviorContext.ServiceProvider.GetRequiredService<IRandomProvider>()
             .GetRandom();
 

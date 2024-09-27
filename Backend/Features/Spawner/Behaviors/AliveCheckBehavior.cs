@@ -12,7 +12,7 @@ namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructBehavior
 {
     private ElementId _coreUnitElementId;
-    
+
     private IConstructHandleRepository _handleRepository;
     private IConstructService _constructService;
     private IConstructElementsService _constructElementsService;
@@ -34,14 +34,20 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
         if (!context.IsAlive)
         {
             await _handleRepository.RemoveHandleAsync(constructId);
-            
+
             return;
         }
-        
+
         if (!context.IsBehaviorActive<AliveCheckBehavior>())
         {
             return;
         }
+
+        // just to cache it
+        await Task.WhenAll([
+            _constructElementsService.GetAllSpaceEnginesPower(constructId),
+            _constructElementsService.GetFunctionalDamageWeaponCount(constructId)
+        ]);
 
         var coreUnit = await _constructElementsService.NoCache().GetElement(constructId, _coreUnitElementId);
         var constructInfo = await _constructService.GetConstructInfoAsync(constructId);
@@ -55,7 +61,7 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
             await context.NotifyConstructDestroyedAsync(new BehaviorEventArgs(constructId, prefab, context));
             context.Deactivate<AliveCheckBehavior>();
             context.IsAlive = false;
-            
+
             await _handleRepository.RemoveHandleAsync(constructId);
         }
     }

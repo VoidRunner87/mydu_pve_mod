@@ -30,6 +30,77 @@ public class ConstructElementsService(IServiceProvider provider) : IConstructEle
         return await _orleans.GetConstructElementsGrain(constructId).GetElementsOfType<WeaponUnit>();
     }
 
+    public async Task<IEnumerable<ElementId>> GetSpaceEngineUnits(ulong constructId)
+    {
+        return await _orleans.GetConstructElementsGrain(constructId).GetElementsOfType<SpaceEngine>();
+    }
+    
+    public async Task<double> GetAllSpaceEnginesPower(ulong constructId)
+    {
+        var engines = await GetSpaceEngineUnits(constructId);
+        var engineInfosTask = engines.Select(x => GetElement(constructId, x));
+
+        var engineInfo = await Task.WhenAll(engineInfosTask);
+
+        var hitPoints = new List<double>();
+        
+        foreach (var elementInfo in engineInfo)
+        {
+            if (!elementInfo.properties.TryGetValue("hitpointsRatio", out var propValue))
+            {
+                hitPoints.Add(1);
+            }
+
+            if (propValue != null)
+            {
+                hitPoints.Add(propValue.doubleValue);
+            }
+        }
+
+        if (hitPoints.Count == 0)
+        {
+            return 0;
+        }
+
+        double brokenCount = hitPoints.Count(x => x <= 0.01d);
+        var functionalCount = hitPoints.Count - brokenCount;
+
+        return functionalCount / hitPoints.Count;
+    }
+
+    public async Task<int> GetFunctionalDamageWeaponCount(ulong constructId)
+    {
+        var weaponUnits = await GetWeaponUnits(constructId);
+        var weaponInfosTask = weaponUnits.Select(x => GetElement(constructId, x));
+
+        var weaponInfos = await Task.WhenAll(weaponInfosTask);
+
+        var hitPoints = new List<double>();
+        
+        foreach (var elementInfo in weaponInfos)
+        {
+            if (!elementInfo.properties.TryGetValue("hitpointsRatio", out var propValue))
+            {
+                hitPoints.Add(1);
+            }
+
+            if (propValue != null)
+            {
+                hitPoints.Add(propValue.doubleValue);
+            }
+        }
+
+        if (hitPoints.Count == 0)
+        {
+            return 0;
+        }
+
+        var brokenCount = hitPoints.Count(x => x <= 0.01d);
+        var functionalCount = hitPoints.Count - brokenCount;
+
+        return functionalCount;
+    }
+
     public async Task<ElementInfo> GetElement(ulong constructId, ElementId elementId)
     {
         return await _orleans.GetConstructElementsGrain(constructId).GetElement(elementId);

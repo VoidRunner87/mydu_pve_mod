@@ -21,6 +21,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
     private bool _active = true;
     private IConstructService _constructService;
     private ILogger<FollowTargetBehaviorV2> _logger;
+    private IConstructElementsService _constructElementsService;
 
     public bool IsActive() => _active;
 
@@ -32,6 +33,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         
         _logger = provider.CreateLogger<FollowTargetBehaviorV2>();
         _constructService = provider.GetRequiredService<IConstructService>();
+        _constructElementsService = provider.GetRequiredService<IConstructElementsService>();
 
         return Task.CompletedTask;
     }
@@ -97,7 +99,29 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         var velocityDirection = context.Velocity.NormalizeSafe();
         var velToTargetDot = velocityDirection.Dot(moveDirection);
 
-        double acceleration = prefab.DefinitionItem.AccelerationG * 9.81f;
+        var enginePower = await _constructElementsService.GetAllSpaceEnginesPower(constructId);
+        _logger.LogDebug("Construct {Construct} Engine Power: {Power}", constructId, enginePower);
+        
+        if (enginePower <= 0)
+        {
+            var cUpdate = new ConstructUpdate
+            {
+                pilotId = ModBase.Bot.PlayerId,
+                constructId = constructId,
+                rotation = context.Rotation,
+                position = npcPos,
+                worldAbsoluteVelocity = new Vec3(),
+                worldRelativeVelocity = new Vec3(),
+                time = TimePoint.Now(),
+                grounded = false,
+            };
+            
+            await ModBase.Bot.Req.ConstructUpdate(cUpdate);
+            
+            return;
+        }
+        
+        var acceleration = prefab.DefinitionItem.AccelerationG * 9.81f * enginePower;
 
         if (velToTargetDot < 0)
         {

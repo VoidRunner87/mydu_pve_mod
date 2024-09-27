@@ -10,13 +10,17 @@ namespace Mod.DynamicEncounters.Features.Common.Services;
 public class CachedConstructElementsService(
     IConstructElementsService service, 
     TimeSpan expirationTimeSpan,
-    TimeSpan coreUnitCacheTimeSpan
+    TimeSpan coreUnitCacheTimeSpan,
+    TimeSpan powerCheckTimeSpan
 )
     : IConstructElementsService
 {
     private readonly TemporaryMemoryCache<ulong, IEnumerable<ElementId>> _pvpRadarUnits = new(expirationTimeSpan);
     private readonly TemporaryMemoryCache<ulong, IEnumerable<ElementId>> _weaponUnits = new(expirationTimeSpan);
     private readonly TemporaryMemoryCache<ulong, IEnumerable<ElementId>> _pvpSeatUnits = new(expirationTimeSpan);
+    private readonly TemporaryMemoryCache<ulong, IEnumerable<ElementId>> _spaceEngineUnits = new(powerCheckTimeSpan);
+    private readonly TemporaryMemoryCache<ulong, double> _spaceEnginePowers = new(powerCheckTimeSpan);
+    private readonly TemporaryMemoryCache<ulong, int> _functionalWeaponCount = new(powerCheckTimeSpan);
     private readonly TemporaryMemoryCache<ulong, ElementId> _coreUnits = new(coreUnitCacheTimeSpan);
     private readonly TemporaryMemoryCache<ulong, ElementInfo> _elementInfos = new(expirationTimeSpan);
 
@@ -44,6 +48,33 @@ public class CachedConstructElementsService(
             constructId,
             () => service.GetWeaponUnits(constructId),
             ids => !ids.Any()
+        );
+    }
+
+    public Task<IEnumerable<ElementId>> GetSpaceEngineUnits(ulong constructId)
+    {
+        return _spaceEngineUnits.TryGetValue(
+            constructId,
+            () => service.GetSpaceEngineUnits(constructId),
+            ids => !ids.Any()
+        );
+    }
+
+    public Task<double> GetAllSpaceEnginesPower(ulong constructId)
+    {
+        return _spaceEnginePowers.TryGetValue(
+            constructId,
+            () => service.GetAllSpaceEnginesPower(constructId),
+            val => val <= 0
+        );
+    }
+
+    public Task<int> GetFunctionalDamageWeaponCount(ulong constructId)
+    {
+        return _functionalWeaponCount.TryGetValue(
+            constructId,
+            () => service.GetFunctionalDamageWeaponCount(constructId),
+            val => val <= 0
         );
     }
 
