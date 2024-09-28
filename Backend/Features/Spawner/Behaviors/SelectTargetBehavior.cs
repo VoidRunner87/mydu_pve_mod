@@ -89,14 +89,16 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         
         _logger.LogInformation("Construct {Construct} at Grid {Grid}", constructId, sectorGrid);
 
-        var foundValue = SectorGridConstructCache.Data.TryGetValue(sectorGrid, out var constructsOnSectorBag);
-        if (!foundValue)
-        {
-            _logger.LogWarning("Construct {Construct} found nothing on Grid Cache", constructId);
-            constructsOnSectorBag = [];
-        }
-
-        var constructsOnSector = constructsOnSectorBag.ToHashSet();
+        var constructsOnSector = SectorGridConstructCache.FindAroundGrid(sectorGrid);
+        
+        // var foundValue = SectorGridConstructCache.Data.TryGetValue(sectorGrid, out var constructsOnSectorBag);
+        // if (!foundValue)
+        // {
+        //     _logger.LogWarning("Construct {Construct} found nothing on Grid Cache", constructId);
+        //     constructsOnSectorBag = [];
+        // }
+        //
+        // var constructsOnSector = constructsOnSectorBag.ToHashSet();
         
         // var constructsOnSector = await _spatialHashRepo.FindPlayerLiveConstructsOnSector(sectorPos);
 

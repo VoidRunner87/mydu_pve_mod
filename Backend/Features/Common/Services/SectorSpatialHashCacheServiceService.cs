@@ -34,7 +34,7 @@ public class SectorSpatialHashCacheServiceService(IServiceProvider provider) : I
 
         var map = new ConcurrentDictionary<LongVector3, ConcurrentBag<ulong>>();
 
-        var offsets = GetOffsets(gridSnap).ToList();
+        var offsets = SectorGridConstructCache.GetOffsets(gridSnap).ToList();
         
         foreach (var item in items)
         {
@@ -53,23 +53,5 @@ public class SectorSpatialHashCacheServiceService(IServiceProvider provider) : I
         }
 
         return map;
-    }
-    
-    private IEnumerable<LongVector3> GetOffsets(long gridSnap, int radius = 1)
-    {
-        var offsets = new List<LongVector3>();
-
-        for (long x = -radius; x <= radius; x++)
-        {
-            for (long y = -radius; y <= radius; y++)
-            {
-                for (long z = -radius; z <= radius; z++)
-                {
-                    offsets.Add(new LongVector3(x * gridSnap, y * gridSnap, z * gridSnap));
-                }
-            }
-        }
-
-        return offsets;
     }
 }
