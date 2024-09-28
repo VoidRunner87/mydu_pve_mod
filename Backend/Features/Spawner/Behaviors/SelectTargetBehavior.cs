@@ -73,7 +73,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         if (!context.Position.HasValue)
         {
-            var npcConstructInfo = await _constructService.GetConstructInfoAsync(constructId);
+            var npcConstructInfo = await _constructService.NoCache().GetConstructInfoAsync(constructId);
             if (npcConstructInfo == null)
             {
                 return;
@@ -86,10 +86,13 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         var sectorPos = npcPos.GridSnap(SectorPoolManager.SectorGridSnap);
         var sectorGrid = new LongVector3(sectorPos);
+        
+        _logger.LogInformation("Construct {Construct} at Grid {Grid}", constructId, sectorGrid);
 
         var foundValue = SectorGridConstructCache.Data.TryGetValue(sectorGrid, out var constructsOnSectorBag);
         if (!foundValue)
         {
+            _logger.LogWarning("Construct {Construct} found nothing on Grid Cache", constructId);
             constructsOnSectorBag = [];
         }
 

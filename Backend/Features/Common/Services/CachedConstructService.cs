@@ -44,6 +44,9 @@ public class CachedConstructService(
     public Task DeleteAsync(ulong constructId)
         => service.DeleteAsync(constructId);
 
+    public Task SoftDeleteAsync(ulong constructId) 
+        => service.SoftDeleteAsync(constructId);
+
     public Task SetAutoDeleteFromNowAsync(ulong constructId, TimeSpan timeSpan)
         => service.SetAutoDeleteFromNowAsync(constructId, timeSpan);
 

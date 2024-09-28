@@ -10,6 +10,7 @@ using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
+using NQ.Visibility;
 using NQutils.Def;
 using Orleans;
 
@@ -89,6 +90,25 @@ public class ConstructService(IServiceProvider provider) : IConstructService
     public Task DeleteAsync(ulong constructId)
     {
         return _orleans.GetConstructGCGrain().DeleteConstruct(constructId);
+    }
+
+    public async Task SoftDeleteAsync(ulong constructId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+        
+        await db.ExecuteAsync(
+            $"""
+             UPDATE public.construct SET deleted_at = NOW() WHERE id = @constructId AND deleted_at IS NULL
+             """
+            , new
+            {
+                constructId = (long)constructId
+            }
+        );
+
+        var internalClient = provider.GetRequiredService<Internal.InternalClient>();
+        await internalClient.RemoveConstructAsync(constructId);
     }
 
     public async Task SetAutoDeleteFromNowAsync(ulong constructId, TimeSpan timeSpan)

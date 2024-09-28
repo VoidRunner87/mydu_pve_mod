@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
@@ -34,5 +35,12 @@ public class SectorInstanceController(IServiceProvider provider) : Controller
         await _repository.ForceExpireAllAsync();
 
         return Ok();
+    }
+
+    [HttpGet]
+    [Route("grid")]
+    public IActionResult GetGrid()
+    {
+        return Ok(SectorGridConstructCache.Data);
     }
 }

@@ -21,7 +21,7 @@ public class MaintenanceController : Controller
 
         foreach (var constructId in items)
         {
-            await constructService.DeleteAsync(constructId);
+            await constructService.SoftDeleteAsync(constructId);
         }
         
         return Ok(items);

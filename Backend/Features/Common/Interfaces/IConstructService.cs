@@ -12,6 +12,7 @@ public interface IConstructService
     Task SetDynamicWreckAsync(ulong constructId, bool isDynamicWreck);
     Task<Velocities> GetConstructVelocities(ulong constructId);
     Task DeleteAsync(ulong constructId);
+    Task SoftDeleteAsync(ulong constructId);
     Task SetAutoDeleteFromNowAsync(ulong constructId, TimeSpan timeSpan);
     Task<bool> TryVentShieldsAsync(ulong constructId);
     Task<bool> IsBeingControlled(ulong constructId);

@@ -33,8 +33,16 @@ public class CleanupLoop(TimeSpan loopTimer) : ModBase
 
     private async Task OnTimer()
     {
+        var maxIterationsPerCycle = 5;
+        var counter = 0;
+        
         while (!ConstructsPendingDelete.Data.IsEmpty)
         {
+            if (counter > maxIterationsPerCycle)
+            {
+                break;
+            }
+            
             if (!ConstructsPendingDelete.Data.TryPeek(out var constructId))
             {
                 continue;
@@ -42,7 +50,7 @@ public class CleanupLoop(TimeSpan loopTimer) : ModBase
             
             try
             {
-                await _constructService.DeleteAsync(constructId);
+                await _constructService.SoftDeleteAsync(constructId);
                 await _constructHandleRepository.DeleteAsync(constructId);
                 await Task.Delay(500);
                 
@@ -54,6 +62,8 @@ public class CleanupLoop(TimeSpan loopTimer) : ModBase
             {
                 _logger.LogError(e, "Failed to Cleanup {Construct}", constructId);
             }
+
+            counter++;
         }
     }
 }

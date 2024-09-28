@@ -95,10 +95,14 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         var npcPos = context.Position.Value;
         var targetDirection = targetPos - npcPos;
 
+        var forward = VectorMathUtils.GetForward(context.Rotation.ToQuat())
+            .ToNqVec3()
+            .NormalizeSafe();
         var moveDirection = (context.TargetMovePosition - npcPos).NormalizeSafe();
 
         var velocityDirection = context.Velocity.NormalizeSafe();
-        var velToTargetDot = velocityDirection.Dot(moveDirection);
+        // var velToTargetDot = velocityDirection.Dot(moveDirection);
+        var velToTargetDot = velocityDirection.Dot(forward);
 
         var enginePower = Math.Clamp(await _constructElementsService.GetAllSpaceEnginesPower(constructId), 0, 1);
         _logger.LogDebug("Construct {Construct} Engine Power: {Power}", constructId, enginePower);
@@ -124,16 +128,18 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         
         var acceleration = prefab.DefinitionItem.AccelerationG * 9.81f * enginePower;
 
-        // if (velToTargetDot < 0)
-        // {
-        //     acceleration *= 1 + Math.Abs(velToTargetDot);
-        // }
+        if (velToTargetDot < 0)
+        {
+            acceleration *= 1 + Math.Abs(velToTargetDot);
+        }
 
-        // var accelV = VectorMathUtils.GetForward(context.Rotation.ToQuat())
-            // .ToNqVec3()
-            // .NormalizeSafe() * acceleration;
-        var accelV = moveDirection * acceleration;
+        const float realismFactor = 0.25f;
+        
+        var accelForward = forward * acceleration * realismFactor;
+        var accelMove = moveDirection * acceleration * (1 - realismFactor);
 
+        var accelV = accelForward + accelMove;
+        
         context.Velocity += accelV * context.DeltaTime;
         context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);
         var velocity = context.Velocity;
@@ -145,6 +151,8 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             accelV,
             context.DeltaTime
         );
+
+        context.Velocity = velocity;
         
         // context.Velocity = velocity;
         // Make the ship point to where it's accelerating

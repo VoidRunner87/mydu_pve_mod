@@ -48,22 +48,39 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
         using var db = _factory.Create();
         db.Open();
 
+        var sectors = (await db.QueryAsync<VectorRow>(
+            """
+            SELECT DISTINCT sector_x as x, sector_y as y, sector_z as z FROM public.mod_npc_construct_handle
+            WHERE deleted_at IS NULL
+            """
+        )).ToList();
+
+        var sectorQueries = sectors.Select(v => $"(C.sector_x = {(long)v.x} AND C.sector_y = {(long)v.y} AND C.sector_z = {(long)v.z})");
+        var sectorQuery = string.Join(" OR ", sectorQueries);
+        
         var result = (await db.QueryAsync<ConstructSectorRow>(
             $"""
-             SELECT C.id, C.name, CH.sector_x, CH.sector_y, CH.sector_z FROM public.construct C
-              INNER JOIN public.mod_npc_construct_handle CH ON (CH.sector_x = C.sector_x AND CH.sector_y = C.sector_y AND CH.sector_z = C.sector_z)
-              LEFT JOIN public.ownership O ON (C.owner_entity_id = O.id)
-              WHERE C.deleted_at IS NULL AND
-              	C.owner_entity_id IS NOT NULL AND
-              	CH.deleted_at IS NULL AND
-             	C.owner_entity_id IS NOT NULL AND (
-             		O.player_id NOT IN({StaticPlayerId.Aphelia}, {StaticPlayerId.Unknown}) OR 
-             		(O.player_id IS NULL AND O.organization_id IS NOT NULL)
-             	)
+             SELECT C.id, C.name, C.sector_x, C.sector_y, C.sector_z FROM public.construct C
+             LEFT JOIN public.ownership O ON (C.owner_entity_id = O.id)
+             WHERE C.deleted_at IS NULL AND
+             C.owner_entity_id IS NOT NULL AND
+             (
+             	O.player_id NOT IN({StaticPlayerId.Aphelia}, {StaticPlayerId.Unknown}) OR 
+             	(O.player_id IS NULL AND O.organization_id IS NOT NULL)
+             ) AND (
+                 {sectorQuery}
+             )
              """
         )).ToList();
 
         return result;
+    }
+
+    public struct VectorRow
+    {
+        public double x { get; set; }
+        public double y { get; set; }
+        public double z { get; set; }
     }
     
     public struct ConstructSectorRow

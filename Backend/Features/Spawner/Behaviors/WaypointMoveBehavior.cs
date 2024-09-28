@@ -155,7 +155,7 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
     private async Task Despawn()
     {
         await _constructHandleService.RemoveHandleAsync(constructId);
-        await _constructService.DeleteAsync(constructId);
+        await _constructService.SoftDeleteAsync(constructId);
         _logger.LogInformation("Despawned Construct {Construct}", constructId);
     }
 }
