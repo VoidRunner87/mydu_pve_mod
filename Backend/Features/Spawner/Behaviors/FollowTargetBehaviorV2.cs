@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Threading.Tasks;
 using BotLib.Generated;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,16 +21,20 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
     private bool _active = true;
     private IConstructService _constructService;
-    private ILogger<FollowTargetBehavior> _logger;
+    private ILogger<FollowTargetBehaviorV2> _logger;
+    private IConstructElementsService _constructElementsService;
 
     public bool IsActive() => _active;
+
+    public BehaviorTaskCategory Category => BehaviorTaskCategory.MovementPriority;
 
     public Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;
         
-        _logger = provider.CreateLogger<FollowTargetBehavior>();
+        _logger = provider.CreateLogger<FollowTargetBehaviorV2>();
         _constructService = provider.GetRequiredService<IConstructService>();
+        _constructElementsService = provider.GetRequiredService<IConstructElementsService>();
 
         return Task.CompletedTask;
     }
@@ -95,14 +100,37 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         var velocityDirection = context.Velocity.NormalizeSafe();
         var velToTargetDot = velocityDirection.Dot(moveDirection);
 
-        double acceleration = prefab.DefinitionItem.AccelerationG * 9.81f;
+        var enginePower = await _constructElementsService.GetAllSpaceEnginesPower(constructId);
+        _logger.LogDebug("Construct {Construct} Engine Power: {Power}", constructId, enginePower);
+        
+        if (enginePower <= 0)
+        {
+            var cUpdate = new ConstructUpdate
+            {
+                pilotId = ModBase.Bot.PlayerId,
+                constructId = constructId,
+                rotation = context.Rotation,
+                position = npcPos,
+                worldAbsoluteVelocity = new Vec3(),
+                worldRelativeVelocity = new Vec3(),
+                time = TimePoint.Now(),
+                grounded = false,
+            };
+            
+            await ModBase.Bot.Req.ConstructUpdate(cUpdate);
+            
+            return;
+        }
+        
+        var acceleration = prefab.DefinitionItem.AccelerationG * 9.81f * enginePower;
 
         if (velToTargetDot < 0)
         {
             acceleration *= 1 + Math.Abs(velToTargetDot);
         }
 
-        var accelV = moveDirection * acceleration;
+        var accelV = VectorMathUtils.GetForward(context.Rotation.ToQuat()).ToNqVec3() * acceleration;
+        // var accelV = moveDirection * acceleration;
 
         context.Velocity += accelV * context.DeltaTime;
         context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);
@@ -120,18 +148,19 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         // Make the ship point to where it's accelerating
         var accelerationFuturePos = npcPos + moveDirection * 200000;
 
-        var rotation = VectorMathUtils.SetRotationToMatchDirection(
+        var currentRotation = context.Rotation;
+        var targetRotation = VectorMathUtils.SetRotationToMatchDirection(
             npcPos.ToVector3(),
             accelerationFuturePos.ToVector3()
         );
 
-        GetD0(context, out var d0, new Vec3());
-        var relativeAngularVel = VectorMathHelper.CalculateAngularVelocity(
-            d0,
-            targetDirection,
-            context.DeltaTime
+        var rotation = Quaternion.Slerp(
+            currentRotation.ToQuat(),
+            targetRotation,
+            (float)(prefab.DefinitionItem.RotationSpeed * context.DeltaTime)
         );
-        
+
+        GetD0(context, out var d0, new Vec3());
         SetD0(moveDirection, context);
 
         context.Rotation = rotation.ToNqQuat();

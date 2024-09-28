@@ -61,39 +61,11 @@ public static class VectorMathUtils
         // Combine current rotation with the new calculated rotation (multiplying quaternions)
         return Quaternion.Normalize(Quaternion.Concatenate(currentRotation, targetRotation));
     }
-    
-    public static Vector3 GetLocalForward(this Quaternion quaternion)
+
+    public static Vector3 GetForward(Quaternion rotation)
     {
-        // World forward vector (assuming it's +Y axis in world coordinates)
-        var worldForward = new Vector3(0, 1, 0);
+        var forward = new Vector3(0, 1, 0);
 
-        return quaternion.GetLocal(worldForward);
-    }
-    
-    public static Vector3 GetLocalRight(this Quaternion quaternion)
-    {
-        // World forward vector (assuming it's +Y axis in world coordinates)
-        var worldForward = new Vector3(1, 0, 0);
-
-        return quaternion.GetLocal(worldForward);
-    }
-    
-    public static Vector3 GetLocalUp(this Quaternion quaternion)
-    {
-        // World forward vector (assuming it's +Y axis in world coordinates)
-        var worldForward = new Vector3(0, 0, 1);
-
-        return quaternion.GetLocal(worldForward);
-    }
-    
-    public static Vector3 GetLocal(this Quaternion quaternion, Vector3 worldDirection)
-    {
-        // Inverse the quaternion (world rotation of the object)
-        var inverseRotation = quaternion.ToNqQuat().ToMnQuat().Inversed;
-
-        // Apply the inverse rotation to the world forward vector to get the local forward vector
-        var r =  inverseRotation.Rotate(new Vector3D(worldDirection.X, worldDirection.Y, worldDirection.Z));
-
-        return new Vector3((float)r.X, (float)r.Y, (float)r.Z);
+        return Vector3.Transform(forward, rotation);
     }
 }

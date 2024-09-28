@@ -29,10 +29,15 @@ public class SectorSpatialHashCacheServiceService(IServiceProvider provider) : I
         {
             foreach (var offset in offsets)
             {
-                if (!map.TryAdd(item.GetLongVector() + offset, [item.ConstructId()]))
-                {
-                    map[item.GetLongVector()].Add(item.ConstructId());
-                }
+                map.AddOrUpdate(
+                    item.GetLongVector() + offset,
+                    [item.ConstructId()],
+                    (_, bag) =>
+                    {
+                        bag = new ConcurrentBag<ulong>(bag.ToHashSet()) { item.ConstructId() };
+
+                        return bag;
+                    });
             }
         }
 

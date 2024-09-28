@@ -8,7 +8,12 @@ public static class ConstructInfoHelpers
     {
         return info.mutableData.ownerId.playerId == 0;
     }
-    
+
+    public static bool HasShield(this ConstructInfo info)
+    {
+        return info.mutableData.shieldState.hasShield;
+    }
+
     public static bool IsShieldDown(this ConstructInfo info)
     {
         if (!info.mutableData.shieldState.hasShield)

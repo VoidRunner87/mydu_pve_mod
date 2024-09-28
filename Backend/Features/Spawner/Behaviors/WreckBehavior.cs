@@ -11,6 +11,8 @@ public class WreckBehavior : IConstructBehavior
         return false;
     }
 
+    public BehaviorTaskCategory Category => BehaviorTaskCategory.LowPriority;
+
     public Task InitializeAsync(BehaviorContext context)
     {
         context.IsActiveWreck = true;

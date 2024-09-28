@@ -18,9 +18,9 @@ public class SpawnerController : Controller
 {
     public class SpawnRequest
     {
-        public ulong ConstructId { get; set; }
+        public ulong? ConstructId { get; set; }
         public string File { get; set; }
-        public Vec3 Position { get; set; }
+        public Vec3? Position { get; set; }
     }
     
     [HttpPost]
@@ -30,17 +30,27 @@ public class SpawnerController : Controller
         var provider = ModBase.ServiceProvider;
         var orleans = provider.GetOrleans();
 
-        var constructInfoGrain = orleans.GetConstructInfoGrain(request.ConstructId);
-        var constructInfo = await constructInfoGrain.Get();
+        if (!request.Position.HasValue && request.ConstructId.HasValue)
+        {
+            var constructInfoGrain = orleans.GetConstructInfoGrain(request.ConstructId.Value);
+            var constructInfo = await constructInfoGrain.Get();
 
-        var random = provider.GetRequiredService<IRandomProvider>().GetRandom();
+            var random = provider.GetRequiredService<IRandomProvider>().GetRandom();
 
-        var offset = random.RandomDirectionVec3() * 2000;
-        var pos = offset + constructInfo.rData.position;
-        
+            var offset = random.RandomDirectionVec3() * 2000;
+            var pos = offset + constructInfo.rData.position;
+            
+            request.Position = pos;
+        }
+
+        if (!request.Position.HasValue)
+        {
+            return BadRequest();
+        }
+
         var asteroidManagerGrain = orleans.GetAsteroidManagerGrain();
         var asteroidId = await asteroidManagerGrain.SpawnAsteroid(
-            1, request.File, pos, 2
+            1, request.File, request.Position.Value, 2
         );
 
         await asteroidManagerGrain.ForcePublish(asteroidId);

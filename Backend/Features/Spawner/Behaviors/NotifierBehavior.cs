@@ -21,8 +21,6 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
 {
     private List<ElementId> _weaponsElements;
     private IClusterClient _orleans;
-    private IGameplayBank _bank;
-    private IConstructGrain _constructGrain;
     private ILogger<AggressiveBehavior> _logger;
     private IConstructElementsGrain _constructElementsGrain;
 
@@ -33,14 +31,14 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
 
     public bool IsActive() => _active;
 
+    public BehaviorTaskCategory Category => BehaviorTaskCategory.MediumPriority;
+
     public async Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;
         _orleans = provider.GetOrleans();
 
         _constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
-
-        _bank = provider.GetGameplayBank();
 
         _weaponsElements = await _constructElementsGrain.GetElementsOfType<WeaponUnit>();
         var elementInfos = await Task.WhenAll(
@@ -49,7 +47,6 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
 
         _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
 
-        _constructGrain = _orleans.GetConstructGrain(constructId);
         _constructService = provider.GetRequiredService<IConstructService>();
         
         context.ExtraProperties.TryAdd("CORE_ID", _coreUnitElementId);

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
-using Mod.DynamicEncounters.Features.Spawner.Behaviors;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
@@ -17,9 +18,9 @@ namespace Mod.DynamicEncounters;
 
 public class ConstructBehaviorLoop : HighTickModLoop
 {
+    private readonly BehaviorTaskCategory _category;
     private readonly IServiceProvider _provider;
     private readonly ILogger<ConstructBehaviorLoop> _logger;
-    private readonly IConstructInMemoryBehaviorContextRepository _inMemoryContextRepo;
     private readonly IConstructHandleRepository _constructHandleRepository;
     private readonly IConstructBehaviorFactory _behaviorFactory;
     private readonly IConstructDefinitionFactory _constructDefinitionFactory;
@@ -27,14 +28,14 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
     private bool _featureEnabled;
     private readonly ConcurrentDictionary<ulong, ConstructHandleItem> _constructHandles = [];
-    
+
     private static readonly object ListLock = new();
 
-    public ConstructBehaviorLoop(int framesPerSecond) : base(framesPerSecond)
+    public ConstructBehaviorLoop(int framesPerSecond, BehaviorTaskCategory category) : base(framesPerSecond)
     {
+        _category = category;
         _provider = ServiceProvider;
         _logger = _provider.CreateLogger<ConstructBehaviorLoop>();
-        _inMemoryContextRepo = _provider.GetRequiredService<IConstructInMemoryBehaviorContextRepository>();
 
         _constructHandleRepository = _provider.GetRequiredService<IConstructHandleRepository>();
         _behaviorFactory = _provider.GetRequiredService<IConstructBehaviorFactory>();
@@ -48,23 +49,8 @@ public class ConstructBehaviorLoop : HighTickModLoop
         return Task.WhenAll(
             CheckFeatureEnabledTask(),
             UpdateConstructHandleListTask(),
-            ExpireBehaviorContexts(),
             base.Start()
         );
-    }
-
-    private Task ExpireBehaviorContexts()
-    {
-        var taskCompletionSource = new TaskCompletionSource();
-
-        var timer = new Timer(10000);
-        timer.Elapsed += (_, _) =>
-        {
-            _inMemoryContextRepo.Cleanup();
-        };
-        timer.Start();
-
-        return taskCompletionSource.Task;
     }
 
     private Task CheckFeatureEnabledTask()
@@ -113,16 +99,22 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
         var taskList = new List<Task>();
 
+        var sw = new Stopwatch();
+        sw.Start();
+
         lock (ListLock)
         {
             foreach (var kvp in _constructHandles)
             {
-                var task = RunIsolatedAsync(() => TickConstructHandle(deltaTime, kvp.Value));
+                var task = Task.Run(() => RunIsolatedAsync(() => TickConstructHandle(deltaTime, kvp.Value)));
                 taskList.Add(task);
             }
         }
 
         await Task.WhenAll(taskList);
+
+        StatsRecorder.Record(_category, sw.ElapsedMilliseconds);
+        // _logger.LogInformation("Behavior Loop Count({Count}) Took: {Time}ms", taskList.Count, sw.ElapsedMilliseconds);
     }
 
     private async Task RunIsolatedAsync(Func<Task> taskFn)
@@ -143,29 +135,28 @@ public class ConstructBehaviorLoop : HighTickModLoop
         {
             return;
         }
-        
+
         var constructDef = _constructDefinitionFactory.Create(handleItem.ConstructDefinitionItem);
 
         var finalBehaviors = new List<IConstructBehavior>();
 
         var behaviors = _behaviorFactory.CreateBehaviors(
-            handleItem.ConstructId, 
+            handleItem.ConstructId,
             constructDef,
             handleItem.JsonProperties.Behaviors
-        );
+        ).Where(x => x.Category == _category);
 
         finalBehaviors.AddRange(behaviors);
-        finalBehaviors.Add(new UpdateLastControlledDateBehavior(handleItem.ConstructId).WithErrorHandler());
 
-        if (!_inMemoryContextRepo.TryGetValue(handleItem.ConstructId, out var context))
-        {
-            // TODO TerritoryId
-            context = new BehaviorContext(handleItem.FactionId, null, handleItem.Sector, Bot, _provider, constructDef);
-            _inMemoryContextRepo.Set(handleItem.ConstructId, context);
-            
-            _logger.LogInformation("NEW CONTEXT {Construct}", handleItem.ConstructId);
-        }
-        context!.DeltaTime = deltaTime.TotalSeconds;
+        // TODO TerritoryId
+        var context = await ConstructBehaviorContextCache.Data
+            .TryGetValue(
+                handleItem.ConstructId,
+                () => Task.FromResult(new BehaviorContext(handleItem.FactionId, null, handleItem.Sector, Bot, _provider,
+                    constructDef))
+            );
+
+        context.DeltaTime = deltaTime.TotalSeconds;
 
         foreach (var behavior in finalBehaviors)
         {

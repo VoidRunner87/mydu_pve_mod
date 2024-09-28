@@ -19,6 +19,8 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
     private IClusterClient _orleans;
     private IConstructService _constructService;
 
+    public BehaviorTaskCategory Category => BehaviorTaskCategory.HighPriority;
+
     public Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;
@@ -67,6 +69,11 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
         
         var targetPos = targetConstructInfo.rData.position;
 
+        if (!npcInfo.HasShield())
+        {
+            return;
+        }
+        
         if (npcInfo.IsShieldLowerThan25() || npcInfo.IsShieldDown())
         {
             var retreatDirection = (npcPos - targetPos).NormalizeSafe();
@@ -86,7 +93,7 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
             //     retreatDirection *= -1; // reverse
             // }
             
-            context.TargetMovePosition = npcPos + retreatDirection * 10 * DistanceHelpers.OneSuInMeters;
+            context.TargetMovePosition = npcPos + retreatDirection * 2.5 * DistanceHelpers.OneSuInMeters;
         }
 
         var isPrettyFar = Math.Abs(targetPos.Dist(npcPos)) > 1.7 * DistanceHelpers.OneSuInMeters;

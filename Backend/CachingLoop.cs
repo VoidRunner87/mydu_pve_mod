@@ -28,35 +28,44 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
         var provider = ServiceProvider;
         var logger = provider.CreateLogger<CachingLoop>();
         var spatialHashCacheService = provider.GetRequiredService<ISectorSpatialHashCacheService>();
+        var constructService = provider.GetRequiredService<IConstructService>();
+        var constructElementsService = provider.GetRequiredService<IConstructElementsService>();
 
         var sw = new Stopwatch();
         sw.Start();
-        
-        var map = await spatialHashCacheService.GetPlayerConstructsSectorMapAsync();
 
-        if (map.Count == 0)
+        try
         {
-            logger.LogInformation("No Constructs in Sectors of Construct Handles. Time = {Time}ms", sw.ElapsedMilliseconds);
+            var map = await spatialHashCacheService.GetPlayerConstructsSectorMapAsync();
+
+            if (map.Count == 0)
+            {
+                logger.LogInformation("No Constructs in Sectors of Construct Handles. Time = {Time}ms", sw.ElapsedMilliseconds);
+                lock (SectorGridConstructCache.Lock)
+                {
+                    SectorGridConstructCache.Data = [];
+                }
+                return;
+            }
+        
             lock (SectorGridConstructCache.Lock)
             {
-                SectorGridConstructCache.Data = [];
+                SectorGridConstructCache.Data = map;
             }
-            return;
-        }
-        
-        lock (SectorGridConstructCache.Lock)
-        {
-            SectorGridConstructCache.Data = map;
-        }
 
-        foreach (var kvp in map)
-        {
-            foreach (var constructId in kvp.Value)
+            foreach (var kvp in map)
             {
-                logger.LogDebug("Sector: {Sector} | Construct: {Construct}", kvp.Key, constructId);
+                foreach (var constructId in kvp.Value)
+                {
+                    logger.LogDebug("Sector: {Sector} | Construct: {Construct}", kvp.Key, constructId);
+                }
             }
+
+            logger.LogInformation("CacheLoop Took: {Time}ms", sw.ElapsedMilliseconds);
         }
-        
-        logger.LogInformation("CacheLoop Took: {Time}ms", sw.ElapsedMilliseconds);
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to Cache Player Map");
+        }
     }
 }

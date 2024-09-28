@@ -150,13 +150,23 @@ public class ModBase
         S3 = ServiceProvider.GetRequiredService<IS3>();
         SpawnerScripts = ServiceProvider.GetRequiredService<IScriptService>();
 
-        Console.WriteLine("Starting Services V2");
-        await ServiceProvider.StartServicesV2();
-        Console.WriteLine("Services Started");
+        var logger = ServiceProvider.CreateLogger<ModBase>();
+
+        try
+        {
+            Console.WriteLine("Starting Services V2");
+            await ServiceProvider.StartServicesV2();
+            Console.WriteLine("Services Started");
         
-        Console.WriteLine("Creating BOT User");
-        Bot = await RefreshClient();
-        Console.WriteLine("BOT User Created");
+            Console.WriteLine("Creating BOT User");
+            Bot = await RefreshClient();
+            Console.WriteLine("BOT User Created");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to Start");
+            throw;
+        }
     }
 
     public virtual async Task Start()
