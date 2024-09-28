@@ -99,7 +99,7 @@ public static class VectorMathHelper
 
     public static double Size(this Vec3 vector)
     {
-        return Math.Sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+        return vector.ToVector3().Length();
     }
 
     public static Vec3 ClampToSize(this Vec3 vector, double maxLength)

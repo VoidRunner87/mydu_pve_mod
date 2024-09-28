@@ -93,7 +93,7 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
             //     retreatDirection *= -1; // reverse
             // }
             
-            context.TargetMovePosition = npcPos + retreatDirection * 2.5 * DistanceHelpers.OneSuInMeters;
+            // context.TargetMovePosition = npcPos + retreatDirection * 1.8 * DistanceHelpers.OneSuInMeters;
         }
 
         var isPrettyFar = Math.Abs(targetPos.Dist(npcPos)) > 1.7 * DistanceHelpers.OneSuInMeters;

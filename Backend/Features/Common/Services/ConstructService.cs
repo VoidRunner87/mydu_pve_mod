@@ -159,4 +159,17 @@ public class ConstructService(IServiceProvider provider) : IConstructService
     {
         return this;
     }
+
+    public async Task<bool> Exists(ulong constructId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var count = await db.ExecuteScalarAsync<int>(
+            "SELECT COUNT(0) FROM public.construct WHERE id = @constructId",
+            new { constructId = (long)constructId }
+        );
+
+        return count > 0;
+    }
 }

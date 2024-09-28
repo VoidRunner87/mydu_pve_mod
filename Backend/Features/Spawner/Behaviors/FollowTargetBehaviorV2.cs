@@ -100,7 +100,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         var velocityDirection = context.Velocity.NormalizeSafe();
         var velToTargetDot = velocityDirection.Dot(moveDirection);
 
-        var enginePower = await _constructElementsService.GetAllSpaceEnginesPower(constructId);
+        var enginePower = Math.Clamp(await _constructElementsService.GetAllSpaceEnginesPower(constructId), 0, 1);
         _logger.LogDebug("Construct {Construct} Engine Power: {Power}", constructId, enginePower);
         
         if (enginePower <= 0)
@@ -124,13 +124,15 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         
         var acceleration = prefab.DefinitionItem.AccelerationG * 9.81f * enginePower;
 
-        if (velToTargetDot < 0)
-        {
-            acceleration *= 1 + Math.Abs(velToTargetDot);
-        }
+        // if (velToTargetDot < 0)
+        // {
+        //     acceleration *= 1 + Math.Abs(velToTargetDot);
+        // }
 
-        var accelV = VectorMathUtils.GetForward(context.Rotation.ToQuat()).ToNqVec3() * acceleration;
-        // var accelV = moveDirection * acceleration;
+        // var accelV = VectorMathUtils.GetForward(context.Rotation.ToQuat())
+            // .ToNqVec3()
+            // .NormalizeSafe() * acceleration;
+        var accelV = moveDirection * acceleration;
 
         context.Velocity += accelV * context.DeltaTime;
         context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);

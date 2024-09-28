@@ -16,4 +16,5 @@ public interface IConstructService
     Task<bool> TryVentShieldsAsync(ulong constructId);
     Task<bool> IsBeingControlled(ulong constructId);
     IConstructService NoCache();
+    Task<bool> Exists(ulong constructId);
 }

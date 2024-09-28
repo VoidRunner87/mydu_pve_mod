@@ -52,7 +52,8 @@ public static class Program
                 new ConstructBehaviorLoop(1, BehaviorTaskCategory.MediumPriority).Start(),
                 new ConstructBehaviorLoop(10, BehaviorTaskCategory.HighPriority).Start(),
                 new ConstructBehaviorLoop(30, BehaviorTaskCategory.MovementPriority).Start(),
-                new TaskQueueLoop().Start()
+                new TaskQueueLoop().Start(),
+                new CleanupLoop(TimeSpan.FromSeconds(10)).Start()
             };
 
             if (apiEnabled)

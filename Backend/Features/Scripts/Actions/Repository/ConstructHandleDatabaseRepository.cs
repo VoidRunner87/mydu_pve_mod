@@ -321,7 +321,9 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             	C.deleted_at IS NULL
             """)).ToList();
 
-        return result.ToDictionary(
+        var distinctResult = result.DistinctBy(x => x.construct_id);
+        
+        return distinctResult.ToDictionary(
             k => (ulong)k.construct_id,
             v => v.time_span
         );

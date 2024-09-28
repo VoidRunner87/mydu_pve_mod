@@ -62,4 +62,9 @@ public class CachedConstructService(
     {
         return service;
     }
+
+    public Task<bool> Exists(ulong constructId)
+    {
+        return service.Exists(constructId);
+    }
 }

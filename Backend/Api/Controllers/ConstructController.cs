@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Backend;
 using BotLib.Generated;
@@ -214,5 +215,31 @@ public class ConstructController : Controller
             });
 
         return Ok(weaponUnits);
+    }
+
+    [Route("{constructId:long}/apply-stasis")]
+    [HttpPost]
+    public async Task<IActionResult> ApplyStasisToConstruct(long constructId, [FromBody] StasisRequest request)
+    {
+        var provider = ModBase.ServiceProvider;
+        var orleans = provider.GetOrleans();
+
+        var constructInfoGrain = orleans.GetConstructInfoGrain((ulong)constructId);
+        await constructInfoGrain.Update(new ConstructInfoUpdate
+        {
+            additionalMaxSpeedDebuf = new MaxSpeedDebuf
+            {
+                until = (DateTime.Now + request.DurationSpan).ToNQTimePoint(),
+                value = Math.Clamp(request.Value, 0d, 1d)
+            }
+        });
+
+        return Ok();
+    }
+
+    public class StasisRequest
+    {
+        public TimeSpan DurationSpan { get; set; }
+        public double Value { get; set; }
     }
 }

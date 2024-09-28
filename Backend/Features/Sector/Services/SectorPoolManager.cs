@@ -107,6 +107,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             };
 
             await _sectorInstanceRepository.AddAsync(instance);
+            await Task.Delay(200);
         }
     }
 
@@ -137,6 +138,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 );
 
                 await _sectorInstanceRepository.SetLoadedAsync(sector.Id, true);
+                await Task.Delay(200);
 
                 _logger.LogInformation("Loaded Sector {Id}({Sector}) Territory = {Territory}", sector.Id, sector.Sector, sector.TerritoryId);
             }
@@ -145,7 +147,6 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 _logger.LogError(e, "Failed to Load Sector {Id}({Sector})", sector.Id, sector.Sector);
 
                 await _sectorInstanceRepository.SetLoadedAsync(sector.Id, false);
-                throw;
             }
         }
     }
@@ -166,6 +167,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             }
 
             await _constructHandleManager.CleanupConstructHandlesInSectorAsync(sector.Sector);
+            await Task.Delay(200);
         }
 
         await _sectorInstanceRepository.DeleteExpiredAsync();
@@ -264,6 +266,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 );
 
                 await _sectorInstanceRepository.TagAsStartedAsync(sectorInstance.Id);
+                await Task.Delay(200);
             }
             catch (Exception e)
             {
