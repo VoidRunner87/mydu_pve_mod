@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Threading.Tasks;
 using BotLib.Generated;
 using Microsoft.Extensions.DependencyInjection;
@@ -128,7 +129,8 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             acceleration *= 1 + Math.Abs(velToTargetDot);
         }
 
-        var accelV = moveDirection * acceleration;
+        var accelV = VectorMathUtils.GetForward(context.Rotation.ToQuat()).ToNqVec3() * acceleration;
+        // var accelV = moveDirection * acceleration;
 
         context.Velocity += accelV * context.DeltaTime;
         context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);
@@ -146,18 +148,19 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         // Make the ship point to where it's accelerating
         var accelerationFuturePos = npcPos + moveDirection * 200000;
 
-        var rotation = VectorMathUtils.SetRotationToMatchDirection(
+        var currentRotation = context.Rotation;
+        var targetRotation = VectorMathUtils.SetRotationToMatchDirection(
             npcPos.ToVector3(),
             accelerationFuturePos.ToVector3()
         );
 
-        GetD0(context, out var d0, new Vec3());
-        var relativeAngularVel = VectorMathHelper.CalculateAngularVelocity(
-            d0,
-            targetDirection,
-            context.DeltaTime
+        var rotation = Quaternion.Slerp(
+            currentRotation.ToQuat(),
+            targetRotation,
+            (float)(prefab.DefinitionItem.RotationSpeed * context.DeltaTime)
         );
-        
+
+        GetD0(context, out var d0, new Vec3());
         SetD0(moveDirection, context);
 
         context.Rotation = rotation.ToNqQuat();
