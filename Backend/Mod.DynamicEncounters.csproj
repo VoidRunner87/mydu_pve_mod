@@ -66,6 +66,7 @@
     <PackageReference Include="Google.Protobuf" Version="3.21.9" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Common\Data\" />
     <Folder Include="Common\Interfaces\" />
     <Folder Include="Features\Sector\Scripts\" />
     <Folder Include="Resources\" />

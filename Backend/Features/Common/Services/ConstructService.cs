@@ -159,8 +159,4 @@ public class ConstructService(IServiceProvider provider) : IConstructService
     {
         return this;
     }
-
-    public void Invalidate()
-    {
-    }
 }
