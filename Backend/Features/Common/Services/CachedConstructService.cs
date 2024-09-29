@@ -70,4 +70,9 @@ public class CachedConstructService(
     {
         return service.Exists(constructId);
     }
+
+    public Task ActivateShieldsAsync(ulong constructId)
+    {
+        return service.ActivateShieldsAsync(constructId);
+    }
 }

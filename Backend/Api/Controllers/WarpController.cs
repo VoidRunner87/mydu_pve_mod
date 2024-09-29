@@ -1,10 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Data;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
+using Mod.DynamicEncounters.Features.TaskQueue.Interfaces;
 using NQ;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
@@ -22,6 +25,7 @@ public class WarpController : Controller
         
         var provider = ModBase.ServiceProvider;
         var spawner = provider.GetRequiredService<IBlueprintSpawnerService>();
+        var taskQueueService = provider.GetRequiredService<ITaskQueueService>();
 
         var constructId = await spawner.SpawnAsync(
             new SpawnArgs
@@ -49,6 +53,15 @@ public class WarpController : Controller
             }
         );
 
+        await taskQueueService.EnqueueScript(
+            new ScriptActionItem
+            {
+                Type = "delete",
+                ConstructId = constructId
+            },
+            DateTime.UtcNow + TimeSpan.FromMinutes(1)
+        );
+        
         return Ok(constructId);
     }
 

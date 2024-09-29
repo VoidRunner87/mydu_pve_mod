@@ -76,7 +76,7 @@ public class TaskQueueLoop : ModBase
 
                 if (isEnabled)
                 {
-                    await taskQueueService.ProcessQueueMessages(Bot);
+                    await taskQueueService.ProcessQueueMessages();
                 }
             }
             catch (Exception e)

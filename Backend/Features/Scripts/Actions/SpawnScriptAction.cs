@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Backend;
 using Backend.AWS;
-using Backend.Database;
 using Backend.Fixture;
 using Backend.Fixture.Construct;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,9 +18,7 @@ using Newtonsoft.Json;
 using NQ;
 using NQ.Interfaces;
 using NQutils.Config;
-using NQutils.Def;
 using NQutils.Sql;
-using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
@@ -138,60 +135,13 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
             provider.GetRequiredService<IPlanetList>()
         ))[0];
 
+        context.ConstructId = constructId;
+        
         _logger.LogInformation("Spawned Construct [{Name}]({Id}) at ::pos{{0,0,{Pos}}}", resultName, constructId,
             spawnPosition);
-
-        var clusterClient = provider.GetRequiredService<IClusterClient>();
-
-        try
-        {
-            await clusterClient.GetConstructParentingGrain().ReloadConstruct(constructId);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to Reload Construct Post-Spawn");
-        }
-
+        
         var isWreck = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck;
         
-        try
-        {
-            var constructElementsGrain = orleans.GetConstructElementsGrain(constructId);
-            var shields = await constructElementsGrain.GetElementsOfType<ShieldGeneratorUnit>();
-
-            var constructGrain = orleans.GetConstructGrain(constructId);
-
-            if (!isWreck && shields.Count > 0)
-            {
-                var sql = provider.GetRequiredService<ISql>();
-                await sql.SetShieldEnabled(constructId, true);
-
-                await constructGrain.UpdateConstructInfo(new ConstructInfoUpdate
-                {
-                    constructId = constructId,
-                    shieldState = new ShieldState
-                    {
-                        hasShield = true,
-                        isActive = true,
-                        shieldHpRatio = 1
-                    },
-                });
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e,
-                "Failed to Set Shields to Active. Will try again another time with construct Behaviors");
-        }
-
-        if (isWreck)
-        {
-            // TODO obtain time span from territory
-            // TODO add territory to sector instance
-            await provider.GetRequiredService<IConstructService>()
-                .SetAutoDeleteFromNowAsync(constructId, TimeSpan.FromHours(3));
-        }
-
         var behaviorList = new List<string>();
 
         if (!isWreck)
@@ -225,6 +175,29 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
         _logger.LogInformation("Created Handle for {ConstructId} on {Sector}", constructId, context.Sector);
 
+        try
+        {
+            if (!isWreck)
+            {
+                await context.ServiceProvider
+                    .GetRequiredService<IConstructService>()
+                    .ActivateShieldsAsync(constructId);
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,
+                "Failed to Set Shields to Active. Will try again another time with construct Behaviors");
+        }
+
+        if (isWreck)
+        {
+            // TODO obtain time span from territory
+            // TODO add territory to sector instance
+            await provider.GetRequiredService<IConstructService>()
+                .SetAutoDeleteFromNowAsync(constructId, TimeSpan.FromHours(3));
+        }
+
         var actionFactory = provider.GetRequiredService<IScriptActionFactory>();
         var onLoadAction = actionFactory.Create(actionItem.Events.OnLoad);
 
@@ -242,6 +215,15 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
                 "Failed to Execute OnLoad Action for Script {Script}",
                 JsonConvert.SerializeObject(onLoadAction)
             );
+        }
+        
+        try
+        {
+            await orleans.GetConstructParentingGrain().ReloadConstruct(constructId);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to Reload Construct Post-Spawn");
         }
 
         return ScriptActionResult.Successful();

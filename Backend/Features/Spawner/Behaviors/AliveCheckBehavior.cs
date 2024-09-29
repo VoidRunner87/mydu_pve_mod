@@ -63,6 +63,10 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
             context.IsAlive = false;
 
             await _handleRepository.RemoveHandleAsync(constructId);
+            
+            return;
         }
+
+        await _constructService.ActivateShieldsAsync(constructId);
     }
 }

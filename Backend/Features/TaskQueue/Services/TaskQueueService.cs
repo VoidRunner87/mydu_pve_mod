@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Features.TaskQueue.Data;
 using Mod.DynamicEncounters.Features.TaskQueue.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using Newtonsoft.Json.Linq;
@@ -23,7 +24,7 @@ public class TaskQueueService(IServiceProvider provider) : ITaskQueueService
     private readonly IFeatureReaderService _featureReaderService = provider.GetRequiredService<IFeatureReaderService>();
     private readonly ILogger<TaskQueueService> _logger = provider.CreateLogger<TaskQueueService>();
     
-    public async Task ProcessQueueMessages(Client client)
+    public async Task ProcessQueueMessages()
     {
         var messageBatch = await _featureReaderService.GetIntValueAsync(ProcessQueueMessageCountFeatureName, 10);
 
@@ -42,7 +43,8 @@ public class TaskQueueService(IServiceProvider provider) : ITaskQueueService
                     var scriptActionItem = JToken.FromObject(message.Data).ToObject<ScriptActionItem>();
 
                     var scriptAction = scriptActionFactory.Create(scriptActionItem);
-                    taskList.Add(scriptAction.ExecuteAsync(
+
+                    var task = scriptAction.ExecuteAsync(
                         new ScriptContext(
                             provider,
                             scriptActionItem.FactionId,
@@ -50,13 +52,22 @@ public class TaskQueueService(IServiceProvider provider) : ITaskQueueService
                             scriptActionItem.Sector ?? new Vec3(),
                             scriptActionItem.TerritoryId
                         )
-                    ));
-                    taskList.Add(_repository.DeleteAsync(message.Id));
+                    ).OnError(exception =>
+                    {
+                        _logger.LogError(exception, "Failed to Dequeue Script Task");
+                        foreach (var e in exception.InnerExceptions)
+                        {
+                            _logger.LogError(e, "Inner Exception");
+                        }
+                    });
+                    
+                    taskList.Add(task);
+                    taskList.Add(_repository.TagCompleted(message.Id));
                     
                     break;
                 default:
                     _logger.LogWarning("Command Type {Command} Not implemented. Message Ignored", message.Command);
-                    taskList.Add(_repository.DeleteAsync(message.Id));
+                    taskList.Add(_repository.TagFailed(message.Id));
                     break;
             }
         }
@@ -83,5 +94,19 @@ public class TaskQueueService(IServiceProvider provider) : ITaskQueueService
         {
             _logger.LogError(e, "Failed to execute task queue processing");
         }
+    }
+
+    public Task EnqueueScript(ScriptActionItem script, DateTime? deliveryAt)
+    {
+        return _repository.AddAsync(
+            new TaskQueueItem
+            {
+                Id = Guid.NewGuid(),
+                Command = "script",
+                DeliveryAt = deliveryAt ?? DateTime.UtcNow,
+                Data = script,
+                Status = "scheduled"
+            }
+        );
     }
 }

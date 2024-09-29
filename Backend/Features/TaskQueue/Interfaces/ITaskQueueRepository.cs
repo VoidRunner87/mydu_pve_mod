@@ -10,4 +10,6 @@ public interface ITaskQueueRepository
     Task AddAsync(TaskQueueItem item);
     Task<IEnumerable<TaskQueueItem>> FindNextAsync(int quantity);
     Task DeleteAsync(Guid id);
+    Task TagCompleted(Guid id);
+    Task TagFailed(Guid id);
 }

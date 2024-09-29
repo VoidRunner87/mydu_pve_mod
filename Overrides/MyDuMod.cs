@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using NQ;
 using NQ.Grains.Core;
 using NQ.Interfaces;
+using NQ.RDMS;
 using NQutils;
 using NQutils.Def;
 using NQutils.Exceptions;

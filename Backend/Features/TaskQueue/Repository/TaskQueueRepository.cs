@@ -24,7 +24,7 @@ public class TaskQueueRepository(IServiceProvider provider) : ITaskQueueReposito
         await db.ExecuteAsync(
             """
             INSERT INTO public.mod_task_queue (id, command, delivery_at, data, status)
-            VALUES (@id, @command, @delivery_at, @data, @status)
+            VALUES (@id, @command, @delivery_at, @data::jsonb, @status)
             """,
             new
             {
@@ -44,7 +44,9 @@ public class TaskQueueRepository(IServiceProvider provider) : ITaskQueueReposito
 
         var result = (await db.QueryAsync<DbRow>(
             $"""
-             SELECT * FROM public.mod_task_queue ORDER BY created_at ASC LIMIT {quantity} 
+             SELECT * FROM public.mod_task_queue
+             WHERE deleted_at IS NULL AND delivery_at < NOW()
+             ORDER BY created_at ASC LIMIT {quantity} 
              """)).ToList();
 
         return result.Select(MapToModel);
@@ -55,7 +57,23 @@ public class TaskQueueRepository(IServiceProvider provider) : ITaskQueueReposito
         using var db = _factory.Create();
         db.Open();
 
-        await db.ExecuteAsync("DELETE FROM public.mod_task_queue WHERE id = @id", new { id });
+        await db.ExecuteAsync("UPDATE public.mod_task_queue SET deleted_at = NOW() WHERE id = @id", new { id });
+    }
+
+    public async Task TagCompleted(Guid id)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync("UPDATE public.mod_task_queue SET status = 'completed', deleted_at = NOW() WHERE id = @id", new { id });
+    }
+
+    public async Task TagFailed(Guid id)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync("UPDATE public.mod_task_queue SET status = 'failed', deleted_at = NOW() WHERE id = @id", new { id });
     }
 
     private TaskQueueItem MapToModel(DbRow row)

@@ -135,7 +135,15 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                         sector.Sector,
                         sector.TerritoryId
                     )
-                );
+                ).OnError(exception =>
+                {
+                    _logger.LogError(exception, "Failed to Execute On Load Script (Aggregate)");
+                    
+                    foreach (var e in exception.InnerExceptions)
+                    {
+                        _logger.LogError(e, "Failed to Execute On Load Script");
+                    }
+                });
 
                 await _sectorInstanceRepository.SetLoadedAsync(sector.Id, true);
                 await Task.Delay(200);

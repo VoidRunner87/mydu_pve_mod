@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Backend;
+using Backend.Database;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ using NQ;
 using NQ.Interfaces;
 using NQ.Visibility;
 using NQutils.Def;
+using NQutils.Sql;
 using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Common.Services;
@@ -96,7 +98,7 @@ public class ConstructService(IServiceProvider provider) : IConstructService
     {
         using var db = _factory.Create();
         db.Open();
-        
+
         await db.ExecuteAsync(
             $"""
              UPDATE public.construct SET deleted_at = NOW() WHERE id = @constructId AND deleted_at IS NULL
@@ -116,15 +118,15 @@ public class ConstructService(IServiceProvider provider) : IConstructService
         var bank = provider.GetGameplayBank();
         var gcConfig = bank.GetBaseObject<ConstructGCConfig>();
         var deleteHours = gcConfig.abandonedConstructDeleteDelayHours;
-        
+
         using var db = _factory.Create();
         db.Open();
 
         await db.ExecuteAsync(
             $"""
-            UPDATE public.construct SET abandoned_at = NOW() - INTERVAL '{deleteHours} HOURS' + INTERVAL '{timeSpan.ToPostgresInterval()}'
-            WHERE id = @constructId
-            """
+             UPDATE public.construct SET abandoned_at = NOW() - INTERVAL '{deleteHours} HOURS' + INTERVAL '{timeSpan.ToPostgresInterval()}'
+             WHERE id = @constructId
+             """
             , new
             {
                 constructId = (long)constructId
@@ -143,20 +145,20 @@ public class ConstructService(IServiceProvider provider) : IConstructService
             {
                 return false;
             }
-            
+
             var shieldPercent = constructInfo.mutableData.shieldState.shieldHpRatio * 100;
-            
+
             _logger.LogInformation("Construct {Construct} Shield Percent {Percent}", constructId, shieldPercent);
-            
+
             if (constructInfo.mutableData.shieldState.isVenting)
             {
-                _logger.LogInformation("Construct {Construct} Already Venting. Shield at {Percent}", 
+                _logger.LogInformation("Construct {Construct} Already Venting. Shield at {Percent}",
                     constructId,
                     shieldPercent
                 );
                 return true;
             }
-            
+
             var constructFightGrain = _orleans.GetConstructFightGrain((ulong)constructId);
             await constructFightGrain.StartVenting(4);
 
@@ -165,7 +167,7 @@ public class ConstructService(IServiceProvider provider) : IConstructService
         catch (Exception)
         {
             _logger.LogWarning("Could not vent shields. On Cooldown or Destroyed");
-            
+
             return false;
         }
     }
@@ -191,5 +193,39 @@ public class ConstructService(IServiceProvider provider) : IConstructService
         );
 
         return count > 0;
+    }
+
+    public async Task ActivateShieldsAsync(ulong constructId)
+    {
+        var constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
+        var shields = await constructElementsGrain.GetElementsOfType<ShieldGeneratorUnit>();
+
+        if (shields.Count == 0)
+        {
+            return;
+        }
+
+        var constructGrain = _orleans.GetConstructGrain(constructId);
+
+        try
+        {
+            var sql = provider.GetRequiredService<ISql>();
+            await sql.SetShieldEnabled(constructId, true);
+
+            await constructGrain.UpdateConstructInfo(new ConstructInfoUpdate
+            {
+                constructId = constructId,
+                shieldState = new ShieldState
+                {
+                    hasShield = true,
+                    isActive = true,
+                    shieldHpRatio = 1
+                },
+            });
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to Enable Shields");
+        }
     }
 }
