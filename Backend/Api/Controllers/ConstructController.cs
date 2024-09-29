@@ -89,9 +89,7 @@ public class ConstructController : Controller
         var constructInfoGrain = orleans.GetConstructInfoGrain((ulong)constructId);
         var constructInfo = await constructInfoGrain.Get();
 
-        var forward = constructInfo.rData.rotation
-            .ToQuat()
-            .Forward();
+        var forward = VectorMathUtils.GetForward(constructInfo.rData.rotation.ToQuat());
 
         const float accel = 100 * 9.81f;
         var offset = accel * forward * 1000;
@@ -217,6 +215,50 @@ public class ConstructController : Controller
         return Ok(weaponUnits);
     }
 
+    [Route("{constructId:long}/warp-start")]
+    [HttpPost]
+    public async Task<IActionResult> WarpStart(long constructId)
+    {
+        var provider = ModBase.ServiceProvider;
+        var orleans = provider.GetOrleans();
+        var constructInfoGrain = orleans.GetConstructInfoGrain((ulong)constructId);
+        var constructInfo = await constructInfoGrain.Get();
+
+        var pilot = constructInfo.mutableData.pilot;
+
+        if (pilot == null)
+        {
+            return BadRequest("Not Piloted");
+        }
+
+        var constructGrain = orleans.GetConstructGrain((ulong)constructId);
+        await constructGrain.WarpStart(pilot.Value);
+        
+        return Ok();
+    }
+    
+    [Route("{constructId:long}/warp-end")]
+    [HttpPost]
+    public async Task<IActionResult> WarpStop(long constructId)
+    {
+        var provider = ModBase.ServiceProvider;
+        var orleans = provider.GetOrleans();
+        var constructInfoGrain = orleans.GetConstructInfoGrain((ulong)constructId);
+        var constructInfo = await constructInfoGrain.Get();
+
+        var pilot = constructInfo.mutableData.pilot;
+
+        if (pilot == null)
+        {
+            return BadRequest("Not Piloted");
+        }
+
+        var constructGrain = orleans.GetConstructGrain((ulong)constructId);
+        await constructGrain.WarpEnd(pilot.Value);
+
+        return Ok();
+    }
+
     [Route("{constructId:long}/apply-stasis")]
     [HttpPost]
     public async Task<IActionResult> ApplyStasisToConstruct(long constructId, [FromBody] StasisRequest request)
@@ -230,7 +272,7 @@ public class ConstructController : Controller
             additionalMaxSpeedDebuf = new MaxSpeedDebuf
             {
                 until = (DateTime.Now + request.DurationSpan).ToNQTimePoint(),
-                value = Math.Clamp(request.Value, 0d, 1d)
+                value = Math.Clamp(request.Value, -2d, 2d)
             }
         });
 

@@ -51,7 +51,7 @@ public class CleanupLoop(TimeSpan loopTimer) : ModBase
             try
             {
                 await _constructService.SoftDeleteAsync(constructId);
-                await _constructHandleRepository.DeleteAsync(constructId);
+                await _constructHandleRepository.DeleteByConstructId(constructId);
                 await Task.Delay(500);
                 
                 ConstructsPendingDelete.Data.TryDequeue(out _);
