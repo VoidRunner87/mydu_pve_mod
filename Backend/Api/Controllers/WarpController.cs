@@ -15,6 +15,11 @@ public class WarpController : Controller
     [Route("anchor")]
     public async Task<IActionResult> CreateWarpAnchor([FromBody] WarpAnchorRequest request)
     {
+        if (request.PlayerId == default)
+        {
+            return BadRequest();
+        }
+        
         var provider = ModBase.ServiceProvider;
         var spawner = provider.GetRequiredService<IBlueprintSpawnerService>();
 

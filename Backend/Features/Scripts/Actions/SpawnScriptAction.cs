@@ -15,6 +15,7 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Helpers;
+using Newtonsoft.Json;
 using NQ;
 using NQ.Interfaces;
 using NQutils.Config;
@@ -28,7 +29,7 @@ namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 {
     public const string ActionName = "spawn";
-    
+
     private IPointGenerator _pointGenerator;
     private ILogger<SpawnScriptAction> _logger;
     public string Name { get; } = Guid.NewGuid().ToString();
@@ -115,7 +116,7 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
         {
             resultName = $"E-{random.Next(1000, 9999)}";
         }
-        
+
         var fixture = ConstructFixture.FromSource(source);
         fixture.parentId = actionItem.Override.PositionParentId;
         fixture.header.prettyName = resultName;
@@ -137,68 +138,53 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
             provider.GetRequiredService<IPlanetList>()
         ))[0];
 
-        var snapshotEnabled = false;
-
-        // Disabled. It takes too long for the game to create a snapshot
-        if (snapshotEnabled)
-        {
-            try
-            {
-                var constructInfoGrain = orleans.GetConstructInfoGrain(constructId);
-                var constructInfo = await constructInfoGrain.Get();
-                var size = constructInfo.rData.geometry.size;
-
-                var blueprintGrain = orleans.GetBlueprintGrain();
-                await blueprintGrain.Snapshot(
-                    new BlueprintCreate
-                    {
-                        constructId = constructId,
-                        enableDRM = true,
-                        box = new BoundingBox
-                        {
-                            min = new Vec3(),
-                            max = new Vec3 { x = size, y = size, z = size }
-                        }
-                    },
-                    constructDef.DefinitionItem.OwnerId,
-                    false
-                );
-
-                _logger.LogInformation("Snapshot Created for Construct {Construct}", constructId);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to Create Snapshot of Spawned Construct {Construct}", constructId);
-            }
-        }
-
-        _logger.LogInformation("Spawned Construct [{Name}]({Id}) at ::pos{{0,0,{Pos}}}", resultName, constructId, spawnPosition);
+        _logger.LogInformation("Spawned Construct [{Name}]({Id}) at ::pos{{0,0,{Pos}}}", resultName, constructId,
+            spawnPosition);
 
         var clusterClient = provider.GetRequiredService<IClusterClient>();
-        await clusterClient.GetConstructParentingGrain().ReloadConstruct(constructId);
 
-        var constructElementsGrain = orleans.GetConstructElementsGrain(constructId);
-        var shields = await constructElementsGrain.GetElementsOfType<ShieldGeneratorUnit>();
-
-        var constructGrain = orleans.GetConstructGrain(constructId);
-        var isWreck = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck;
-        if (!isWreck && shields.Count > 0)
+        try
         {
-            var sql = provider.GetRequiredService<ISql>();
-            await sql.SetShieldEnabled(constructId, true);
-
-            await constructGrain.UpdateConstructInfo(new ConstructInfoUpdate
-            {
-                constructId = constructId,
-                shieldState = new ShieldState
-                {
-                    hasShield = true,
-                    isActive = true,
-                    shieldHpRatio = 1
-                },
-            });
+            await clusterClient.GetConstructParentingGrain().ReloadConstruct(constructId);
         }
-        else
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to Reload Construct Post-Spawn");
+        }
+
+        var isWreck = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck;
+        
+        try
+        {
+            var constructElementsGrain = orleans.GetConstructElementsGrain(constructId);
+            var shields = await constructElementsGrain.GetElementsOfType<ShieldGeneratorUnit>();
+
+            var constructGrain = orleans.GetConstructGrain(constructId);
+
+            if (!isWreck && shields.Count > 0)
+            {
+                var sql = provider.GetRequiredService<ISql>();
+                await sql.SetShieldEnabled(constructId, true);
+
+                await constructGrain.UpdateConstructInfo(new ConstructInfoUpdate
+                {
+                    constructId = constructId,
+                    shieldState = new ShieldState
+                    {
+                        hasShield = true,
+                        isActive = true,
+                        shieldHpRatio = 1
+                    },
+                });
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,
+                "Failed to Set Shields to Active. Will try again another time with construct Behaviors");
+        }
+
+        if (isWreck)
         {
             // TODO obtain time span from territory
             // TODO add territory to sector instance
@@ -213,7 +199,7 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
             behaviorList.AddRange(["alive", "select-target", "notifier"]);
             behaviorList.AddRange(constructDefItem.InitialBehaviors);
         }
-        
+
         // Keeping track of what this script instance spawned
         await constructHandleRepo.AddAsync(
             new ConstructHandleItem
@@ -242,11 +228,22 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
         var actionFactory = provider.GetRequiredService<IScriptActionFactory>();
         var onLoadAction = actionFactory.Create(actionItem.Events.OnLoad);
 
-        // Execute on load tasks
-        await onLoadAction.ExecuteAsync(
-            context.WithConstructId(constructId)
-        );
-        
+        try
+        {
+            // Execute on load tasks
+            await onLoadAction.ExecuteAsync(
+                context.WithConstructId(constructId)
+            );
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(
+                e,
+                "Failed to Execute OnLoad Action for Script {Script}",
+                JsonConvert.SerializeObject(onLoadAction)
+            );
+        }
+
         return ScriptActionResult.Successful();
     }
 
