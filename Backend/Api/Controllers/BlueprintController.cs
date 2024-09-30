@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Backend;
@@ -59,7 +59,7 @@ public partial class BlueprintController : Controller
 
     [Route("upload/{folder}")]
     [HttpPost]
-    public async Task<IActionResult> UploadAsync(string folder, [FromForm] IFormFile? file)
+    public async Task<IActionResult> UploadAsync(string folder, IFormFile? file)
     {
         if (file == null || file.Length == 0 || !file.FileName.EndsWith("json"))
         {
