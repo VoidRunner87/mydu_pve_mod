@@ -23,6 +23,7 @@
         <EmbeddedResource Include="Resources\create-root-div.js" />
         <EmbeddedResource Include="Resources\npc-app.css" />
         <EmbeddedResource Include="Resources\npc-app.js" />
+        <EmbeddedResource Remove="obj\**" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Overrides\" />
@@ -48,6 +49,10 @@
     <ItemGroup>
       <Compile Include="obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
       <Compile Include="obj\Debug\net6.0\Mod.DynamicEncounters.AssemblyInfo.cs" />
+      <Compile Remove="obj\**" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Remove="obj\**" />
     </ItemGroup>
 
     <!-- https://github.com/dotnet/efcore/issues/15047 -->

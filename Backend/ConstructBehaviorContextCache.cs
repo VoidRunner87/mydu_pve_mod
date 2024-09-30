@@ -6,5 +6,5 @@ namespace Mod.DynamicEncounters;
 
 public static class ConstructBehaviorContextCache
 {
-    public static TemporaryMemoryCache<ulong, BehaviorContext> Data { get; set; } = new(TimeSpan.FromMinutes(5));
+    public static TemporaryMemoryCache<ulong, BehaviorContext> Data { get; set; } = new(TimeSpan.FromHours(3));
 }

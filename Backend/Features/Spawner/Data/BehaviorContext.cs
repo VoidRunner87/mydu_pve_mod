@@ -138,14 +138,6 @@ public class BehaviorContext(
 
         await Task.WhenAll(taskList);
 
-        var featureService = ServiceProvider.GetRequiredService<IFeatureReaderService>();
-
-        if (await featureService.GetBoolValueAsync("ResetNPCCombatLockOnDestruction", false))
-        {
-            var constructService = ServiceProvider.GetRequiredService<IConstructService>();
-            await constructService.ResetConstructCombatLock(eventArgs.ConstructId);
-        }
-
         PublishedEvents.TryAdd(nameof(NotifyConstructDestroyedAsync), true);
     }
 

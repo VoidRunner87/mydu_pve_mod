@@ -205,23 +205,10 @@ public class ConstructService(IServiceProvider provider) : IConstructService
             return;
         }
 
-        var constructGrain = _orleans.GetConstructGrain(constructId);
-
         try
         {
             var sql = provider.GetRequiredService<ISql>();
             await sql.SetShieldEnabled(constructId, true);
-
-            await constructGrain.UpdateConstructInfo(new ConstructInfoUpdate
-            {
-                constructId = constructId,
-                shieldState = new ShieldState
-                {
-                    hasShield = true,
-                    isActive = true,
-                    shieldHpRatio = 1
-                },
-            });
         }
         catch (Exception e)
         {

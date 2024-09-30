@@ -232,6 +232,16 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             return;
         }
 
+        if (context.TargetConstructId > 0)
+        {
+            var targetConstructGrain = _orleans.GetConstructGrain(context.TargetConstructId);
+            var targetInSafeZone = await targetConstructGrain.IsInSafeZone();
+            if (targetInSafeZone)
+            {
+                return;
+            }
+        }
+
         SetShootTotalDeltaTime(context.BehaviorContext, 0);
 
         if (prefab.DefinitionItem.AmmoItems.Count == 0)

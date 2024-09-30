@@ -94,7 +94,6 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var accelV = moveDirection * acceleration;
 
         context.Velocity += accelV * context.DeltaTime;
-        context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);
         var velocity = context.Velocity;
 
         var position = VelocityHelper.LinearInterpolateWithVelocity(
@@ -102,6 +101,7 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
             context.TargetMovePosition,
             ref velocity,
             accelV,
+            prefab.DefinitionItem.MaxSpeedKph / 3.6d,
             context.DeltaTime
         );
 

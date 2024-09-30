@@ -6,7 +6,7 @@ namespace Mod.DynamicEncounters.Features.Common.Services;
 
 public class TemporaryMemoryCache<TKey, T>(TimeSpan expirationSpan)
 {
-    private readonly MemoryCache _cache = new(new MemoryCacheOptions());
+    private readonly MemoryCache _cache = new(new MemoryCacheOptions { SizeLimit = 10000 });
 
     public async Task<T> TryGetValue(TKey key, Func<Task<T>> defaultValueFn, Func<T, bool>? noCacheRule = null)
     {
@@ -46,6 +46,11 @@ public class TemporaryMemoryCache<TKey, T>(TimeSpan expirationSpan)
             return;
         }
 
-        _cache.Set(key, value, expirationSpan);
+        _cache.Set(key, value, new MemoryCacheEntryOptions
+        {
+            Size = 1,
+            AbsoluteExpirationRelativeToNow = expirationSpan,
+            Priority = CacheItemPriority.NeverRemove
+        });
     }
 }

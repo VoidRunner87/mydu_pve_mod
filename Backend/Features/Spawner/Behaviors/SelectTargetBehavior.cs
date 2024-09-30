@@ -9,6 +9,7 @@ using Mod.DynamicEncounters.Common.Vector;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Services;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
@@ -28,6 +29,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
     private IConstructGrain _constructGrain;
     private IConstructService _constructService;
     private IConstructElementsService _constructElementsService;
+    private ISectorPoolManager _sectorPoolManager;
 
     public bool IsActive() => _active;
 
@@ -42,6 +44,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         _constructGrain = _orleans.GetConstructGrain(constructId);
         _constructService = provider.GetRequiredService<IConstructService>();
         _constructElementsService = provider.GetRequiredService<IConstructElementsService>();
+        _sectorPoolManager = provider.GetRequiredService<ISectorPoolManager>();
         
         var radarElementId = (await _constructElementsService.GetPvpRadarElements(constructId)).FirstOrDefault();
         var gunnerSeatElementId = (await _constructElementsService.GetPvpSeatElements(constructId)).FirstOrDefault();
@@ -91,17 +94,6 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         var constructsOnSector = SectorGridConstructCache.FindAroundGrid(sectorGrid);
         
-        // var foundValue = SectorGridConstructCache.Data.TryGetValue(sectorGrid, out var constructsOnSectorBag);
-        // if (!foundValue)
-        // {
-        //     _logger.LogWarning("Construct {Construct} found nothing on Grid Cache", constructId);
-        //     constructsOnSectorBag = [];
-        // }
-        //
-        // var constructsOnSector = constructsOnSectorBag.ToHashSet();
-        
-        // var constructsOnSector = await _spatialHashRepo.FindPlayerLiveConstructsOnSector(sectorPos);
-
         var result = new List<ConstructInfo>();
         foreach (var id in constructsOnSector)
         {
@@ -126,7 +118,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             sw.ElapsedMilliseconds
         );
 
-        ulong targetId = 0;
+        ulong? targetId = null;
         var distance = double.MaxValue;
         int maxIterations = 10;
         int counter = 0;
@@ -173,20 +165,47 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             counter++;
         }
 
-        context.TargetConstructId = targetId == 0 ? null : targetId;
-        context.TargetSelectedTime = DateTime.UtcNow;
-
+        if (targetId.HasValue && targetId.Value != 0)
+        {
+            context.TargetConstructId = targetId;
+            context.TargetSelectedTime = DateTime.UtcNow;
+        }
+        
         if (!context.TargetConstructId.HasValue)
         {
             return;
         }
-        
+
+        var returnToSector = false;
+        if (context.Position.HasValue)
+        {
+            var targetConstructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
+            if (targetConstructInfo != null)
+            {
+                var targetPos = targetConstructInfo.rData.position;
+
+                var targetDistance = (targetPos - context.Position.Value).Size();
+                if (targetDistance > 10 * DistanceHelpers.OneSuInMeters)
+                {
+                    returnToSector = true;
+                }
+            }
+        }
+
         var targetMovePositionTask = GetTargetMovePosition(context);
         var cacheTargetElementPositionsTask = CacheTargetElementPositions(context);
 
         await Task.WhenAll([targetMovePositionTask, cacheTargetElementPositionsTask]);
 
-        context.TargetMovePosition = await targetMovePositionTask;
+        if (returnToSector)
+        {
+            context.TargetMovePosition = context.Sector;
+        }
+        else
+        {
+            context.TargetMovePosition = await targetMovePositionTask;
+            await _sectorPoolManager.SetExpirationFromNow(context.Sector, TimeSpan.FromHours(1));
+        }
         
         _logger.LogInformation("Selected a new Target: {Target}; {Time}ms", targetId, sw.ElapsedMilliseconds);
 
@@ -259,17 +278,19 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         {
             return new Vec3();
         }
-        
+
         var targetConstructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
         if (targetConstructInfo == null)
         {
             _logger.LogError("Construct {Construct} Target construct info {Target} is null", constructId, context.TargetConstructId.Value);
             return new Vec3();
         }
-        
+
+        var targetPos = targetConstructInfo.rData.position;
+
         var distanceGoal = prefab.DefinitionItem.TargetDistance;
         var offset = new Vec3 { y = distanceGoal };
         
-        return targetConstructInfo.rData.position + offset;
+        return targetPos + offset;
     }
 }

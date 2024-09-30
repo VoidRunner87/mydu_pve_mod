@@ -51,7 +51,7 @@ public static class Program
                 new SectorLoop().Start(),
                 new ConstructBehaviorLoop(1, BehaviorTaskCategory.MediumPriority).Start(),
                 new ConstructBehaviorLoop(10, BehaviorTaskCategory.HighPriority).Start(),
-                new ConstructBehaviorLoop(30, BehaviorTaskCategory.MovementPriority).Start(),
+                new ConstructBehaviorLoop(20, BehaviorTaskCategory.MovementPriority).Start(),
                 new TaskQueueLoop().Start(),
                 new CleanupLoop(TimeSpan.FromSeconds(5)).Start()
             };
