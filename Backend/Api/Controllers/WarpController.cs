@@ -69,5 +69,6 @@ public class WarpController : Controller
     {
         public ulong PlayerId { get; set; }
         public Vec3 Position { get; set; }
+        public string BeaconElement { get; set; } = "SupercruiseBeacon";
     }
 }

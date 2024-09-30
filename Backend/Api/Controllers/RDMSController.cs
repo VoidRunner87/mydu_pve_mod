@@ -15,10 +15,6 @@ public class RDMSController : Controller
     [HttpPost]
     public async Task<IActionResult> GiveRightsToBot()
     {
-        var provider = ModBase.ServiceProvider;
-        var orleans = provider.GetOrleans();
-        var bank = provider.GetGameplayBank();
-        
         var unknownEntity = new EntityId { playerId = StaticPlayerId.Unknown };
 
         var actor = await ModBase.Bot.Req.RDMSActorCreate(new ActorData

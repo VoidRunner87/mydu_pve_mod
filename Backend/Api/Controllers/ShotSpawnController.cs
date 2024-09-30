@@ -8,14 +8,17 @@ using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
+using NQ;
 using NQ.Interfaces;
 using NQutils.Def;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("shot")]
 public class ShotSpawnController : Controller
 {
+    [SwaggerOperation("Spawns shots on a construct. Useful to make wrecks")]
     [HttpPut]
     [Route("shooter/{shooterConstructId:long}/target/{targetConstructId:long}")]
     public async Task<IActionResult> Shoot(
@@ -97,6 +100,32 @@ public class ShotSpawnController : Controller
         }
 
         return Ok();
+    }
+    
+    [Route("stasis/{constructId:long}")]
+    [HttpPost]
+    public async Task<IActionResult> ApplyStasisToConstruct(long constructId, [FromBody] StasisRequest request)
+    {
+        var provider = ModBase.ServiceProvider;
+        var orleans = provider.GetOrleans();
+
+        var constructInfoGrain = orleans.GetConstructInfoGrain((ulong)constructId);
+        await constructInfoGrain.Update(new ConstructInfoUpdate
+        {
+            additionalMaxSpeedDebuf = new MaxSpeedDebuf
+            {
+                until = (DateTime.Now + request.DurationSpan).ToNQTimePoint(),
+                value = Math.Clamp(request.Value, 0d, 1d)
+            }
+        });
+
+        return Ok();
+    }
+
+    public class StasisRequest
+    {
+        public TimeSpan DurationSpan { get; set; }
+        public double Value { get; set; }
     }
 
     public class ShotRequest

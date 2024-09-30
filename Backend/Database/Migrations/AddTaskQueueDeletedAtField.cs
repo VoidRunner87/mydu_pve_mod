@@ -7,7 +7,7 @@ namespace Mod.DynamicEncounters.Database.Migrations;
 public class AddTaskQueueDeletedAtField : Migration
 {
     private const string TaskQueueTable = "mod_task_queue";
-    
+
     public override void Up()
     {
         Alter.Table(TaskQueueTable)

@@ -27,6 +27,28 @@
     <ItemGroup>
       <Folder Include="Overrides\" />
     </ItemGroup>
+    <ItemGroup>
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.AssemblyInfoInputs.cache" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.assets.cache" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.csproj.AssemblyReference.cache" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.GeneratedMSBuildEditorConfig.editorconfig" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.Overrides.AssemblyInfoInputs.cache" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.Overrides.assets.cache" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.Overrides.csproj.AssemblyReference.cache" />
+      <Content Include="obj\Mod.DynamicEncounters.csproj.nuget.dgspec.json" />
+      <Content Include="obj\Mod.DynamicEncounters.csproj.nuget.g.props" />
+      <Content Include="obj\Mod.DynamicEncounters.csproj.nuget.g.targets" />
+      <Content Include="obj\Mod.DynamicEncounters.Overrides.csproj.nuget.dgspec.json" />
+      <Content Include="obj\project.assets.json" />
+      <Content Include="obj\project.nuget.cache" />
+      <Content Include="obj\project.packagespec.json" />
+      <Content Include="obj\rider.project.model.nuget.info" />
+      <Content Include="obj\rider.project.restore.info" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Include="obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
+      <Compile Include="obj\Debug\net6.0\Mod.DynamicEncounters.AssemblyInfo.cs" />
+    </ItemGroup>
 
     <!-- https://github.com/dotnet/efcore/issues/15047 -->
     <Target Name="AddAssemblyAliasToReactiveAsync" AfterTargets="ResolveAssemblyReferences">

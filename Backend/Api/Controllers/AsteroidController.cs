@@ -1,20 +1,16 @@
 ﻿using System.Threading.Tasks;
-using Backend;
-using Backend.AWS;
-using Backend.Fixture;
-using Backend.Fixture.Construct;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
-using NQutils.Sql;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
-[Route("spawner")]
-public class SpawnerController : Controller
+[Route("asteroid")]
+public class AsteroidController : Controller
 {
     public class SpawnRequest
     {
@@ -23,8 +19,9 @@ public class SpawnerController : Controller
         public Vec3? Position { get; set; }
     }
     
+    [SwaggerOperation("Spawns an Asteroid at a position or around a construct")]
     [HttpPost]
-    [Route("asteroid")]
+    [Route("spawn")]
     public async Task<IActionResult> SpawnAsync([FromBody] SpawnRequest request)
     {
         var provider = ModBase.ServiceProvider;
