@@ -19,4 +19,5 @@ public interface IConstructService
     IConstructService NoCache();
     Task<bool> Exists(ulong constructId);
     Task ActivateShieldsAsync(ulong constructId);
+    Task<bool> IsInSafeZone(ulong constructId);
 }

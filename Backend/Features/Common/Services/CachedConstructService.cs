@@ -15,6 +15,7 @@ public class CachedConstructService(
     private readonly TemporaryMemoryCache<ulong, ConstructInfo> _constructInfos = new(constructInfoCacheSpan);
     private readonly TemporaryMemoryCache<ulong, Velocities> _velocities = new(constructInfoCacheSpan);
     private readonly TemporaryMemoryCache<ulong, bool> _beingControlled = new(controlCheckCacheSpan);
+    private readonly TemporaryMemoryCache<ulong, bool> _inSafeZone = new(controlCheckCacheSpan);
 
     public async Task<ConstructInfo?> GetConstructInfoAsync(ulong constructId)
     {
@@ -74,5 +75,13 @@ public class CachedConstructService(
     public Task ActivateShieldsAsync(ulong constructId)
     {
         return service.ActivateShieldsAsync(constructId);
+    }
+
+    public async Task<bool> IsInSafeZone(ulong constructId)
+    {
+        return await _inSafeZone.TryGetValue(
+            constructId,
+            () => service.IsInSafeZone(constructId)
+        );
     }
 }

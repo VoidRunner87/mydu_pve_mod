@@ -135,10 +135,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             // Adds to the list of players involved
             if (construct.mutableData.pilot.HasValue)
             {
-                context.PlayerIds.TryAdd(
-                    construct.mutableData.pilot.Value.id,
-                    construct.mutableData.pilot.Value.id
-                );
+                context.PlayerIds.Add(construct.mutableData.pilot.Value.id);
             }
             
             var pos = construct.rData.position;
@@ -190,6 +187,16 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                     returnToSector = true;
                 }
             }
+
+            if (await _constructService.IsInSafeZone(context.TargetConstructId.Value))
+            {
+                returnToSector = true;
+            }
+        }
+
+        if (returnToSector)
+        {
+            _logger.LogInformation("Construct {Construct} Returning to Sector", constructId);
         }
 
         var targetMovePositionTask = GetTargetMovePosition(context);

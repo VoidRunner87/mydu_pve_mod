@@ -41,7 +41,7 @@ public class BehaviorContext(
     public Vec3 Velocity { get; set; }
     public Vec3? Position { get; set; }
     public Quat Rotation { get; set; }
-    public ConcurrentDictionary<ulong, ulong> PlayerIds { get; set; } = new();
+    public HashSet<ulong> PlayerIds { get; set; } = new();
     public long FactionId { get; } = factionId;
     public Guid? TerritoryId { get; } = territoryId;
     public Vec3 Sector { get; } = sector;
@@ -76,7 +76,7 @@ public class BehaviorContext(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.FactionId,
-                eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
+                eventArgs.Context.PlayerIds.ToHashSet(),
                 eventArgs.Context.Sector,
                 eventArgs.Context.TerritoryId
             )
@@ -108,7 +108,7 @@ public class BehaviorContext(
         var tasks = eventArgs.Context.PlayerIds.Select(id =>
             eventService.PublishAsync(
                 new PlayerDefeatedNpcEvent(
-                    id.Key,
+                    id,
                     eventArgs.Context.Sector,
                     eventArgs.ConstructId,
                     eventArgs.Context.FactionId,
@@ -123,7 +123,7 @@ public class BehaviorContext(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.FactionId,
-                eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
+                eventArgs.Context.PlayerIds.ToHashSet(),
                 eventArgs.Context.Sector,
                 eventArgs.Context.TerritoryId
             )
@@ -150,7 +150,7 @@ public class BehaviorContext(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.FactionId,
-                eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
+                eventArgs.Context.PlayerIds,
                 eventArgs.Context.Sector,
                 eventArgs.Context.TerritoryId
             )
@@ -173,7 +173,7 @@ public class BehaviorContext(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.FactionId,
-                eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
+                eventArgs.Context.PlayerIds,
                 eventArgs.Context.Sector,
                 eventArgs.Context.TerritoryId
             )
@@ -196,7 +196,7 @@ public class BehaviorContext(
             new ScriptContext(
                 eventArgs.Context.ServiceProvider,
                 eventArgs.Context.FactionId,
-                eventArgs.Context.PlayerIds.Select(x => x.Key).ToHashSet(),
+                eventArgs.Context.PlayerIds,
                 eventArgs.Context.Sector,
                 eventArgs.Context.TerritoryId
             )

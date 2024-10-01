@@ -215,4 +215,9 @@ public class ConstructService(IServiceProvider provider) : IConstructService
             _logger.LogError(e, "Failed to Enable Shields");
         }
     }
+
+    public Task<bool> IsInSafeZone(ulong constructId)
+    {
+        return _orleans.GetConstructGrain(constructId).IsInSafeZone();
+    }
 }

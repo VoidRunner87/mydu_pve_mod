@@ -39,25 +39,6 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         return Task.CompletedTask;
     }
 
-    private void SetD0(Vec3 value, BehaviorContext context)
-    {
-        if (!context.ExtraProperties.TryAdd("d0", value))
-        {
-            context.ExtraProperties["d0"] = value;
-        }
-    }
-
-    private bool GetD0(BehaviorContext context, out Vec3 value, Vec3 defaultValue)
-    {
-        if (!context.ExtraProperties.TryGetValue("d0", out value))
-        {
-            value = defaultValue;
-            return false;
-        }
-
-        return true;
-    }
-
     public async Task TickAsync(BehaviorContext context)
     {
         if (!context.IsAlive)
@@ -209,8 +190,8 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
         _timePoint = TimePoint.Now();
 
-        var velocityDisplay = context.Velocity; 
-        // var velocityDisplay = (position - npcPos) / context.DeltaTime; 
+        // var velocityDisplay = context.Velocity; 
+        var velocityDisplay = (position - npcPos) / context.DeltaTime; 
 
         try
         {

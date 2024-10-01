@@ -119,7 +119,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
         if (targetInfo.mutableData.pilot.HasValue)
         {
-            context.PlayerIds.TryAdd(targetInfo.mutableData.pilot.Value, targetInfo.mutableData.pilot.Value);
+            context.PlayerIds.Add(targetInfo.mutableData.pilot.Value);
         }
 
         var random = provider.GetRandomProvider()
@@ -226,7 +226,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             return;
         }
 
-        var isInSafeZone = await _constructGrain.IsInSafeZone();
+        var isInSafeZone = await _constructService.IsInSafeZone(constructId);
         if (isInSafeZone)
         {
             return;
@@ -234,8 +234,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
         if (context.TargetConstructId > 0)
         {
-            var targetConstructGrain = _orleans.GetConstructGrain(context.TargetConstructId);
-            var targetInSafeZone = await targetConstructGrain.IsInSafeZone();
+            var targetInSafeZone = await _constructService.NoCache().IsInSafeZone(context.TargetConstructId);
             if (targetInSafeZone)
             {
                 return;
