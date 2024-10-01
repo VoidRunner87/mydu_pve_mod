@@ -133,25 +133,60 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             acceleration *= 1 + Math.Abs(velToTargetDot);
         }
 
-        const float realismFactor = 0.25f;
-        
+        const double realismFactor = 0.25d;
+
         var accelForward = forward * acceleration * realismFactor;
         var accelMove = moveDirection * acceleration * (1 - realismFactor);
 
         var accelV = accelForward + accelMove;
-        
-        context.Velocity += accelV * context.DeltaTime;
-        context.Velocity = context.Velocity.ClampToSize(prefab.DefinitionItem.MaxSpeedKph / 3.6d);
+
         var velocity = context.Velocity;
 
+        _logger.LogDebug(
+            "Construct 1 {Construct} | {DT} | Vel = {Vel:N0}kph | Accel = {Accel}", 
+            constructId, 
+            context.DeltaTime,
+            velocity.Size() * 3.6d,
+            accelV
+        );
+        
         var position = VelocityHelper.LinearInterpolateWithVelocity(
             npcPos,
             context.TargetMovePosition,
             ref velocity,
             accelV,
+            prefab.DefinitionItem.MaxSpeedKph / 3.6d,
             context.DeltaTime
         );
 
+        context.TryGetProperty("V0", out var v0, velocity);
+
+        var deltaV = velocity - v0;
+        var maxDeltaV = acceleration * context.DeltaTime;
+
+        if (deltaV.Size() > maxDeltaV)
+        {
+            deltaV = deltaV.NormalizeSafe() * maxDeltaV;
+            velocity = v0 + deltaV;
+            position = npcPos + velocity * context.DeltaTime;
+            
+            _logger.LogDebug("Construct {Construct} Delta V Discrepancy {DV}. V set to {V}Kph", 
+                constructId, 
+                deltaV.Size() * 3.6d,
+                velocity
+            );
+        }
+        
+        context.SetProperty("V0", velocity);
+
+        _logger.LogDebug(
+            "Construct 2 {Construct} | {DT} |  Vel = {Vel:N0}kph | Accel = {Accel}", 
+            constructId, 
+            context.DeltaTime,
+            velocity.Size() * 3.6d,
+            accelV
+        );
+        
         context.Velocity = velocity;
         
         // context.Velocity = velocity;
@@ -170,15 +205,13 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             (float)(prefab.DefinitionItem.RotationSpeed * context.DeltaTime)
         );
 
-        GetD0(context, out var d0, new Vec3());
-        SetD0(moveDirection, context);
-
         context.Rotation = rotation.ToNqQuat();
 
         _timePoint = TimePoint.Now();
 
-        context.Velocity = (position - npcPos) / context.DeltaTime; 
-        
+        var velocityDisplay = context.Velocity; 
+        // var velocityDisplay = (position - npcPos) / context.DeltaTime; 
+
         try
         {
             context.Position = position;
@@ -188,8 +221,8 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
                 constructId = constructId,
                 rotation = context.Rotation,
                 position = position,
-                worldAbsoluteVelocity = context.Velocity,
-                worldRelativeVelocity = context.Velocity,
+                worldAbsoluteVelocity = velocityDisplay,
+                worldRelativeVelocity = velocityDisplay,
                 // worldAbsoluteAngVelocity = relativeAngularVel,
                 // worldRelativeAngVelocity = relativeAngularVel,
                 time = _timePoint,
@@ -247,6 +280,4 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             z = rotationAxis.z * theta / deltaTime
         };
     }
-
-    
 }

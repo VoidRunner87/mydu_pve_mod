@@ -51,8 +51,10 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
 
         var sectors = (await db.QueryAsync<VectorRow>(
             """
-            SELECT DISTINCT sector_x as x, sector_y as y, sector_z as z FROM public.mod_npc_construct_handle
-            WHERE deleted_at IS NULL
+            SELECT DISTINCT C.sector_x as x, C.sector_y as y, C.sector_z as z 
+            FROM public.mod_npc_construct_handle CH
+            INNER JOIN public.construct C ON (C.id = CH.construct_id)
+            WHERE C.deleted_at IS NULL AND CH.deleted_at IS NULL 
             """
         )).ToList();
 

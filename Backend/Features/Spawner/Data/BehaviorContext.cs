@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Events.Data;
 using Mod.DynamicEncounters.Features.Events.Interfaces;
-using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
@@ -35,7 +33,7 @@ public class BehaviorContext(
     public double DeltaTime
     {
         get => _deltaTime;
-        set => _deltaTime = Math.Clamp(value, 1 / 60f, 1 / 30f);
+        set => _deltaTime = Math.Clamp(value, 1 / 60f, 1 / 20f);
     }
 
     public Dictionary<string, object> ExtraProperties = new();
