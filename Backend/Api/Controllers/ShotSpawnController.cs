@@ -30,14 +30,14 @@ public class ShotSpawnController : Controller
         var provider = ModBase.ServiceProvider;
         var orleans = provider.GetOrleans();
         var npcShotGrain = orleans.GetNpcShotGrain();
-        var constructInfoGrain = orleans.GetConstructInfoGrain((ulong)targetConstructId);
-        var constructInfo = await constructInfoGrain.Get();
+        var targetConstructInfoGrain = orleans.GetConstructInfoGrain((ulong)targetConstructId);
+        var targetConstructInfo = await targetConstructInfoGrain.Get();
         var bank = provider.GetGameplayBank();
 
         var targetConstructElementsGrain = orleans.GetConstructElementsGrain((ulong)targetConstructId);
         var elements = await targetConstructElementsGrain.GetElementsOfType<ConstructElement>();
 
-        var targetPos = constructInfo.rData.position;
+        var targetPos = targetConstructInfo.rData.position;
 
         var constructElementsGrain = orleans.GetConstructElementsGrain((ulong)shooterConstructId);
 
@@ -69,7 +69,7 @@ public class ShotSpawnController : Controller
                 "Random",
                 shootPos,
                 (ulong)shooterConstructId,
-                (ulong)constructInfo.rData.geometry.size,
+                (ulong)targetConstructInfo.rData.geometry.size,
                 (ulong)targetConstructId,
                 targetPos,
                 new SentinelWeapon
@@ -79,8 +79,8 @@ public class ShotSpawnController : Controller
                     range = 400000,
                     aoeRange = 100000,
                     baseAccuracy = w.baseAccuracy * weaponMod.Accuracy,
-                    effectDuration = 10,
-                    effectStrength = 10,
+                    effectDuration = 1,
+                    effectStrength = 1,
                     falloffDistance = w.falloffDistance * weaponMod.FalloffDistance,
                     falloffTracking = w.falloffTracking * weaponMod.FalloffTracking,
                     fireCooldown = 1,

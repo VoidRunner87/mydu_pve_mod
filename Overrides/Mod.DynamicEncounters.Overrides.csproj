@@ -6,6 +6,9 @@
         <PackageId>Mod.DynamicEncounters</PackageId>
     </PropertyGroup>
     <ItemGroup>
+        <Reference Include="Grains">
+          <HintPath>NQ\Grains.dll</HintPath>
+        </Reference>
         <Reference Include="NQutils"/>
         <Reference Include="Backend"/>
         <Reference Include="Backend.PubSub"/>
@@ -13,6 +16,7 @@
         <Reference Include="Router.Orleans"/>
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="MathNet.Spatial" Version="0.6.0" />
         <PackageReference Include="Microsoft.Orleans.Core" Version="3.6.5"/>
         <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="3.6.5"/>
         <PackageReference Include="prometheus-net" Version="6.0.0"/>

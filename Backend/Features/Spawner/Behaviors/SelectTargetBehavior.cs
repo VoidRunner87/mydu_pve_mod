@@ -234,19 +234,36 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                 return;
             }
 
-            var identifyTask = _orleans.GetRadarGrain(radarElementId)
-                .IdentifyStart(ModBase.Bot.PlayerId, new RadarIdentifyTarget
-                {
-                    playerId = constructInfo.mutableData.pilot ?? 0,
-                    sourceConstructId = constructId,
-                    targetConstructId = context.TargetConstructId.Value,
-                    sourceRadarElementId = radarElementId,
-                    sourceSeatElementId = seatElementId
-                });
+            var targeting = new TargetingConstructData
+            {
+                constructId = constructId,
+                ownerId = new EntityId { playerId = prefab.DefinitionItem.OwnerId },
+                constructName = prefab.DefinitionItem.Name
+            };
+            
+            await _constructService.SendIdentificationNotification(
+                context.TargetConstructId.Value,
+                targeting
+            );
+
+            await _constructService.SendAttackingNotification(
+                context.TargetConstructId.Value,
+                targeting
+            );
+            
+            // var identifyTask = _orleans.GetRadarGrain(radarElementId)
+            //     .IdentifyStart(ModBase.Bot.PlayerId, new RadarIdentifyTarget
+            //     {
+            //         playerId = constructInfo.mutableData.pilot ?? 0,
+            //         sourceConstructId = constructId,
+            //         targetConstructId = context.TargetConstructId.Value,
+            //         sourceRadarElementId = radarElementId,
+            //         sourceSeatElementId = seatElementId
+            //     });
 
             var pilotTakeOverTask = PilotingTakeOverAsync();
 
-            await Task.WhenAll([identifyTask, pilotTakeOverTask]);
+            await Task.WhenAll([pilotTakeOverTask]);
         }
         catch (Exception e)
         {

@@ -220,4 +220,22 @@ public class ConstructService(IServiceProvider provider) : IConstructService
     {
         return _orleans.GetConstructGrain(constructId).IsInSafeZone();
     }
+
+    public Task SendIdentificationNotification(ulong constructId, TargetingConstructData targeting)
+    {
+        return _orleans.GetConstructGrain(constructId)
+            .ConstructStartIdentifying(
+                targeting,
+                0UL
+            );
+    }
+
+    public Task SendAttackingNotification(ulong constructId, TargetingConstructData targeting)
+    {
+        return _orleans.GetConstructGrain(constructId)
+            .ConstructStartAttacking(
+                targeting,
+                0UL
+            );
+    }
 }

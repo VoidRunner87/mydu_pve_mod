@@ -16,6 +16,8 @@ public class CachedConstructService(
     private readonly TemporaryMemoryCache<ulong, Velocities> _velocities = new(constructInfoCacheSpan);
     private readonly TemporaryMemoryCache<ulong, bool> _beingControlled = new(controlCheckCacheSpan);
     private readonly TemporaryMemoryCache<ulong, bool> _inSafeZone = new(controlCheckCacheSpan);
+    private readonly TemporaryMemoryCache<ulong, bool> _identifyNotification = new(constructInfoCacheSpan);
+    private readonly TemporaryMemoryCache<ulong, bool> _attackingNotification = new(constructInfoCacheSpan);
 
     public async Task<ConstructInfo?> GetConstructInfoAsync(ulong constructId)
     {
@@ -82,6 +84,24 @@ public class CachedConstructService(
         return await _inSafeZone.TryGetValue(
             constructId,
             () => service.IsInSafeZone(constructId)
+        );
+    }
+
+    public async Task SendIdentificationNotification(ulong constructId, TargetingConstructData targeting)
+    {
+        await _identifyNotification.TryGetValue(
+            constructId,
+            () => service.SendIdentificationNotification(constructId, targeting)
+                .ContinueWith(_ => true)
+        );
+    }
+
+    public async Task SendAttackingNotification(ulong constructId, TargetingConstructData targeting)
+    {
+        await _attackingNotification.TryGetValue(
+            constructId,
+            () => service.SendAttackingNotification(constructId, targeting)
+                .ContinueWith(_ => true)
         );
     }
 }
