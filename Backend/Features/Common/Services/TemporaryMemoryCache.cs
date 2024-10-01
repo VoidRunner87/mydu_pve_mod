@@ -4,10 +4,23 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Mod.DynamicEncounters.Features.Common.Services;
 
-public class TemporaryMemoryCache<TKey, T>(TimeSpan expirationSpan)
+public class TemporaryMemoryCache<TKey, T>
 {
-    private readonly MemoryCache _cache = new(new MemoryCacheOptions());
+    private readonly TimeSpan _expirationSpan;
+    
+    private readonly MemoryCache _cache = new(new MemoryCacheOptions
+    {
+        ExpirationScanFrequency = TimeSpan.FromSeconds(1/30d),
+        TrackStatistics = true
+    });
 
+    public TemporaryMemoryCache(string id, TimeSpan expirationSpan)
+    {
+        _expirationSpan = expirationSpan;
+
+        CacheRegistry.CacheMap.TryAdd(id, _cache);
+    }
+    
     public async Task<T> TryGetValue(TKey key, Func<Task<T>> defaultValueFn, Func<T, bool>? noCacheRule = null)
     {
         if (key == null)
@@ -48,7 +61,7 @@ public class TemporaryMemoryCache<TKey, T>(TimeSpan expirationSpan)
 
         _cache.Set(key, value, new MemoryCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = expirationSpan
+            AbsoluteExpirationRelativeToNow = _expirationSpan
         });
     }
 }

@@ -28,14 +28,13 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
     private ILogger<SelectTargetBehavior> _logger;
     private IConstructGrain _constructGrain;
     private IConstructService _constructService;
-    private IConstructElementsService _constructElementsService;
     private ISectorPoolManager _sectorPoolManager;
 
     public bool IsActive() => _active;
 
     public BehaviorTaskCategory Category => BehaviorTaskCategory.MediumPriority;
 
-    public async Task InitializeAsync(BehaviorContext context)
+    public Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;
 
@@ -43,14 +42,9 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         _logger = provider.CreateLogger<SelectTargetBehavior>();
         _constructGrain = _orleans.GetConstructGrain(constructId);
         _constructService = provider.GetRequiredService<IConstructService>();
-        _constructElementsService = provider.GetRequiredService<IConstructElementsService>();
         _sectorPoolManager = provider.GetRequiredService<ISectorPoolManager>();
-        
-        var radarElementId = (await _constructElementsService.GetPvpRadarElements(constructId)).FirstOrDefault();
-        var gunnerSeatElementId = (await _constructElementsService.GetPvpSeatElements(constructId)).FirstOrDefault();
 
-        context.ExtraProperties.TryAdd("RADAR_ID", radarElementId.elementId);
-        context.ExtraProperties.TryAdd("SEAT_ID", gunnerSeatElementId.elementId);
+        return Task.CompletedTask;
     }
 
     public async Task TickAsync(BehaviorContext context)
@@ -65,7 +59,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         if (targetSpan < TimeSpan.FromSeconds(10))
         {
             context.TargetMovePosition = await GetTargetMovePosition(context);
-            
+
             return;
         }
 
@@ -81,19 +75,19 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             {
                 return;
             }
-            
+
             context.Position = npcConstructInfo.rData.position;
         }
-        
+
         var npcPos = context.Position.Value;
 
         var sectorPos = npcPos.GridSnap(SectorPoolManager.SectorGridSnap);
         var sectorGrid = new LongVector3(sectorPos);
-        
+
         _logger.LogInformation("Construct {Construct} at Grid {Grid}", constructId, sectorGrid);
 
         var constructsOnSector = SectorGridConstructCache.FindAroundGrid(sectorGrid);
-        
+
         var result = new List<ConstructInfo>();
         foreach (var id in constructsOnSector)
         {
@@ -120,30 +114,24 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         ulong? targetId = null;
         var distance = double.MaxValue;
-        int maxIterations = 10;
-        int counter = 0;
+        const int maxIterations = 5;
 
-        var targetingDistance = 5 * DistanceHelpers.OneSuInMeters;
+        const long targetingDistance = 5 * DistanceHelpers.OneSuInMeters;
 
-        foreach (var construct in playerConstructs)
+        foreach (var construct in playerConstructs.Take(maxIterations))
         {
-            if (counter > maxIterations)
-            {
-                break;
-            }
-
             // Adds to the list of players involved
             if (construct.mutableData.pilot.HasValue)
             {
                 context.PlayerIds.Add(construct.mutableData.pilot.Value.id);
             }
-            
+
             var pos = construct.rData.position;
 
             var delta = Math.Abs(pos.Distance(npcPos));
 
-            _logger.LogInformation("Construct {Construct} Distance: {Distance}su. Time = {Time}ms", 
-                construct.rData.constructId, 
+            _logger.LogInformation("Construct {Construct} Distance: {Distance}su. Time = {Time}ms",
+                construct.rData.constructId,
                 delta / DistanceHelpers.OneSuInMeters,
                 sw.ElapsedMilliseconds
             );
@@ -158,8 +146,6 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                 distance = delta;
                 targetId = construct.rData.constructId;
             }
-
-            counter++;
         }
 
         if (targetId.HasValue && targetId.Value != 0)
@@ -167,7 +153,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             context.TargetConstructId = targetId;
             context.TargetSelectedTime = DateTime.UtcNow;
         }
-        
+
         if (!context.TargetConstructId.HasValue)
         {
             return;
@@ -213,21 +199,17 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             context.TargetMovePosition = await targetMovePositionTask;
             await _sectorPoolManager.SetExpirationFromNow(context.Sector, TimeSpan.FromHours(1));
         }
-        
+
         _logger.LogInformation("Selected a new Target: {Target}; {Time}ms", targetId, sw.ElapsedMilliseconds);
-
-        if (!context.ExtraProperties.TryGetValue<ulong>("RADAR_ID", out var radarElementId))
-        {
-            return;
-        }
-
-        if (!context.ExtraProperties.TryGetValue<ulong>("SEAT_ID", out var seatElementId))
-        {
-            return;
-        }
 
         try
         {
+            var npcConstructInfo = await _constructService.GetConstructInfoAsync(constructId);
+            if (npcConstructInfo == null)
+            {
+                return;
+            }
+
             var constructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
             if (constructInfo == null)
             {
@@ -238,9 +220,9 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             {
                 constructId = constructId,
                 ownerId = new EntityId { playerId = prefab.DefinitionItem.OwnerId },
-                constructName = prefab.DefinitionItem.Name
+                constructName = npcConstructInfo.rData.name
             };
-            
+
             await _constructService.SendIdentificationNotification(
                 context.TargetConstructId.Value,
                 targeting
@@ -250,24 +232,19 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                 context.TargetConstructId.Value,
                 targeting
             );
-            
-            // var identifyTask = _orleans.GetRadarGrain(radarElementId)
-            //     .IdentifyStart(ModBase.Bot.PlayerId, new RadarIdentifyTarget
-            //     {
-            //         playerId = constructInfo.mutableData.pilot ?? 0,
-            //         sourceConstructId = constructId,
-            //         targetConstructId = context.TargetConstructId.Value,
-            //         sourceRadarElementId = radarElementId,
-            //         sourceSeatElementId = seatElementId
-            //     });
-
-            var pilotTakeOverTask = PilotingTakeOverAsync();
-
-            await Task.WhenAll([pilotTakeOverTask]);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to Identity Target");
+        }
+
+        try
+        {
+            await PilotingTakeOverAsync();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to Takeover Ship");
         }
     }
 
@@ -277,10 +254,10 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         {
             return;
         }
-        
+
         var constructElementsGrain = _orleans.GetConstructElementsGrain(context.TargetConstructId.Value);
         var elements = (await constructElementsGrain.GetElementsOfType<ConstructElement>()).ToList();
-        
+
         var elementInfoListTasks = elements
             .Select(constructElementsGrain.GetElement);
 
@@ -306,7 +283,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var targetConstructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
         if (targetConstructInfo == null)
         {
-            _logger.LogError("Construct {Construct} Target construct info {Target} is null", constructId, context.TargetConstructId.Value);
+            _logger.LogError("Construct {Construct} Target construct info {Target} is null", constructId,
+                context.TargetConstructId.Value);
             return new Vec3();
         }
 
@@ -314,7 +292,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         var distanceGoal = prefab.DefinitionItem.TargetDistance;
         var offset = new Vec3 { y = distanceGoal };
-        
+
         return targetPos + offset;
     }
 }
