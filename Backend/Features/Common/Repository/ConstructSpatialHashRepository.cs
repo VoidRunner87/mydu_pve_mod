@@ -58,6 +58,11 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
             """
         )).ToList();
 
+        if (sectors.Count == 0)
+        {
+            return new List<ConstructSectorRow>();
+        }
+
         var sectorQueries = sectors.Select(v => $"(C.sector_x = {(long)v.x} AND C.sector_y = {(long)v.y} AND C.sector_z = {(long)v.z})");
         var sectorQuery = string.Join(" OR ", sectorQueries);
         
