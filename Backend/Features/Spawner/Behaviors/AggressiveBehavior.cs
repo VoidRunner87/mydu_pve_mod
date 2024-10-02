@@ -12,6 +12,7 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
+using Newtonsoft.Json;
 using NQ;
 using NQ.Interfaces;
 using NQutils.Def;
@@ -25,7 +26,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
     private List<WeaponHandle> _weaponUnits;
     private IClusterClient _orleans;
     private IGameplayBank _bank;
-    private IConstructGrain _constructGrain;
     private ILogger<AggressiveBehavior> _logger;
     private IConstructService _constructService;
 
@@ -51,7 +51,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         _orleans = provider.GetOrleans();
 
         _constructElementsService = provider.GetRequiredService<IConstructElementsService>();
-        
+
         _bank = provider.GetGameplayBank();
 
         _weaponsElements = await _constructElementsService.GetWeaponUnits(constructId);
@@ -64,8 +64,6 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             .ToList();
 
         _coreUnitElementId = await _constructElementsService.GetCoreUnit(constructId);
-
-        _constructGrain = _orleans.GetConstructGrain(constructId);
 
         _constructService = provider.GetRequiredService<IConstructService>();
 
@@ -96,7 +94,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
         var npcShotGrain = _orleans.GetNpcShotGrain();
 
-        var constructInfo = await _constructService.GetConstructInfoAsync(constructId);;
+        var constructInfo = await _constructService.GetConstructInfoAsync(constructId);
         if (constructInfo == null)
         {
             return;
@@ -195,6 +193,28 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         }
     }
 
+    private async Task SendShootModAction(ShotContext context)
+    {
+        var modManagerGrain = _orleans.GetModManagerGrain();
+
+        await modManagerGrain.TriggerModAction(
+            ModBase.Bot.PlayerId,
+            new ModAction
+            {
+                constructId = constructId,
+                modName = "Mod.DynamicEncounters",
+                actionId = 1,
+                payload = JsonConvert.SerializeObject(
+                    new
+                    {
+                        context.TargetConstructId,
+                        WeaponElementId = context.WeaponHandle.ElementInfo.elementId,
+                    }
+                )
+            }
+        );
+    }
+
     private async Task ShootAndCycleAsync(ShotContext context)
     {
         var functionalWeaponCount = await _constructElementsService.GetFunctionalDamageWeaponCount(constructId);
@@ -202,11 +222,11 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         {
             return;
         }
-        
+
         _logger.LogDebug("Construct {Construct} Functional Weapon Count {Count}", constructId, functionalWeaponCount);
 
         context.QuantityModifier = functionalWeaponCount;
-        
+
         var random = context.BehaviorContext.ServiceProvider.GetRequiredService<IRandomProvider>()
             .GetRandom();
 

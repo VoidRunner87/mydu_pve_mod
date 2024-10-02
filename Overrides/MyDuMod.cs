@@ -59,7 +59,7 @@ public class MyDuMod : IMod
             [
                 new ModActionDefinition
                 {
-                    id = (ulong)ModActionType.LoadNPCApp,
+                    id = (ulong)ActionType.LoadNpcApp,
                     context = ModActionContext.Global,
                     label = "Admin\\Load NPC APP"
                 }
@@ -73,9 +73,9 @@ public class MyDuMod : IMod
     {
         _logger.LogInformation("Received Trigger Action: {Id} | {Content}", action.actionId, action.payload);
 
-        switch ((ModActionType)action.actionId)
+        switch ((ActionType)action.actionId)
         {
-            case ModActionType.LoadNPCApp:
+            case ActionType.LoadNpcApp:
                 await UploadJson(playerId, "faction-quests", new object[]{
                     new { faction = 3, title = "Disrupt UEF Supplies", description = "" },
                     new { faction = 3, title = "Disrupt UEF Supplies", description = "" },
@@ -88,7 +88,7 @@ public class MyDuMod : IMod
                 await InjectCss(playerId, Resources.NpcAppCss);
                 await InjectJs(playerId, Resources.NpcAppJs);
                 break;
-            case ModActionType.CloseNPCApp:
+            case ActionType.CloseNpcApp:
                 await InjectJs(playerId, "modApi.removeAppRoot()");
                 break;
         }
