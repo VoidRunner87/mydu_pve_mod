@@ -10,23 +10,23 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Backend">
+      <HintPath>NQ\Backend.dll</HintPath>
+    </Reference>
     <Reference Include="Backend.PubSub">
       <HintPath>NQ\Backend.PubSub.dll</HintPath>
     </Reference>
     <Reference Include="Backend.Telemetry">
       <HintPath>NQ\Backend.Telemetry.dll</HintPath>
     </Reference>
-    <Reference Include="NQutils">
-      <HintPath>NQ\NQutils.dll</HintPath>
-    </Reference>
-    <Reference Include="Backend">
-      <HintPath>NQ\Backend.dll</HintPath>
-    </Reference>
     <Reference Include="BotLib">
       <HintPath>NQ\BotLib.dll</HintPath>
     </Reference>
     <Reference Include="Interfaces">
       <HintPath>NQ\Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="NQutils">
+      <HintPath>NQ\NQutils.dll</HintPath>
     </Reference>
     <Reference Include="Router.Orleans">
       <HintPath>NQ\Router.Orleans.dll</HintPath>
