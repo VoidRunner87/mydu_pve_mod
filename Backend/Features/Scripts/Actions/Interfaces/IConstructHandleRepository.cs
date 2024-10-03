@@ -20,4 +20,6 @@ public interface IConstructHandleRepository : IRepository<ConstructHandleItem>
     Task RemoveHandleAsync(ulong constructId);
 
     Task<Dictionary<ulong, TimeSpan>> GetPoiConstructExpirationTimeSpansAsync();
+    
+    Task TagAsDeletedConstructHandledThatAreDeletedConstructs();
 }

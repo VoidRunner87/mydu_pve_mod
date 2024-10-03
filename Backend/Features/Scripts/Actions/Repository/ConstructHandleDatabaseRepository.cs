@@ -312,10 +312,28 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             """)).ToList();
 
         var distinctResult = result.DistinctBy(x => x.construct_id);
-        
+
         return distinctResult.ToDictionary(
             k => (ulong)k.construct_id,
             v => v.time_span
+        );
+    }
+
+    public async Task TagAsDeletedConstructHandledThatAreDeletedConstructs()
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            """
+            UPDATE public.mod_npc_construct_handle CH
+            SET deleted_at = NOW()
+            WHERE deleted_at IS NULL AND construct_id IN (
+            	SELECT CH.construct_id FROM public.mod_npc_construct_handle CH
+            	LEFT JOIN public.construct C ON (C.id = CH.construct_id)
+            	WHERE (C.deleted_at IS NOT NULL AND CH.deleted_at IS NULL) OR C.id IS NULL
+            )
+            """
         );
     }
 

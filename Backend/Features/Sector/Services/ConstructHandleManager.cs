@@ -122,4 +122,9 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
             }
         }
     }
+
+    public Task TagAsDeletedConstructHandledThatAreDeletedConstructs()
+    {
+        return _repository.TagAsDeletedConstructHandledThatAreDeletedConstructs();
+    }
 }

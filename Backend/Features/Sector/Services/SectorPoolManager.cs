@@ -161,6 +161,9 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
     public async Task ExecuteSectorCleanup()
     {
+        await _sectorInstanceRepository.ExpireSectorsWithDeletedConstructHandles();
+        await _constructHandleManager.TagAsDeletedConstructHandledThatAreDeletedConstructs();
+        
         var expiredSectors = await _sectorInstanceRepository.FindExpiredAsync();
 
         foreach (var sector in expiredSectors)

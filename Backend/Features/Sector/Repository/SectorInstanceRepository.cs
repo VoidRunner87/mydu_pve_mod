@@ -221,6 +221,25 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         );
     }
 
+    public async Task ExpireSectorsWithDeletedConstructHandles()
+    {
+        using var db = _connectionFactory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            """
+            UPDATE public.mod_sector_instance
+            	SET expires_at = NOW()
+            WHERE id IN (
+            	SELECT SI.id FROM public.mod_npc_construct_handle CH
+            	INNER JOIN public.construct C ON (C.id = CH.construct_id)
+            	INNER JOIN public.mod_sector_instance SI ON (SI.sector_x = CH.sector_x AND SI.sector_y = CH.sector_y AND SI.sector_z = CH.sector_z)
+            	WHERE C.deleted_at IS NOT NULL AND CH.deleted_at IS NULL
+            )            
+            """
+        );
+    }
+
     public async Task SetExpirationFromNowAsync(Guid id, TimeSpan span)
     {
         using var db = _connectionFactory.Create();
