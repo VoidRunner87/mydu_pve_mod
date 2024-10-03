@@ -118,7 +118,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
         if (unloadedSectors.Count == 0)
         {
-            _logger.LogDebug("No Sectors {Count} Need Loading", unloadedSectors.Count);
+            _logger.LogInformation("No Sectors {Count} Need Loading", unloadedSectors.Count);
             return;
         }
 
@@ -181,7 +181,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         await _sectorInstanceRepository.DeleteExpiredAsync();
         // await _constructHandleManager.CleanupConstructsThatFailedSectorCleanupAsync();
 
-        _logger.LogDebug("Executed Sector Cleanup");
+        _logger.LogInformation("Executed Sector Cleanup");
     }
 
     public async Task SetExpirationFromNow(Vec3 sector, TimeSpan span)

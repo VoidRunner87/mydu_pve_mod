@@ -11,7 +11,6 @@ public interface IConstructHandleRepository : IRepository<ConstructHandleItem>
 {
     Task<IEnumerable<ConstructHandleItem>> FindTagInSectorAsync(Vec3 sector, string tag);
     Task<IEnumerable<ConstructHandleItem>> FindInSectorAsync(Vec3 sector);
-    Task<IEnumerable<ConstructHandleItem>> FindExpiredAsync(int minutes, Vec3 sector);
     Task<ConstructHandleItem?> FindByConstructIdAsync(ulong constructId);
     Task<IEnumerable<ConstructHandleItem>> FindActiveHandlesAsync();
     Task<IEnumerable<ulong>> FindAllBuggedPoiConstructsAsync();

@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Services;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 
 namespace Mod.DynamicEncounters;
@@ -30,6 +31,16 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
         var spatialHashCacheService = provider.GetRequiredService<ISectorSpatialHashCacheService>();
         var constructService = provider.GetRequiredService<IConstructService>();
         var constructElementsService = provider.GetRequiredService<IConstructElementsService>();
+        var spawnerService = ServiceProvider.GetRequiredService<IScriptService>();
+
+        try
+        {
+            await spawnerService.LoadAllFromDatabase();
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to Load Scripts");
+        }
 
         var sw = new Stopwatch();
         sw.Start();
@@ -40,7 +51,7 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
 
             if (map.Count == 0)
             {
-                logger.LogInformation("No Constructs in Sectors of Construct Handles. Time = {Time}ms", sw.ElapsedMilliseconds);
+                logger.LogDebug("No Constructs in Sectors of Construct Handles. Time = {Time}ms", sw.ElapsedMilliseconds);
                 lock (SectorGridConstructCache.Lock)
                 {
                     SectorGridConstructCache.Data = [];

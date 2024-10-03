@@ -26,16 +26,6 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
     private readonly ILogger<ConstructHandleManager> _logger =
         provider.CreateLogger<ConstructHandleManager>();
 
-    public async Task CleanupExpiredConstructHandlesAsync(Vec3 sector)
-    {
-        var expirationMinutes = await _featureReaderService
-            .GetIntValueAsync(ConstructHandleExpirationMinutesFeatureName, 360);
-
-        var expiredHandles = await _repository.FindExpiredAsync(expirationMinutes, sector);
-
-        await CleanupHandles(expiredHandles);
-    }
-
     public async Task CleanupConstructHandlesInSectorAsync(Vec3 sector)
     {
         var expiredHandles = (await _repository.FindInSectorAsync(sector)).ToList();

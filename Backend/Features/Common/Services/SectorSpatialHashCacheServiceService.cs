@@ -30,7 +30,7 @@ public class SectorSpatialHashCacheServiceService(IServiceProvider provider) : I
         
         var items = await _repository.FindPlayerLiveConstructsOnSectorInstances();
         
-        _logger.LogInformation("Query GetPlayerConstructsSectorMapAsync Took: {Time}ms", sw.ElapsedMilliseconds);
+        _logger.LogDebug("Query GetPlayerConstructsSectorMapAsync Took: {Time}ms", sw.ElapsedMilliseconds);
 
         var map = new ConcurrentDictionary<LongVector3, ConcurrentBag<ulong>>();
 

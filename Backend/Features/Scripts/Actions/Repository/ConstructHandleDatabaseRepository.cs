@@ -262,31 +262,6 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         return result.Select(MapToModel);
     }
 
-    public async Task<IEnumerable<ConstructHandleItem>> FindExpiredAsync(int minutes, Vec3 sector)
-    {
-        minutes = Math.Clamp(minutes, 5, 120);
-
-        using var db = _factory.Create();
-        db.Open();
-
-        var result = (await db.QueryAsync<DbRow>(
-            $"""
-             SELECT * FROM public.mod_npc_construct_handle 
-             WHERE last_controlled_at + INTERVAL '{minutes} minutes' < NOW() AND
-             sector_x = @x AND sector_y = @y AND sector_z = @z AND
-             deleted_at IS NULL
-             """,
-            new
-            {
-                sector.x,
-                sector.y,
-                sector.z,
-            }
-        )).ToList();
-
-        return result.Select(MapToModel);
-    }
-
     public async Task UpdateLastControlledDateAsync(HashSet<ulong> constructIds)
     {
         using var db = _factory.Create();
