@@ -200,7 +200,10 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             await _sectorPoolManager.SetExpirationFromNow(context.Sector, TimeSpan.FromHours(1));
         }
 
-        _logger.LogInformation("Selected a new Target: {Target}; {Time}ms", targetId, sw.ElapsedMilliseconds);
+        if (targetId.HasValue)
+        {
+            _logger.LogInformation("Selected a new Target: {Target}; {Time}ms", targetId, sw.ElapsedMilliseconds);
+        }
 
         try
         {

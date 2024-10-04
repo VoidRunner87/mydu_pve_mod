@@ -20,9 +20,12 @@ public class SectorLoop : ModBase
     private ILogger<SectorLoop> _logger;
     private ISectorPoolManager _sectorPoolManager;
     private Timer _updateExpirationNameTimer;
+    private Timer _sectorLoopTimer;
 
     public override async Task Start()
     {
+        await Task.Yield();
+        
         _logger = ServiceProvider.CreateLogger<SectorLoop>();
         _sectorPoolManager = ServiceProvider.GetRequiredService<ISectorPoolManager>();
 
@@ -42,32 +45,36 @@ public class SectorLoop : ModBase
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to execute {Name} Timer", nameof(SectorLoop));
+            _logger.LogError(e, "Failed to execute {Name} Timer", nameof(_updateExpirationNameTimer));
         }
 
-        await base.Start();
+        try
+        {
+            _sectorLoopTimer = new Timer(TimeSpan.FromSeconds(5));
+            _sectorLoopTimer.Elapsed += async (sender, args) => await ExecuteSectorIteration();
+            _sectorLoopTimer.Start();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to execute {Name} Timer", nameof(_sectorLoopTimer));
+        }
     }
 
-    public override async Task Loop()
+    public async Task ExecuteSectorIteration()
     {
-        while (true)
+        try
         {
-            await Task.Delay(3000);
-            
-            try
-            {
-                var featureService = ServiceProvider.GetRequiredService<IFeatureReaderService>();
-                var isEnabled = await featureService.GetEnabledValue<SectorLoop>(false);
+            var featureService = ServiceProvider.GetRequiredService<IFeatureReaderService>();
+            var isEnabled = await featureService.GetEnabledValue<SectorLoop>(false);
 
-                if (isEnabled)
-                {
-                    await ExecuteAction();
-                }
-            }
-            catch (Exception e)
+            if (isEnabled)
             {
-                _logger.LogError(e, "Failed to execute {Name}", nameof(SectorLoop));
+                await ExecuteAction();
             }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to execute {Name}", nameof(SectorLoop));
         }
     }
 

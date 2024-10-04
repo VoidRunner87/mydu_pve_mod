@@ -4,11 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Api;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using NQutils.Config;
-using NQutils.Logging;
 
 namespace Mod.DynamicEncounters;
 
@@ -35,9 +33,6 @@ public static class Program
         var apiDisabledEnvValue = Environment.GetEnvironmentVariable("API_ENABLED");
         var apiEnabled = !string.IsNullOrEmpty(apiDisabledEnvValue) && apiDisabledEnvValue == "true"
                          || apiDisabledEnvValue == "1";
-
-        var loggerFactory = LoggerFactory.Create(builder => { builder.Setup(logWebHostInfo: true); });
-        var logger = loggerFactory.CreateLogger("Program");
 
         try
         {
@@ -72,7 +67,7 @@ public static class Program
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Application Failed");
+            Console.WriteLine(e);
             throw;
         }
     }

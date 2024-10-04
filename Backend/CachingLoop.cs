@@ -16,9 +16,21 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
     public override Task Start()
     {
         var taskCompletionSource = new TaskCompletionSource();
+        var logger = ServiceProvider.CreateLogger<CachingLoop>();
         
         var timer = new Timer(timerSpan);
-        timer.Elapsed += async (_, _) => await OnTimer();
+        timer.Elapsed += async (_, _) =>
+        {
+            try
+            {
+                await OnTimer();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to run Cache Loop Timer");
+            }
+            
+        };
         timer.Start();
 
         return taskCompletionSource.Task;
@@ -29,8 +41,6 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
         var provider = ServiceProvider;
         var logger = provider.CreateLogger<CachingLoop>();
         var spatialHashCacheService = provider.GetRequiredService<ISectorSpatialHashCacheService>();
-        var constructService = provider.GetRequiredService<IConstructService>();
-        var constructElementsService = provider.GetRequiredService<IConstructElementsService>();
         var spawnerService = ServiceProvider.GetRequiredService<IScriptService>();
 
         try
@@ -51,7 +61,7 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
 
             if (map.Count == 0)
             {
-                logger.LogDebug("No Constructs in Sectors of Construct Handles. Time = {Time}ms", sw.ElapsedMilliseconds);
+                logger.LogInformation("No Constructs in Sectors of Construct Handles. Time = {Time}ms", sw.ElapsedMilliseconds);
                 lock (SectorGridConstructCache.Lock)
                 {
                     SectorGridConstructCache.Data = [];
