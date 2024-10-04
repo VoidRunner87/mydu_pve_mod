@@ -145,17 +145,19 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     }
                 });
 
-                await _sectorInstanceRepository.SetLoadedAsync(sector.Id, true);
                 await Task.Delay(200);
 
                 _logger.LogInformation("Loaded Sector {Id}({Sector}) Territory = {Territory}", sector.Id, sector.Sector, sector.TerritoryId);
             }
             catch (Exception e)
             {
+                // On Failure... expire the sector quicker.
+                // Maybe the server is under load
                 _logger.LogError(e, "Failed to Load Sector {Id}({Sector})", sector.Id, sector.Sector);
-
-                await _sectorInstanceRepository.SetLoadedAsync(sector.Id, false);
+                await _sectorInstanceRepository.SetExpirationFromNowAsync(sector.Id, TimeSpan.FromMinutes(5));
             }
+            
+            await _sectorInstanceRepository.SetLoadedAsync(sector.Id, true);
         }
     }
 
