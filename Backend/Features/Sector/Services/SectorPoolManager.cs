@@ -266,6 +266,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 return;
             }
             
+            counter++;
+            
             var constructs = (await spatialHashRepository
                     .FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
                 .ToList();
@@ -328,8 +330,6 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     sectorInstance.Sector
                 );
             }
-
-            counter++;
 
             try
             {
