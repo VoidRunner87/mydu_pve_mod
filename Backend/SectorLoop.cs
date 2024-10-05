@@ -17,43 +17,53 @@ namespace Mod.DynamicEncounters;
 
 public class SectorLoop : ModBase
 {
-    private ILogger<SectorLoop> _logger;
-    private ISectorPoolManager _sectorPoolManager;
-    private Timer _updateExpirationNameTimer;
 
-    public override async Task Start()
+    public override Task Start()
     {
-        _logger = ServiceProvider.CreateLogger<SectorLoop>();
-        _sectorPoolManager = ServiceProvider.GetRequiredService<ISectorPoolManager>();
+        return Task.WhenAll([
+            base.Start(),
+            UpdateExpirationNames(),
+            ManageSectors()
+        ]);
+    }
 
+    private Task UpdateExpirationNames()
+    {
+        var taskCompletionSource = new TaskCompletionSource();
+        var logger = ServiceProvider.CreateLogger<SectorLoop>();
+        
         try
         {
-            _updateExpirationNameTimer = new Timer(TimeSpan.FromSeconds(30));
-            _updateExpirationNameTimer.Elapsed += async (sender, args) =>
+            var sectorPoolManager = ServiceProvider.GetRequiredService<ISectorPoolManager>();
+            
+            var updateExpirationNameTimer = new Timer(TimeSpan.FromSeconds(30));
+            updateExpirationNameTimer.Elapsed += async (sender, args) =>
             {
                 var featureService = ServiceProvider.GetRequiredService<IFeatureReaderService>();
 
                 if (await featureService.GetEnabledValue<SectorLoop>(false))
                 {
-                    await _sectorPoolManager.UpdateExpirationNames();
+                    await sectorPoolManager.UpdateExpirationNames();
                 }
             };
-            _updateExpirationNameTimer.Start();
+            updateExpirationNameTimer.Start();
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to execute {Name} Timer", nameof(SectorLoop));
+            logger.LogError(e, "Failed to execute {Name} Timer", nameof(SectorLoop));
         }
 
-        await base.Start();
+        return taskCompletionSource.Task;
     }
 
-    public override async Task Loop()
+    public async Task ManageSectors()
     {
+        var logger = ServiceProvider.CreateLogger<SectorLoop>();
+        
         while (true)
         {
             await Task.Delay(3000);
-            
+
             try
             {
                 var featureService = ServiceProvider.GetRequiredService<IFeatureReaderService>();
@@ -66,7 +76,7 @@ public class SectorLoop : ModBase
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to execute {Name}", nameof(SectorLoop));
+                logger.LogError(e, "Failed to execute {Name}", nameof(SectorLoop));
             }
         }
     }
@@ -76,28 +86,29 @@ public class SectorLoop : ModBase
         var sw = new Stopwatch();
         sw.Start();
 
+        var logger = ServiceProvider.CreateLogger<SectorLoop>();
+        
         var factionRepository = ServiceProvider.GetRequiredService<IFactionRepository>();
-
-        await _sectorPoolManager.ExecuteSectorCleanup()
-            .OnError(exception =>
-            {
-                _logger.LogError(exception, "Failed to Execute Sector Cleanup");
-            });
+        var sectorPoolManager = ServiceProvider.GetRequiredService<ISectorPoolManager>();
+        
+        await sectorPoolManager.ExecuteSectorCleanup()
+            .OnError(exception => { logger.LogError(exception, "Failed to Execute Sector Cleanup"); });
 
         var factionSectorPrepTasks = (await factionRepository.GetAllAsync())
             .Select(PrepareSector);
         await Task.WhenAll(factionSectorPrepTasks);
 
-        await _sectorPoolManager.LoadUnloadedSectors();
-        await _sectorPoolManager.ActivateEnteredSectors();
+        await sectorPoolManager.LoadUnloadedSectors();
+        await sectorPoolManager.ActivateEnteredSectors();
 
-        _logger.LogInformation("Sector Loop Action took {Time}ms", sw.ElapsedMilliseconds);
+        logger.LogInformation("Sector Loop Action took {Time}ms", sw.ElapsedMilliseconds);
     }
 
     private async Task PrepareSector(FactionItem faction)
     {
-        _logger.LogDebug("Preparing Sector for {Faction}", faction.Name);
-        
+        var logger = ServiceProvider.CreateLogger<SectorLoop>();
+        logger.LogDebug("Preparing Sector for {Faction}", faction.Name);
+
         // TODO sector encounters becomes tied to a territory
         // a territory has center, max and min radius
         // a territory is owned by a faction
@@ -108,7 +119,7 @@ public class SectorLoop : ModBase
 
         if (encounters.Count == 0)
         {
-            _logger.LogDebug("No Encounters for Faction: {Faction}({Id})", faction.Name, faction.Id);
+            logger.LogDebug("No Encounters for Faction: {Faction}({Id})", faction.Name, faction.Id);
             return;
         }
 
@@ -120,6 +131,7 @@ public class SectorLoop : ModBase
             Tag = faction.Tag
         };
 
-        await _sectorPoolManager.GenerateSectors(generationArgs);
+        var sectorPoolManager = ServiceProvider.GetRequiredService<ISectorPoolManager>();
+        await sectorPoolManager.GenerateSectors(generationArgs);
     }
 }
