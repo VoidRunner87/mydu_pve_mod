@@ -76,6 +76,23 @@ public class ConstructController : Controller
 
         return Ok();
     }
+    
+    [HttpDelete]
+    [Route("batch")]
+    public async Task<IActionResult> Delete([FromBody] ulong[] constructIds)
+    {
+        var provider = ModBase.ServiceProvider;
+        var orleans = provider.GetOrleans();
+
+        var gcGrain = orleans.GetConstructGCGrain();
+
+        foreach (var constructId in constructIds)
+        {
+            await gcGrain.DeleteConstruct(constructId);
+        }
+
+        return Ok();
+    }
 
     [Route("{constructId:long}/shield/vent-start")]
     [HttpPost]

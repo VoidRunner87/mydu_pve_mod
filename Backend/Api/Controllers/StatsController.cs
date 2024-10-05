@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Mod.DynamicEncounters.Features.Sector.Services;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
@@ -6,12 +7,16 @@ namespace Mod.DynamicEncounters.Api.Controllers;
 [Route("stats")]
 public class StatsController : Controller
 {
-    [SwaggerOperation("Retrieves Behavior Thread Stats")]
+    [SwaggerOperation("Retrieves Stats")]
     [HttpGet]
     [Route("")]
     public ActionResult Get()
     {
-        return Ok(StatsRecorder.GetStats());
+        return Ok(new
+        {
+            BehaviorStats = StatsRecorder.GetStats(),
+            ConstructsPendingDelete = ConstructsPendingDelete.Data.Count
+        });
     }
     
     [SwaggerOperation("Clears Stats")]

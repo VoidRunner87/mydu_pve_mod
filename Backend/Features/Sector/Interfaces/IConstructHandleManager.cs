@@ -8,4 +8,5 @@ public interface IConstructHandleManager
     Task CleanupConstructHandlesInSectorAsync(Vec3 sector);
     Task CleanupConstructsThatFailedSectorCleanupAsync();
     Task TagAsDeletedConstructHandledThatAreDeletedConstructs();
+    Task<int> GetActiveCount();
 }

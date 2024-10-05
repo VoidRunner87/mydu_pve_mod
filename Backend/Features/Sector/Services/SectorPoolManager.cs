@@ -11,6 +11,7 @@ using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Events.Data;
 using Mod.DynamicEncounters.Features.Events.Interfaces;
+using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
@@ -46,6 +47,16 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         if (missingQuantity <= 0)
         {
             _logger.LogDebug("No Sectors Missing. Missing {Missing} of {Total}", missingQuantity, args.Quantity);
+            return;
+        }
+        
+        var handleCount = await _constructHandleManager.GetActiveCount();
+        var featureReaderService = serviceProvider.GetRequiredService<IFeatureReaderService>();
+        var maxBudgetConstructs = await featureReaderService.GetIntValueAsync("MaxConstructHandles", 50);
+
+        if (handleCount >= maxBudgetConstructs)
+        {
+            _logger.LogError("Generate Sector: Reached MAX Number of Construct Handles to Spawn: {Max}", maxBudgetConstructs);
             return;
         }
 
@@ -122,6 +133,16 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             return;
         }
 
+        var handleCount = await _constructHandleManager.GetActiveCount();
+        var featureReaderService = serviceProvider.GetRequiredService<IFeatureReaderService>();
+        var maxBudgetConstructs = await featureReaderService.GetIntValueAsync("MaxConstructHandles", 50);
+
+        if (handleCount >= maxBudgetConstructs)
+        {
+            _logger.LogError("LoadUnloadedSectors: Reached MAX Number of Construct Handles to Spawn: {Max}", maxBudgetConstructs);
+            return;
+        }
+
         foreach (var sector in unloadedSectors)
         {
             try
@@ -146,6 +167,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 });
 
                 await Task.Delay(200);
+                await _sectorInstanceRepository.SetLoadedAsync(sector.Id, true);
 
                 _logger.LogInformation("Loaded Sector {Id}({Sector}) Territory = {Territory}", sector.Id, sector.Sector, sector.TerritoryId);
             }
@@ -154,17 +176,23 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 // On Failure... expire the sector quicker.
                 // Maybe the server is under load
                 _logger.LogError(e, "Failed to Load Sector {Id}({Sector})", sector.Id, sector.Sector);
-                await _sectorInstanceRepository.SetExpirationFromNowAsync(sector.Id, TimeSpan.FromMinutes(5));
+                await _sectorInstanceRepository.SetLoadedAsync(sector.Id, true);
+                await _sectorInstanceRepository.SetExpirationFromNowAsync(sector.Id, TimeSpan.FromMinutes(10));
             }
-            
-            await _sectorInstanceRepository.SetLoadedAsync(sector.Id, true);
         }
     }
 
     public async Task ExecuteSectorCleanup()
     {
-        await _sectorInstanceRepository.ExpireSectorsWithDeletedConstructHandles();
-        await _constructHandleManager.TagAsDeletedConstructHandledThatAreDeletedConstructs();
+        try
+        {
+            await _sectorInstanceRepository.ExpireSectorsWithDeletedConstructHandles();
+            await _constructHandleManager.TagAsDeletedConstructHandledThatAreDeletedConstructs();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to ExpireSectorsWithDeletedConstructHandles");
+        }
         
         var expiredSectors = await _sectorInstanceRepository.FindExpiredAsync();
 

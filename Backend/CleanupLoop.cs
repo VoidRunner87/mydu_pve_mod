@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,8 +34,11 @@ public class CleanupLoop(TimeSpan loopTimer) : ModBase
 
     private async Task OnTimer()
     {
-        var maxIterationsPerCycle = 5;
+        var maxIterationsPerCycle = 50;
         var counter = 0;
+
+        var sw = new Stopwatch();
+        sw.Start();
         
         while (!ConstructsPendingDelete.Data.IsEmpty)
         {
@@ -54,9 +58,9 @@ public class CleanupLoop(TimeSpan loopTimer) : ModBase
                 await _constructHandleRepository.DeleteByConstructId(constructId);
                 await Task.Delay(500);
                 
-                ConstructsPendingDelete.Data.TryDequeue(out _);
+                var dequeued = ConstructsPendingDelete.Data.TryDequeue(out _);
                 
-                _logger.LogInformation("Cleaned up {Construct}", constructId);
+                _logger.LogInformation("Cleaned up {Construct} | DQed={Dequeued}", constructId, dequeued);
             }
             catch (Exception e)
             {
@@ -65,5 +69,7 @@ public class CleanupLoop(TimeSpan loopTimer) : ModBase
 
             counter++;
         }
+        
+        _logger.LogInformation("Cleanup Total = {Time}ms", sw.ElapsedMilliseconds);
     }
 }

@@ -127,4 +127,9 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
     {
         return _repository.TagAsDeletedConstructHandledThatAreDeletedConstructs();
     }
+
+    public Task<int> GetActiveCount()
+    {
+        return _repository.GetActiveCount();
+    }
 }

@@ -262,24 +262,6 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         return result.Select(MapToModel);
     }
 
-    public async Task UpdateLastControlledDateAsync(HashSet<ulong> constructIds)
-    {
-        using var db = _factory.Create();
-        db.Open();
-
-        await db.ExecuteAsync(
-            """
-            UPDATE public.mod_npc_construct_handle
-            SET last_controlled_at = NOW()
-            WHERE construct_id IN (@ids)
-            """,
-            new
-            {
-                ids = constructIds.Select(x => (long)x).ToList()
-            }
-        );
-    }
-
     public async Task RemoveHandleAsync(ulong constructId)
     {
         using var db = _factory.Create();
@@ -335,6 +317,14 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             )
             """
         );
+    }
+
+    public async Task<int> GetActiveCount()
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        return await db.ExecuteScalarAsync<int>("SELECT COUNT(0) FROM public.mod_npc_construct_handle WHERE deleted_at IS NULL");
     }
 
     private ConstructHandleItem MapToModel(DbRow row)
