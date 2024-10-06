@@ -54,7 +54,7 @@ public class PrefabItemDatabaseRepository(IServiceProvider provider) : IPrefabIt
         throw new NotImplementedException("TODO LATER");
     }
 
-    public async Task<PrefabItem?> FindAsync(object key)
+    public async Task<PrefabItem?> FindAsync(string key)
     {
         using var db = _factory.Create();
         db.Open();
@@ -88,8 +88,16 @@ public class PrefabItemDatabaseRepository(IServiceProvider provider) : IPrefabIt
                                                 SELECT COUNT(0) FROM public.mod_construct_def
                                                 """);
     }
+    
+    public async Task DeleteAsync(Guid key)
+    {
+        using var db = _factory.Create();
+        db.Open();
 
-    public async Task DeleteAsync(object key)
+        await db.ExecuteAsync("DELETE FROM public.mod_construct_def WHERE id = @key", new { key });
+    }
+
+    public async Task DeleteAsync(string key)
     {
         using var db = _factory.Create();
         db.Open();

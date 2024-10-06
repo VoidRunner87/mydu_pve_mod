@@ -28,7 +28,6 @@ public static class SpawnerRegistration
         services.AddSingleton<IConstructBehaviorFactory, ConstructBehaviorFactory>();
         services.AddSingleton<IConstructInMemoryBehaviorContextRepository, ConstructInMemoryBehaviorContextRepository>();
         
-        services.AddSingleton<IRepository<IScriptAction>, ScriptActionMemoryRepository>();
         services.AddSingleton<IScriptActionItemRepository, ScriptActionItemDatabaseRepository>();
         services.AddSingleton<IPrefabItemRepository, PrefabItemDatabaseRepository>();
         services.AddSingleton<IRepository<IConstructHandle>, ConstructHandleMemoryRepository>();

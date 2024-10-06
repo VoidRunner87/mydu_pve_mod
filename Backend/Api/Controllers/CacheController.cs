@@ -28,9 +28,6 @@ public class CacheController : Controller
         await scriptActionRepository.Clear();
         await prefabRepository.Clear();
 
-        var scriptService = provider.GetRequiredService<IScriptService>();
-        await scriptService.LoadAllFromDatabase();
-
         return Ok($"Cache Cleared. Took: {sw.Elapsed.TotalMilliseconds}ms");
     }
 

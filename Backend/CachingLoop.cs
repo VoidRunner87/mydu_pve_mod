@@ -41,16 +41,6 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
         var provider = ServiceProvider;
         var logger = provider.CreateLogger<CachingLoop>();
         var spatialHashCacheService = provider.GetRequiredService<ISectorSpatialHashCacheService>();
-        var spawnerService = ServiceProvider.GetRequiredService<IScriptService>();
-
-        try
-        {
-            await spawnerService.LoadAllFromDatabase();
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Failed to Load Scripts");
-        }
 
         var sw = new Stopwatch();
         sw.Start();

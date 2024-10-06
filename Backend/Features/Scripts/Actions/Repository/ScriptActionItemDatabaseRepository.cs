@@ -108,12 +108,12 @@ public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : ISc
                                                 """);
     }
 
-    public async Task DeleteAsync(object key)
+    public async Task DeleteAsync(Guid key)
     {
         using var db = _factory.Create();
         db.Open();
 
-        await db.ExecuteAsync("DELETE FROM public.mod_script WHERE name = @key", new { key });
+        await db.ExecuteAsync("DELETE FROM public.mod_script WHERE id = @key", new { key });
     }
 
     public Task Clear()
@@ -130,6 +130,11 @@ public class ScriptActionItemDatabaseRepository(IServiceProvider provider) : ISc
             "SELECT COUNT(0) FROM public.mod_script WHERE name = @actionName",
             new { actionName }
         ) > 0;
+    }
+
+    public Task<ScriptActionItem?> FindAsync(string name)
+    {
+        return FindAsync((object)name);
     }
 
     private ScriptActionItem MapToModel(DbRow row)
