@@ -49,14 +49,15 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             _logger.LogDebug("No Sectors Missing. Missing {Missing} of {Total}", missingQuantity, args.Quantity);
             return;
         }
-        
+
         var handleCount = await _constructHandleManager.GetActiveCount();
         var featureReaderService = serviceProvider.GetRequiredService<IFeatureReaderService>();
         var maxBudgetConstructs = await featureReaderService.GetIntValueAsync("MaxConstructHandles", 50);
 
         if (handleCount >= maxBudgetConstructs)
         {
-            _logger.LogError("Generate Sector: Reached MAX Number of Construct Handles to Spawn: {Max}", maxBudgetConstructs);
+            _logger.LogError("Generate Sector: Reached MAX Number of Construct Handles to Spawn: {Max}",
+                maxBudgetConstructs);
             return;
         }
 
@@ -117,6 +118,11 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 OnSectorEnterScript = encounter.OnSectorEnterScript,
             };
 
+            if (position is { x: 0, y: 0, z: 0 })
+            {
+                return;
+            }
+
             await _sectorInstanceRepository.AddAsync(instance);
             await Task.Delay(200);
         }
@@ -139,7 +145,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
         if (handleCount >= maxBudgetConstructs)
         {
-            _logger.LogError("LoadUnloadedSectors: Reached MAX Number of Construct Handles to Spawn: {Max}", maxBudgetConstructs);
+            _logger.LogError("LoadUnloadedSectors: Reached MAX Number of Construct Handles to Spawn: {Max}",
+                maxBudgetConstructs);
             return;
         }
 
@@ -159,7 +166,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 ).OnError(exception =>
                 {
                     _logger.LogError(exception, "Failed to Execute On Load Script (Aggregate)");
-                    
+
                     foreach (var e in exception.InnerExceptions)
                     {
                         _logger.LogError(e, "Failed to Execute On Load Script");
@@ -169,7 +176,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 await Task.Delay(200);
                 await _sectorInstanceRepository.SetLoadedAsync(sector.Id, true);
 
-                _logger.LogInformation("Loaded Sector {Id}({Sector}) Territory = {Territory}", sector.Id, sector.Sector, sector.TerritoryId);
+                _logger.LogInformation("Loaded Sector {Id}({Sector}) Territory = {Territory}", sector.Id, sector.Sector,
+                    sector.TerritoryId);
             }
             catch (Exception e)
             {
@@ -193,7 +201,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         {
             _logger.LogError(e, "Failed to ExpireSectorsWithDeletedConstructHandles");
         }
-        
+
         var expiredSectors = await _sectorInstanceRepository.FindExpiredAsync();
 
         foreach (var sector in expiredSectors)
@@ -256,18 +264,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         var random = serviceProvider.GetRandomProvider().GetRandom();
         var orleans = serviceProvider.GetOrleans();
 
-        const int maxIterations = 10;
-        var counter = 0;
-        
         foreach (var sectorInstance in sectorsToActivate)
         {
-            if (counter > maxIterations)
-            {
-                return;
-            }
-            
-            counter++;
-            
             var constructs = (await spatialHashRepository
                     .FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
                 .ToList();
@@ -361,12 +359,12 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         var constructHandleRepository = serviceProvider.GetRequiredService<IConstructHandleRepository>();
         var poiMap = await constructHandleRepository.GetPoiConstructExpirationTimeSpansAsync();
         var orleans = serviceProvider.GetOrleans();
-        
+
         _logger.LogInformation("Update Expiration Names found: {Count}", poiMap.Count);
 
         using var db = serviceProvider.GetRequiredService<IPostgresConnectionFactory>().Create();
         db.Open();
-        
+
         foreach (var kvp in poiMap)
         {
             try
@@ -390,7 +388,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     name = newName,
                     id = (long)kvp.Key
                 });
-            
+
                 _logger.LogDebug("Construct {Construct} Name Updated to: {Name}", kvp.Key, newName);
             }
             catch (Exception e)

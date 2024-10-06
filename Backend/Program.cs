@@ -47,13 +47,13 @@ public static class Program
 
             var taskList = new List<Task>
             {
-                new CachingLoop(TimeSpan.FromSeconds(5)).Start(),
-                new SectorLoop().Start(),
-                new ConstructBehaviorLoop(1, BehaviorTaskCategory.MediumPriority).Start(),
-                new ConstructBehaviorLoop(10, BehaviorTaskCategory.HighPriority).Start(),
-                new ConstructBehaviorLoop(20, BehaviorTaskCategory.MovementPriority).Start(),
-                new TaskQueueLoop().Start(),
-                new CleanupLoop(TimeSpan.FromSeconds(5)).Start()
+                Task.Factory.StartNew(() => new CachingLoop(TimeSpan.FromSeconds(5)).Start(), TaskCreationOptions.LongRunning),
+                Task.Factory.StartNew(() => new SectorLoop().Start(), TaskCreationOptions.LongRunning),
+                Task.Factory.StartNew(() => new ConstructBehaviorLoop(1, BehaviorTaskCategory.MediumPriority).Start(), TaskCreationOptions.LongRunning),
+                Task.Factory.StartNew(() => new ConstructBehaviorLoop(10, BehaviorTaskCategory.HighPriority).Start(), TaskCreationOptions.LongRunning),
+                Task.Factory.StartNew(() => new ConstructBehaviorLoop(20, BehaviorTaskCategory.MovementPriority).Start(), TaskCreationOptions.LongRunning),
+                Task.Factory.StartNew(() => new TaskQueueLoop().Start(), TaskCreationOptions.LongRunning),
+                Task.Factory.StartNew(() => new CleanupLoop(TimeSpan.FromSeconds(5)).Start(), TaskCreationOptions.LongRunning),
             };
 
             if (apiEnabled)
