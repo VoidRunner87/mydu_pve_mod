@@ -11,38 +11,44 @@ namespace Mod.DynamicEncounters;
 
 public class TaskQueueLoop : ModBase
 {
-    public override Task Start()
+    public override async Task Loop()
     {
-        var provider = ServiceProvider;
-        var logger = provider.CreateLogger<TaskQueueLoop>();
-        var taskQueueService = provider.GetRequiredService<ITaskQueueService>();
-        var featureService = provider.GetRequiredService<IFeatureReaderService>();
-
-        var taskCompletionSource = new TaskCompletionSource();
-        
-        var timer = new Timer(5000);
-        timer.Elapsed += async (sender, args) =>
+        while (true)
         {
             try
             {
-                var isEnabled = await featureService.GetEnabledValue<TaskQueueLoop>(false);
-
-                if (isEnabled)
-                {
-                    await taskQueueService.ProcessQueueMessages();
-                }
-                
-                RecordHeartBeat();
+                await Tick();
+                await Task.Delay(TimeSpan.FromSeconds(5));
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Failed to execute {Name}", nameof(TaskQueueLoop));
+                var logger = ServiceProvider.CreateLogger<TaskQueueLoop>();
+                logger.LogError(e, "Failed Task Queue Loop");
             }
-        };
-        
-        timer.Start();
+        }
+    }
 
-        // It will never complete because we're not setting result
-        return taskCompletionSource.Task;
+    public async Task Tick()
+    {
+        try
+        {
+            var provider = ServiceProvider;
+            var taskQueueService = provider.GetRequiredService<ITaskQueueService>();
+            var featureService = provider.GetRequiredService<IFeatureReaderService>();
+            
+            var isEnabled = await featureService.GetEnabledValue<TaskQueueLoop>(false);
+
+            if (isEnabled)
+            {
+                await taskQueueService.ProcessQueueMessages();
+            }
+                
+            RecordHeartBeat();
+        }
+        catch (Exception e)
+        {
+            var logger = ServiceProvider.CreateLogger<TaskQueueLoop>();
+            logger.LogError(e, "Failed to execute {Name}", nameof(TaskQueueLoop));
+        }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
@@ -13,32 +12,35 @@ namespace Mod.DynamicEncounters;
 
 public class CleanupLoop(TimeSpan loopTimer) : ModBase
 {
-    private IConstructService _constructService;
-    private ILogger<CleanupLoop> _logger;
-    private IConstructHandleRepository _constructHandleRepository;
-
-    public override Task Start()
+    public override async Task Loop()
     {
-        _constructService = ServiceProvider.GetRequiredService<IConstructService>();
-        _constructHandleRepository = ServiceProvider.GetRequiredService<IConstructHandleRepository>();
-        _logger = ServiceProvider.CreateLogger<CleanupLoop>();
-        
-        var taskCompletionSource = new TaskCompletionSource();
-        
-        var timer = new Timer(loopTimer);
-        timer.Elapsed += async (_,_) => await OnTimer();
-        timer.Start();
-
-        return taskCompletionSource.Task;
+        while (true)
+        {
+            try
+            {
+                await Tick();
+                await Task.Delay(loopTimer);
+            }
+            catch (Exception e)
+            {
+                var logger = ServiceProvider.CreateLogger<CleanupLoop>();
+                logger.LogError(e, "Failed Cleanup Loop");
+            }
+            
+        }
     }
 
-    private async Task OnTimer()
+    private async Task Tick()
     {
         var maxIterationsPerCycle = 50;
         var counter = 0;
 
         var sw = new Stopwatch();
         sw.Start();
+        
+        var logger = ServiceProvider.CreateLogger<CleanupLoop>();
+        var constructService = ServiceProvider.GetRequiredService<IConstructService>();
+        var constructHandleRepository = ServiceProvider.GetRequiredService<IConstructHandleRepository>();
         
         while (!ConstructsPendingDelete.Data.IsEmpty)
         {
@@ -54,23 +56,23 @@ public class CleanupLoop(TimeSpan loopTimer) : ModBase
             
             try
             {
-                await _constructService.SoftDeleteAsync(constructId);
-                await _constructHandleRepository.DeleteByConstructId(constructId);
+                await constructService.SoftDeleteAsync(constructId);
+                await constructHandleRepository.DeleteByConstructId(constructId);
                 await Task.Delay(500);
                 
                 var dequeued = ConstructsPendingDelete.Data.TryDequeue(out _);
                 
-                _logger.LogInformation("Cleaned up {Construct} | DQed={Dequeued}", constructId, dequeued);
+                logger.LogInformation("Cleaned up {Construct} | DQed={Dequeued}", constructId, dequeued);
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to Cleanup {Construct}", constructId);
+                logger.LogError(e, "Failed to Cleanup {Construct}", constructId);
             }
 
             counter++;
         }
         
-        _logger.LogInformation("Cleanup Total = {Time}ms", sw.ElapsedMilliseconds);
+        logger.LogInformation("Cleanup Total = {Time}ms", sw.ElapsedMilliseconds);
         
         RecordHeartBeat();
     }
