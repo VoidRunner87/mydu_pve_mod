@@ -17,52 +17,13 @@ namespace Mod.DynamicEncounters;
 
 public class SectorLoop : ModBase
 {
-
-    public override Task Start()
-    {
-        return Task.WhenAll([
-            base.Start(),
-            UpdateExpirationNames(),
-            ManageSectors()
-        ]);
-    }
-
-    private Task UpdateExpirationNames()
-    {
-        var taskCompletionSource = new TaskCompletionSource();
-        var logger = ServiceProvider.CreateLogger<SectorLoop>();
-        
-        try
-        {
-            var sectorPoolManager = ServiceProvider.GetRequiredService<ISectorPoolManager>();
-            
-            var updateExpirationNameTimer = new Timer(TimeSpan.FromSeconds(30));
-            updateExpirationNameTimer.Elapsed += async (sender, args) =>
-            {
-                var featureService = ServiceProvider.GetRequiredService<IFeatureReaderService>();
-
-                if (await featureService.GetEnabledValue<SectorLoop>(false))
-                {
-                    await sectorPoolManager.UpdateExpirationNames();
-                }
-            };
-            updateExpirationNameTimer.Start();
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Failed to execute {Name} Timer", nameof(SectorLoop));
-        }
-
-        return taskCompletionSource.Task;
-    }
-
-    public async Task ManageSectors()
+    public override async Task Loop()
     {
         var logger = ServiceProvider.CreateLogger<SectorLoop>();
         
         while (true)
         {
-            await Task.Delay(3000);
+            await Task.Delay(5000);
 
             try
             {
@@ -73,6 +34,8 @@ public class SectorLoop : ModBase
                 {
                     await ExecuteAction();
                 }
+                
+                RecordHeartBeat();
             }
             catch (Exception e)
             {

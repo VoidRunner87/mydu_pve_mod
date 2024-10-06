@@ -120,10 +120,19 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
             if (position is { x: 0, y: 0, z: 0 })
             {
+                _logger.LogWarning("BLOCKED Sector 0,0,0 creation");
                 return;
             }
 
-            await _sectorInstanceRepository.AddAsync(instance);
+            try
+            {
+                await _sectorInstanceRepository.AddAsync(instance);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to create sector. Likely violating unique constraint. It will be tried again on the next cycle");
+            }
+            
             await Task.Delay(200);
         }
     }
@@ -247,7 +256,6 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
     public async Task ActivateEnteredSectors()
     {
         var sectorsToActivate = (await _sectorInstanceRepository.FindSectorsRequiringStartupAsync())
-            .Where(x => x.Sector.x != 0 && x.Sector.y != 0 && x.Sector.z != 0)
             .DistinctBy(x => x.Sector)
             .ToList();
 

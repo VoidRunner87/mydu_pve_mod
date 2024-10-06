@@ -30,6 +30,7 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
                 logger.LogError(e, "Failed to run Cache Loop Timer");
             }
             
+            RecordHeartBeat();
         };
         timer.Start();
 
@@ -64,13 +65,13 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
                 SectorGridConstructCache.Data = map;
             }
 
-            foreach (var kvp in map)
-            {
-                foreach (var constructId in kvp.Value)
-                {
-                    logger.LogDebug("Sector: {Sector} | Construct: {Construct}", kvp.Key, constructId);
-                }
-            }
+            // foreach (var kvp in map)
+            // {
+            //     foreach (var constructId in kvp.Value)
+            //     {
+            //         logger.LogInformation("Sector: {Sector} | Construct: {Construct}", kvp.Key, constructId);
+            //     }
+            // }
 
             logger.LogInformation("CacheLoop Took: {Time}ms", sw.ElapsedMilliseconds);
         }

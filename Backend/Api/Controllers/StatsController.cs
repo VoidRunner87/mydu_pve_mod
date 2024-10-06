@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using Mod.DynamicEncounters.Features.Sector.Services;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -15,7 +17,12 @@ public class StatsController : Controller
         return Ok(new
         {
             BehaviorStats = StatsRecorder.GetStats(),
-            ConstructsPendingDelete = ConstructsPendingDelete.Data.Count
+            ConstructsPendingDelete = ConstructsPendingDelete.Data.Count,
+            LoopHeartBeatSpan = LoopStats.LastHeartbeatMap
+                .ToDictionary(
+                    k => k.Key,
+                    v => DateTime.UtcNow - v.Value
+                )
         });
     }
     

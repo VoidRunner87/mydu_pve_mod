@@ -47,13 +47,52 @@ public static class Program
 
             var taskList = new List<Task>
             {
-                Task.Factory.StartNew(() => new CachingLoop(TimeSpan.FromSeconds(5)).Start(), TaskCreationOptions.LongRunning),
-                Task.Factory.StartNew(() => new SectorLoop().Start(), TaskCreationOptions.LongRunning),
-                Task.Factory.StartNew(() => new ConstructBehaviorLoop(1, BehaviorTaskCategory.MediumPriority).Start(), TaskCreationOptions.LongRunning),
-                Task.Factory.StartNew(() => new ConstructBehaviorLoop(10, BehaviorTaskCategory.HighPriority).Start(), TaskCreationOptions.LongRunning),
-                Task.Factory.StartNew(() => new ConstructBehaviorLoop(20, BehaviorTaskCategory.MovementPriority).Start(), TaskCreationOptions.LongRunning),
-                Task.Factory.StartNew(() => new TaskQueueLoop().Start(), TaskCreationOptions.LongRunning),
-                Task.Factory.StartNew(() => new CleanupLoop(TimeSpan.FromSeconds(5)).Start(), TaskCreationOptions.LongRunning),
+                Task.Factory.StartNew(
+                    () => new CachingLoop(TimeSpan.FromSeconds(5)).Start(), 
+                    TaskCreationOptions.LongRunning
+                ),
+                Task.Factory.StartNew(
+                    () => new SectorLoop().Start(), 
+                    TaskCreationOptions.LongRunning
+                ),
+                Task.Factory.StartNew(
+                    () => new ExpirationNamesLoop().Start(), 
+                    TaskCreationOptions.LongRunning
+                ),
+                Task.Factory.StartNew(
+                    () => new ConstructBehaviorFeatureCheckLoop().Start(), 
+                    TaskCreationOptions.LongRunning
+                ),
+                Task.Factory.StartNew(
+                    () => new ConstructHandleListQueryLoop().Start(), 
+                    TaskCreationOptions.LongRunning
+                ),
+                Task.Factory.StartNew(
+                    () => new ConstructBehaviorLoop(1, BehaviorTaskCategory.MediumPriority)
+                        .WithName<ConstructBehaviorLoop>(nameof(BehaviorTaskCategory.MediumPriority))
+                        .Start(), 
+                    TaskCreationOptions.LongRunning
+                ),
+                Task.Factory.StartNew(
+                    () => new ConstructBehaviorLoop(10, BehaviorTaskCategory.HighPriority)
+                        .WithName<ConstructBehaviorLoop>(nameof(BehaviorTaskCategory.HighPriority))
+                        .Start(), 
+                    TaskCreationOptions.LongRunning
+                ),
+                Task.Factory.StartNew(
+                    () => new ConstructBehaviorLoop(20, BehaviorTaskCategory.MovementPriority)
+                        .WithName<ConstructBehaviorLoop>(nameof(BehaviorTaskCategory.MovementPriority))
+                        .Start(), 
+                    TaskCreationOptions.LongRunning
+                ),
+                Task.Factory.StartNew(
+                    () => new TaskQueueLoop().Start(), 
+                    TaskCreationOptions.LongRunning
+                ),
+                Task.Factory.StartNew(
+                    () => new CleanupLoop(TimeSpan.FromSeconds(5)).Start(), 
+                    TaskCreationOptions.LongRunning
+                ),
             };
 
             if (apiEnabled)

@@ -71,5 +71,7 @@ public class CleanupLoop(TimeSpan loopTimer) : ModBase
         }
         
         _logger.LogInformation("Cleanup Total = {Time}ms", sw.ElapsedMilliseconds);
+        
+        RecordHeartBeat();
     }
 }

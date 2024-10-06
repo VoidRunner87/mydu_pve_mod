@@ -58,6 +58,20 @@ public class ModBase
     public static IScenegraph SceneG;
     public static IScriptService SpawnerScripts;
 
+    public string Name { get; set; }
+
+    public ModBase()
+    {
+        Name = GetType().Name;
+    }
+
+    public ModBase WithName<T>(string suffix)
+    {
+        Name = $"{typeof(T).Name}_{suffix}";
+        
+        return this;
+    }
+
     /// Create or login a user, return bot client instance
     public static async Task<Client> CreateUser(string prefix, bool allowExisting = false, bool randomize = false)
     {
@@ -87,7 +101,7 @@ public class ModBase
             NullValueHandling = NullValueHandling.Ignore,
             DefaultValueHandling = DefaultValueHandling.Ignore
         };
-        
+
         //services.RegisterCoreServices();
         var queueingUrl = Environment.GetEnvironmentVariable("QUEUEING");
         if (string.IsNullOrEmpty(queueingUrl))
@@ -137,7 +151,7 @@ public class ModBase
         ServiceProvider = sp;
         ClientExtensions.SetSingletons(sp);
         ClientExtensions.UseFactory(sp.GetRequiredService<IDuClientFactory>());
-        Orleans = ServiceProvider.GetRequiredService<IClusterClient>(); 
+        Orleans = ServiceProvider.GetRequiredService<IClusterClient>();
         DataAccessor = ServiceProvider.GetRequiredService<IDataAccessor>();
         UserContent = ServiceProvider.GetRequiredService<IUserContent>();
         VoxelService = ServiceProvider.GetRequiredService<IVoxelService>();
@@ -157,7 +171,7 @@ public class ModBase
             Console.WriteLine("Starting Services V2");
             await ServiceProvider.StartServicesV2();
             Console.WriteLine("Services Started");
-        
+
             Console.WriteLine("Creating BOT User");
             Bot = await RefreshClient();
             Console.WriteLine("BOT User Created");
@@ -169,21 +183,33 @@ public class ModBase
         }
     }
 
+    public void RecordHeartBeat()
+    {
+        LoopStats.LastHeartbeatMap.AddOrUpdate(
+            Name,
+            _ => DateTime.UtcNow,
+            (_, _) => DateTime.UtcNow
+        );
+    }
+
     public virtual async Task Start()
     {
         var logger = ServiceProvider.CreateLogger<ModBase>();
-        
-        try
+
+        while (true)
         {
-            await Loop();
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Failed to run Loop {Name}", GetType().Name);
-            await Task.Delay(5000);
+            try
+            {
+                await Loop();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to run Loop {Name}", GetType().Name);
+                await Task.Delay(5000);
+            }
         }
     }
-    
+
     public static async Task<Client> RefreshClient()
     {
         return await CreateUser(Environment.GetEnvironmentVariable("BOT_PREFIX")!, true);
@@ -196,7 +222,7 @@ public class ModBase
         migrationRunner.MigrateUp();
         Console.WriteLine("Migrations Executed");
     }
-    
+
     public static void DowngradeDatabase(IServiceScope scope, int version)
     {
         Console.WriteLine("Executing DB Migrations");
@@ -209,21 +235,5 @@ public class ModBase
     public virtual Task Loop()
     {
         return Task.CompletedTask;
-    }
-
-    /// Conveniance helper for running code forever
-    public async Task SafeLoop(Func<Task> action)
-    {
-        while (true)
-        {
-            try
-            {
-                await action();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Exception in mod action: {e}");
-            }
-        }
     }
 }

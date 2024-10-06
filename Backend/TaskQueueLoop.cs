@@ -31,6 +31,8 @@ public class TaskQueueLoop : ModBase
                 {
                     await taskQueueService.ProcessQueueMessages();
                 }
+                
+                RecordHeartBeat();
             }
             catch (Exception e)
             {

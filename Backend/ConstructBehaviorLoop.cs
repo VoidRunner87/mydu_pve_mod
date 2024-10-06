@@ -4,10 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
@@ -21,15 +19,12 @@ public class ConstructBehaviorLoop : HighTickModLoop
     private readonly BehaviorTaskCategory _category;
     private readonly IServiceProvider _provider;
     private readonly ILogger<ConstructBehaviorLoop> _logger;
-    private readonly IConstructHandleRepository _constructHandleRepository;
     private readonly IConstructBehaviorFactory _behaviorFactory;
     private readonly IConstructDefinitionFactory _constructDefinitionFactory;
-    private readonly IFeatureReaderService _featureService;
 
-    private bool _featureEnabled;
-    private readonly ConcurrentDictionary<ulong, ConstructHandleItem> _constructHandles = [];
-
-    private static readonly object ListLock = new();
+    public static bool FeatureEnabled;
+    public static readonly ConcurrentDictionary<ulong, ConstructHandleItem> ConstructHandles = [];
+    public static readonly object ListLock = new();
 
     public ConstructBehaviorLoop(int framesPerSecond, BehaviorTaskCategory category) : base(framesPerSecond)
     {
@@ -37,62 +32,13 @@ public class ConstructBehaviorLoop : HighTickModLoop
         _provider = ServiceProvider;
         _logger = _provider.CreateLogger<ConstructBehaviorLoop>();
 
-        _constructHandleRepository = _provider.GetRequiredService<IConstructHandleRepository>();
         _behaviorFactory = _provider.GetRequiredService<IConstructBehaviorFactory>();
         _constructDefinitionFactory = _provider.GetRequiredService<IConstructDefinitionFactory>();
-
-        _featureService = _provider.GetRequiredService<IFeatureReaderService>();
-    }
-
-    public override Task Start()
-    {
-        return Task.WhenAll(
-            CheckFeatureEnabledTask(),
-            UpdateConstructHandleListTask(),
-            base.Start()
-        );
-    }
-
-    private Task CheckFeatureEnabledTask()
-    {
-        var taskCompletionSource = new TaskCompletionSource();
-
-        var timer = new Timer(10000);
-        timer.Elapsed += async (_, _) =>
-        {
-            _featureEnabled = await _featureService.GetEnabledValue<ConstructBehaviorLoop>(false);
-        };
-        timer.Start();
-
-        return taskCompletionSource.Task;
-    }
-
-    private Task UpdateConstructHandleListTask()
-    {
-        var taskCompletionSource = new TaskCompletionSource();
-
-        var timer = new Timer(2000);
-        timer.Elapsed += async (_, _) =>
-        {
-            var items = await _constructHandleRepository.FindActiveHandlesAsync();
-
-            lock (ListLock)
-            {
-                _constructHandles.Clear();
-                foreach (var item in items)
-                {
-                    _constructHandles.TryAdd(item.ConstructId, item);
-                }
-            }
-        };
-        timer.Start();
-
-        return taskCompletionSource.Task;
     }
 
     public override async Task Tick(TimeSpan deltaTime)
     {
-        if (!_featureEnabled)
+        if (!FeatureEnabled)
         {
             return;
         }
@@ -104,7 +50,7 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
         lock (ListLock)
         {
-            foreach (var kvp in _constructHandles)
+            foreach (var kvp in ConstructHandles)
             {
                 var task = Task.Run(() => RunIsolatedAsync(() => TickConstructHandle(deltaTime, kvp.Value)));
                 taskList.Add(task);
@@ -172,5 +118,7 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
             await behavior.TickAsync(context);
         }
+        
+        RecordHeartBeat();
     }
 }
