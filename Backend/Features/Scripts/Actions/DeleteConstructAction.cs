@@ -19,7 +19,7 @@ public class DeleteConstructAction(ScriptActionItem actionItem) : IScriptAction
     
     public string GetKey() => Name;
 
-    public string Name => Guid.NewGuid().ToString();
+    public string Name => ActionName;
     
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {

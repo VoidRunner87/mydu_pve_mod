@@ -9,7 +9,7 @@ namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
 public class NullScriptAction : IScriptAction
 {
-    public string Name { get; }
+    public string Name => "null";
 
     public Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {

@@ -18,7 +18,7 @@ public class SpawnLootForConstruct(ScriptActionItem actionItem) : IScriptAction
     public const string ActionName = "spawn-loot";
     public const string Description = "Spawns Loot for the construct in context";
     
-    public string Name { get; } = Guid.NewGuid().ToString();
+    public string Name => ActionName;
     public string GetKey() => Name;
 
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)

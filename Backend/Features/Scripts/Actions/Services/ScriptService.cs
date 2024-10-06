@@ -32,7 +32,7 @@ public class ScriptService(IServiceProvider serviceProvider) : IScriptService
         var constructDefsTask = _prefabItemRepository.GetAllAsync();
 
         await Task.WhenAll(scriptsTask, constructDefsTask);
-
+        //TODO This is accumulating scripts because they are guid named
         var scripts = await scriptsTask;
         var constructDefs = await constructDefsTask;
 

@@ -29,7 +29,7 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
 
     private IPointGenerator _pointGenerator;
     private ILogger<SpawnScriptAction> _logger;
-    public string Name { get; } = Guid.NewGuid().ToString();
+    public string Name => ActionName;
 
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {

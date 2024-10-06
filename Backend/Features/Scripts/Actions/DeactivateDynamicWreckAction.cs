@@ -17,8 +17,8 @@ public class DeactivateDynamicWreckAction : IScriptAction
 
     public string GetKey() => Name;
 
-    public string Name { get; } = Guid.NewGuid().ToString();
-    
+    public string Name => ActionName;
+
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {
         if (!context.ConstructId.HasValue)

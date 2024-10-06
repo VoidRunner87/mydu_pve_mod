@@ -20,10 +20,11 @@ public class ForEachConstructHandleTaggedOnSectorAction(
     IScriptAction scriptAction
 ) : IScriptAction
 {
+    public const string ActionName = "for-each-handle-with-tag";
     public string GetKey() => Name;
 
-    public string Name { get; } = Guid.NewGuid().ToString();
-    
+    public string Name => ActionName;
+
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {
         var provider = context.ServiceProvider;

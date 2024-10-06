@@ -13,7 +13,7 @@ public class Repeat(ScriptActionItem actionItem) : IScriptAction
     public const string ActionName = "repeat";
     public const string Description = "Repeats an action N number of times";
     
-    public string Name { get; } = Guid.NewGuid().ToString();
+    public string Name => ActionName;
     public string GetKey() => Name;
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {

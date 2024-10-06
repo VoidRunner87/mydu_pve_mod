@@ -5,10 +5,10 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
-public class CompositeScriptAction(string name, IEnumerable<IScriptAction> actions) : IScriptAction
+public class CompositeScriptAction(IEnumerable<IScriptAction> actions) : IScriptAction
 {
-    public string Name { get; } = name;
-    
+    public string Name => "composite";
+
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {
         await Task.Yield();
