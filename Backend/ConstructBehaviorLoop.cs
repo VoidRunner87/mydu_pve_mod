@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,7 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
+using Mod.DynamicEncounters.Threads;
 
 namespace Mod.DynamicEncounters;
 
@@ -27,10 +29,16 @@ public class ConstructBehaviorLoop : HighTickModLoop
     public static readonly ConcurrentDictionary<ulong, DateTime> ConstructHandleHeartbeat = [];
     public static readonly object ListLock = new();
 
-    public ConstructBehaviorLoop(int framesPerSecond, BehaviorTaskCategory category) : base(framesPerSecond)
+    public ConstructBehaviorLoop(
+        ThreadId threadId,
+        IThreadManager threadManager,
+        CancellationToken token,
+        int framesPerSecond,
+        BehaviorTaskCategory category
+    ) : base(framesPerSecond, threadId, threadManager, token)
     {
         _category = category;
-        _provider = ServiceProvider;
+        _provider = ModBase.ServiceProvider;
         _logger = _provider.CreateLogger<ConstructBehaviorLoop>();
 
         _behaviorFactory = _provider.GetRequiredService<IConstructBehaviorFactory>();
@@ -99,8 +107,16 @@ public class ConstructBehaviorLoop : HighTickModLoop
         var context = await ConstructBehaviorContextCache.Data
             .TryGetValue(
                 handleItem.ConstructId,
-                () => Task.FromResult(new BehaviorContext(handleItem.FactionId, null, handleItem.Sector, Bot, _provider,
-                    constructDef))
+                () => Task.FromResult(
+                    new BehaviorContext(
+                        handleItem.FactionId,
+                        null,
+                        handleItem.Sector,
+                        ModBase.Bot,
+                        _provider,
+                        constructDef
+                    )
+                )
             );
 
         context.DeltaTime = deltaTime.TotalSeconds;
@@ -119,15 +135,15 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
             await behavior.TickAsync(context);
         }
-        
-        RecordHeartBeat();
+
+        ReportHeartbeat();
     }
 
     public static void RecordConstructHeartBeat(ulong constructId)
     {
         ConstructHandleHeartbeat.AddOrUpdate(
             constructId,
-            _ => DateTime.UtcNow, 
+            _ => DateTime.UtcNow,
             (_, _) => DateTime.UtcNow
         );
     }

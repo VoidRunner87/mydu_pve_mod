@@ -183,31 +183,9 @@ public class ModBase
         }
     }
 
-    public void RecordHeartBeat()
+    public virtual Task Start()
     {
-        LoopStats.LastHeartbeatMap.AddOrUpdate(
-            Name,
-            _ => DateTime.UtcNow,
-            (_, _) => DateTime.UtcNow
-        );
-    }
-
-    public virtual async Task Start()
-    {
-        var logger = ServiceProvider.CreateLogger<ModBase>();
-
-        while (true)
-        {
-            try
-            {
-                await Loop();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Failed to run Loop {Name}", GetType().Name);
-                await Task.Delay(5000);
-            }
-        }
+        return Task.CompletedTask;
     }
 
     public static async Task<Client> RefreshClient()

@@ -1,39 +1,39 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Helpers;
+using Mod.DynamicEncounters.Threads;
 
 namespace Mod.DynamicEncounters;
 
-public class ExpirationNamesLoop : ModBase
+public class ExpirationNamesLoop(IThreadManager tm, CancellationToken ct) :
+    ThreadHandle(ThreadId.ExpirationNames, tm, ct)
 {
-    public override async Task Loop()
+    public override async Task Tick()
     {
-        while (true)
+        var logger = ModBase.ServiceProvider.CreateLogger<SectorLoop>();
+
+        try
         {
-            var logger = ServiceProvider.CreateLogger<SectorLoop>();
+            var featureService = ModBase.ServiceProvider.GetRequiredService<IFeatureReaderService>();
+            var sectorPoolManager = ModBase.ServiceProvider.GetRequiredService<ISectorPoolManager>();
 
-            try
+            if (await featureService.GetEnabledValue<SectorLoop>(false))
             {
-                var featureService = ServiceProvider.GetRequiredService<IFeatureReaderService>();
-                var sectorPoolManager = ServiceProvider.GetRequiredService<ISectorPoolManager>();
-
-                if (await featureService.GetEnabledValue<SectorLoop>(false))
-                {
-                    await sectorPoolManager.UpdateExpirationNames();
-                }
-
-                await Task.Delay(TimeSpan.FromSeconds(30));
+                await sectorPoolManager.UpdateExpirationNames();
             }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Failed to UpdateExpirationNames");
-                
-                await Task.Delay(TimeSpan.FromSeconds(30));
-            }
+
+            Thread.Sleep(TimeSpan.FromSeconds(30));
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to UpdateExpirationNames");
+
+            Thread.Sleep(TimeSpan.FromSeconds(30));
         }
     }
 }

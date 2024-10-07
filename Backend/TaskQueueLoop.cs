@@ -1,38 +1,22 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.TaskQueue.Interfaces;
 using Mod.DynamicEncounters.Helpers;
+using Mod.DynamicEncounters.Threads;
 
 namespace Mod.DynamicEncounters;
 
-public class TaskQueueLoop : ModBase
+public class TaskQueueLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle(ThreadId.TaskQueue, tm, ct)
 {
-    public override async Task Loop()
-    {
-        while (true)
-        {
-            try
-            {
-                await Tick();
-                await Task.Delay(TimeSpan.FromSeconds(5));
-            }
-            catch (Exception e)
-            {
-                var logger = ServiceProvider.CreateLogger<TaskQueueLoop>();
-                logger.LogError(e, "Failed Task Queue Loop");
-            }
-        }
-    }
-
-    private async Task Tick()
+    public override async Task Tick()
     {
         try
         {
-            var provider = ServiceProvider;
+            var provider = ModBase.ServiceProvider;
             var taskQueueService = provider.GetRequiredService<ITaskQueueService>();
             var featureService = provider.GetRequiredService<IFeatureReaderService>();
             
@@ -43,11 +27,12 @@ public class TaskQueueLoop : ModBase
                 await taskQueueService.ProcessQueueMessages();
             }
                 
-            RecordHeartBeat();
+            ReportHeartbeat();
+            Thread.Sleep(TimeSpan.FromSeconds(5));
         }
         catch (Exception e)
         {
-            var logger = ServiceProvider.CreateLogger<TaskQueueLoop>();
+            var logger = ModBase.ServiceProvider.CreateLogger<TaskQueueLoop>();
             logger.LogError(e, "Failed to execute {Name}", nameof(TaskQueueLoop));
         }
     }

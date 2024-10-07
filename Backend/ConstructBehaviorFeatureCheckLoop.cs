@@ -1,34 +1,34 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Helpers;
+using Mod.DynamicEncounters.Threads;
 
 namespace Mod.DynamicEncounters;
 
-public class ConstructBehaviorFeatureCheckLoop : ModBase
+public class ConstructBehaviorFeatureCheckLoop(IThreadManager tm, CancellationToken ct) :
+    ThreadHandle(ThreadId.BehaviorFeatureCheck, tm, ct)
 {
-    public override async Task Loop()
+    public override async Task Tick()
     {
-        while (true)
+        try
         {
-            try
-            {
-                var featureService = ServiceProvider.GetRequiredService<IFeatureReaderService>();
-                ConstructBehaviorLoop.FeatureEnabled =
-                    await featureService.GetEnabledValue<ConstructBehaviorLoop>(false);
+            var featureService = ModBase.ServiceProvider.GetRequiredService<IFeatureReaderService>();
+            ConstructBehaviorLoop.FeatureEnabled =
+                await featureService.GetEnabledValue<ConstructBehaviorLoop>(false);
 
-                await Task.Delay(TimeSpan.FromSeconds(10));
-                
-                RecordHeartBeat();
-            }
-            catch (Exception e)
-            {
-                var logger = ServiceProvider.CreateLogger<ConstructBehaviorFeatureCheckLoop>();
+            Thread.Sleep(TimeSpan.FromSeconds(10));
 
-                logger.LogError(e, "Failed to check Feature Status");
-            }
+            ReportHeartbeat();
+        }
+        catch (Exception e)
+        {
+            var logger = ModBase.ServiceProvider.CreateLogger<ConstructBehaviorFeatureCheckLoop>();
+
+            logger.LogError(e, "Failed to check Feature Status");
         }
     }
 }

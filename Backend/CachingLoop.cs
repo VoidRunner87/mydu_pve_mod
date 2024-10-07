@@ -1,64 +1,66 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Helpers;
+using Mod.DynamicEncounters.Threads;
 
 namespace Mod.DynamicEncounters;
 
-public class CachingLoop(TimeSpan timerSpan) : ModBase
+public class CachingLoop(IThreadManager threadManager, CancellationToken token) :
+    ThreadHandle(ThreadId.Caching, threadManager, token)
 {
-    public override async Task Loop()
+    private readonly TimeSpan _timeSpan = TimeSpan.FromSeconds(5);
+    
+    public override async Task Tick()
     {
-        while (true)
+        try
         {
-            try
+            var provider = ModBase.ServiceProvider;
+            var logger = provider.CreateLogger<CachingLoop>();
+            var spatialHashCacheService = provider.GetRequiredService<ISectorSpatialHashCacheService>();
+
+            var sw = new Stopwatch();
+            sw.Start();
+
+            var map = await spatialHashCacheService.GetPlayerConstructsSectorMapAsync();
+
+            if (map.Count == 0)
             {
-                var provider = ServiceProvider;
-                var logger = provider.CreateLogger<CachingLoop>();
-                var spatialHashCacheService = provider.GetRequiredService<ISectorSpatialHashCacheService>();
-
-                var sw = new Stopwatch();
-                sw.Start();
-                
-                var map = await spatialHashCacheService.GetPlayerConstructsSectorMapAsync();
-
-                if (map.Count == 0)
-                {
-                    logger.LogInformation("No Constructs in Sectors of Construct Handles. Time = {Time}ms",
-                        sw.ElapsedMilliseconds);
-                    lock (SectorGridConstructCache.Lock)
-                    {
-                        SectorGridConstructCache.Data = [];
-                    }
-                    
-                    RecordHeartBeat();
-                    await Task.Delay(timerSpan);
-
-                    return;
-                }
-
+                logger.LogInformation("No Constructs in Sectors of Construct Handles. Time = {Time}ms",
+                    sw.ElapsedMilliseconds);
                 lock (SectorGridConstructCache.Lock)
                 {
-                    SectorGridConstructCache.Data = map;
+                    SectorGridConstructCache.Data = [];
                 }
 
-                logger.LogInformation("CacheLoop Took: {Time}ms", sw.ElapsedMilliseconds);
-                
-                RecordHeartBeat();
-                
-                await Task.Delay(timerSpan);
+                ReportHeartbeat();
+                Thread.Sleep(_timeSpan);
+
+                return;
             }
-            catch (Exception e)
+
+            lock (SectorGridConstructCache.Lock)
             {
-                var logger = ServiceProvider.CreateLogger<CachingLoop>();
-                logger.LogError(e, "Failed to Cache Player Map");
-                
-                await Task.Delay(timerSpan);
+                SectorGridConstructCache.Data = map;
             }
+
+            logger.LogInformation("CacheLoop Took: {Time}ms", sw.ElapsedMilliseconds);
+
+            ReportHeartbeat();
+
+            Thread.Sleep(_timeSpan);
+        }
+        catch (Exception e)
+        {
+            var logger = ModBase.ServiceProvider.CreateLogger<CachingLoop>();
+            logger.LogError(e, "Failed to Cache Player Map");
+
+            Thread.Sleep(_timeSpan);
         }
     }
 }
