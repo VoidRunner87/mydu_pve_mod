@@ -36,7 +36,8 @@ public class ConstructHandleListQueryLoop : ModBase
                     foreach (var kvp in deadConstructHandles)
                     {
                         ConstructBehaviorLoop.ConstructHandles.TryRemove(kvp.Key, out _);
-                        logger.LogWarning("Removed Construct Handle {Construct} that failed to be removed", kvp.Value);
+                        ConstructBehaviorLoop.ConstructHandleHeartbeat.TryRemove(kvp.Key, out _);
+                        logger.LogWarning("Removed Construct Handle {Construct} that failed to be removed", kvp.Key);
                     }
                 }
 
