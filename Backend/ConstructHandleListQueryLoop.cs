@@ -27,11 +27,7 @@ public class ConstructHandleListQueryLoop : ModBase
                     // ConstructBehaviorLoop.ConstructHandles.Clear();
                     foreach (var item in items)
                     {
-                        var added = ConstructBehaviorLoop.ConstructHandles.TryAdd(item.ConstructId, item);
-                        if (!added)
-                        {
-                            logger.LogError("Failed to Add {Construct}", item.ConstructId);
-                        }
+                        ConstructBehaviorLoop.ConstructHandles.TryAdd(item.ConstructId, item);
                     }
 
                     var deadConstructHandles = ConstructBehaviorLoop.ConstructHandleHeartbeat

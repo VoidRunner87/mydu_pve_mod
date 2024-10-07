@@ -36,17 +36,14 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
     public async Task TickAsync(BehaviorContext context)
     {
-        if (!context.IsAlive)
+        if (!context.IsAlive || !context.IsBehaviorActive<AliveCheckBehavior>())
         {
             await context.NotifyConstructDestroyedAsync(new BehaviorEventArgs(constructId, prefab, context));
             await _handleRepository.RemoveHandleAsync(constructId);
             ConstructBehaviorLoop.ConstructHandles.TryRemove(constructId, out _);
 
-            return;
-        }
-
-        if (!context.IsBehaviorActive<AliveCheckBehavior>())
-        {
+            _logger.LogInformation("Construct {Construct} NOT ALIVE", constructId);
+            
             return;
         }
 
@@ -79,6 +76,8 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
             context.IsAlive = false;
 
             await _handleRepository.RemoveHandleAsync(constructId);
+            
+            _logger.LogInformation("Construct {Construct} CORE DESTROYED", constructId);
             
             return;
         }

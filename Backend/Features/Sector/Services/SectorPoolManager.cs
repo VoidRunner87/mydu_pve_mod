@@ -144,7 +144,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
         if (missingQuantity <= 0)
         {
-            _logger.LogDebug("No Territory({Territory}) Sectors Missing. Missing {Missing} of {Total}", args.TerritoryId, missingQuantity, args.Quantity);
+            _logger.LogInformation("No Territory({Territory}) Sectors Missing. Missing {Missing} of {Total}", args.TerritoryId, missingQuantity, args.Quantity);
             return;
         }
 
