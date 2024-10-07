@@ -8,6 +8,7 @@ using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 using Mod.DynamicEncounters.Helpers.DU;
+using Mod.DynamicEncounters.Threads.Handles;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;

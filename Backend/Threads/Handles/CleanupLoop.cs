@@ -8,9 +8,8 @@ using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Services;
 using Mod.DynamicEncounters.Helpers;
-using Mod.DynamicEncounters.Threads;
 
-namespace Mod.DynamicEncounters;
+namespace Mod.DynamicEncounters.Threads.Handles;
 
 public class CleanupLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle(ThreadId.Cleanup, tm, ct)
 {

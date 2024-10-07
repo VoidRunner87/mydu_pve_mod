@@ -1,4 +1,5 @@
 using FluentMigrator;
+using Mod.DynamicEncounters.Threads.Handles;
 
 namespace Mod.DynamicEncounters.Database.Migrations;
 

@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Helpers;
+using Mod.DynamicEncounters.Threads.Handles;
+using ThreadState = System.Threading.ThreadState;
 using Timer = System.Timers.Timer;
 
 namespace Mod.DynamicEncounters.Threads;
@@ -15,10 +18,10 @@ public class ThreadManager : IThreadManager
 {
     private static ThreadManager? _instance;
     private readonly ConcurrentDictionary<ThreadId, CancellationTokenSource> _cancellationTokenSources = new();
-
     private readonly ConcurrentDictionary<ThreadId, DateTime> _heartbeatMap = new();
     private readonly ILogger<ThreadManager> _logger = ModBase.ServiceProvider.CreateLogger<ThreadManager>();
     private readonly ConcurrentDictionary<ThreadId, Thread> _threads = new();
+    private readonly ConcurrentDictionary<ThreadId, DateTime> _threadStartMap = new();
 
     public static ThreadManager Instance
     {
@@ -44,7 +47,7 @@ public class ThreadManager : IThreadManager
     {
         var taskCompletionSource = new TaskCompletionSource();
 
-        var timer = new Timer(TimeSpan.FromSeconds(5));
+        var timer = new Timer(TimeSpan.FromSeconds(1));
         timer.Elapsed += (_, _) => { OnTimer(); };
         timer.Start();
 
@@ -53,6 +56,8 @@ public class ThreadManager : IThreadManager
 
     public void OnTimer()
     {
+        var sw = new Stopwatch();
+        sw.Start();
         var threadIds = Enum.GetValues<ThreadId>();
 
         foreach (var id in threadIds)
@@ -66,6 +71,8 @@ public class ThreadManager : IThreadManager
                 continue;
             }
 
+            if (IsThreadOld(id)) CancelThread(id);
+
             if (IsThreadCancelled(id))
             {
                 if (IsThreadStopped(id)) RemoveThread(id);
@@ -74,11 +81,19 @@ public class ThreadManager : IThreadManager
 
             if (DidThreadHang(id))
             {
-                CancelThread(id);
-                InterruptThread(id);
-                RemoveThread(id);
+                if (!IsThreadCancelled(id))
+                {
+                    CancelThread(id);
+                }
+                else
+                {
+                    InterruptThread(id);
+                    RemoveThread(id);
+                }
             }
         }
+
+        // _logger.LogInformation("ThreadManager Timer: {Timer}ms", sw.ElapsedMilliseconds);
     }
 
     public Dictionary<ThreadId, object> GetState()
@@ -89,12 +104,14 @@ public class ThreadManager : IThreadManager
             {
                 _heartbeatMap.TryGetValue(v.Key, out var lastHeartbeat);
                 _cancellationTokenSources.TryGetValue(v.Key, out var cts);
+                _threadStartMap.TryGetValue(v.Key, out var startDate);
 
                 return (object)new
                 {
                     State = $"{v.Value.ThreadState}",
                     LastHeartbeat = lastHeartbeat,
-                    IsThreadCancelled = cts?.IsCancellationRequested
+                    IsThreadCancelled = cts?.IsCancellationRequested,
+                    StartDate = startDate
                 };
             });
 
@@ -195,6 +212,12 @@ public class ThreadManager : IThreadManager
 
         if (_threads.TryGetValue(threadId, out var oldThread)) oldThread.Interrupt();
 
+        _threadStartMap.AddOrUpdate(
+            threadId,
+            _ => DateTime.UtcNow,
+            (_, _) => DateTime.UtcNow
+        );
+
         _threads.AddOrUpdate(
             threadId,
             _ => thread,
@@ -263,9 +286,18 @@ public class ThreadManager : IThreadManager
     private bool DidThreadHang(ThreadId threadId)
     {
         if (_heartbeatMap.TryGetValue(threadId, out var lastHeartbeat))
-            return DateTime.UtcNow - lastHeartbeat > TimeSpan.FromMinutes(5);
+            return DateTime.UtcNow - lastHeartbeat > TimeSpan.FromMinutes(2);
 
         return false;
+    }
+
+    private bool IsThreadOld(ThreadId threadId)
+    {
+        if (!DoesThreadExist(threadId)) return false;
+
+        if (!_threadStartMap.TryGetValue(threadId, out var threadStartDate)) return false;
+
+        return DateTime.UtcNow - threadStartDate > TimeSpan.FromHours(2);
     }
 
     private bool IsThreadCancelled(ThreadId threadId)

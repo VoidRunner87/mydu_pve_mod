@@ -7,9 +7,8 @@ using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Helpers;
-using Mod.DynamicEncounters.Threads;
 
-namespace Mod.DynamicEncounters;
+namespace Mod.DynamicEncounters.Threads.Handles;
 
 public class CachingLoop(IThreadManager threadManager, CancellationToken token) :
     ThreadHandle(ThreadId.Caching, threadManager, token)

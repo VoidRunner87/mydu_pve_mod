@@ -6,9 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Helpers;
-using Mod.DynamicEncounters.Threads;
 
-namespace Mod.DynamicEncounters;
+namespace Mod.DynamicEncounters.Threads.Handles;
 
 public class ConstructHandleListQueryLoop(IThreadManager tm, CancellationToken ct) :
     ThreadHandle(ThreadId.ConstructHandleQuery, tm, ct)

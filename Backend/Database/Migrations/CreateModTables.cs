@@ -72,7 +72,7 @@ public class CreateModTables : Migration
             .InSchema("public")
             .Row(new
             {
-                name = $"{nameof(AlienCoreRotationLoop)}Enabled",
+                name = "AlienCoreRotationLoopEnabled",
                 type = "bool",
                 value = "false"
             });

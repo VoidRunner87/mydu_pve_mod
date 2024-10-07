@@ -2,9 +2,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using FluentMigrator.Runner;
-using Mod.DynamicEncounters.Threads;
 
-namespace Mod.DynamicEncounters;
+namespace Mod.DynamicEncounters.Threads.Handles;
 
 public abstract class HighTickModLoop : ThreadHandle
 {

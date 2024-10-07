@@ -12,9 +12,8 @@ using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Helpers;
-using Mod.DynamicEncounters.Threads;
 
-namespace Mod.DynamicEncounters;
+namespace Mod.DynamicEncounters.Threads.Handles;
 
 public class SectorLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle(ThreadId.Sector, tm, ct)
 {
@@ -62,7 +61,7 @@ public class SectorLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle(
         await sectorPoolManager.LoadUnloadedSectors();
         await sectorPoolManager.ActivateEnteredSectors();
 
-        logger.LogInformation("Sector Loop Action took {Time}ms", sw.ElapsedMilliseconds);
+        logger.LogInformation("{Thread} Sector Loop Action took {Time}ms", Environment.CurrentManagedThreadId, sw.ElapsedMilliseconds);
     }
 
     private async Task PrepareFactionSector(FactionItem faction)
@@ -75,28 +74,11 @@ public class SectorLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle(
         // a territory is owned by a faction
         // a territory is a point on a map - not constructs nor DU's territories - perhaps name it differently
         var sectorEncountersRepository = ModBase.ServiceProvider.GetRequiredService<ISectorEncounterRepository>();
-        // var encounters = (await sectorEncountersRepository.FindActiveByFactionAsync(faction.Id))
-        //     .ToList();
-        //
-        // if (encounters.Count == 0)
-        // {
-        //     logger.LogDebug("No Encounters for Faction: {Faction}({Id})", faction.Name, faction.Id);
-        //     return;
-        // }
 
         var factionTerritoryRepository = ModBase.ServiceProvider.GetRequiredService<IFactionTerritoryRepository>();
         var factionTerritories = await factionTerritoryRepository.GetAllByFactionAsync(faction.Id);
 
-        // var generationArgs = new SectorGenerationArgs
-        // {
-        //     Encounters = encounters,
-        //     Quantity = faction.Properties.SectorPoolCount,
-        //     FactionId = faction.Id,
-        //     Tag = faction.Tag,
-        // };
-
         var sectorPoolManager = ModBase.ServiceProvider.GetRequiredService<ISectorPoolManager>();
-        // await sectorPoolManager.GenerateSectors(generationArgs);
 
         foreach (var ft in factionTerritories)
         {

@@ -6,9 +6,8 @@ using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Helpers;
-using Mod.DynamicEncounters.Threads;
 
-namespace Mod.DynamicEncounters;
+namespace Mod.DynamicEncounters.Threads.Handles;
 
 public class ExpirationNamesLoop(IThreadManager tm, CancellationToken ct) :
     ThreadHandle(ThreadId.ExpirationNames, tm, ct)

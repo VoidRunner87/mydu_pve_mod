@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Mod.DynamicEncounters.Features.Sector.Services;
+using Mod.DynamicEncounters.Threads.Handles;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mod.DynamicEncounters.Api.Controllers;

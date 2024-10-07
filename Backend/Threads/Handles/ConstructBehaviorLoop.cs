@@ -12,9 +12,8 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
-using Mod.DynamicEncounters.Threads;
 
-namespace Mod.DynamicEncounters;
+namespace Mod.DynamicEncounters.Threads.Handles;
 
 public class ConstructBehaviorLoop : HighTickModLoop
 {
