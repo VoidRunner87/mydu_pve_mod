@@ -137,6 +137,106 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         }
     }
 
+    public async Task GenerateTerritorySectors(SectorGenerationArgs args)
+    {
+        var count = await _sectorInstanceRepository.GetCountByTerritoryAsync(args.TerritoryId);
+        var missingQuantity = args.Quantity - count;
+
+        if (missingQuantity <= 0)
+        {
+            _logger.LogDebug("No Territory({Territory}) Sectors Missing. Missing {Missing} of {Total}", args.TerritoryId, missingQuantity, args.Quantity);
+            return;
+        }
+
+        var handleCount = await _constructHandleManager.GetActiveCount();
+        var featureReaderService = serviceProvider.GetRequiredService<IFeatureReaderService>();
+        var maxBudgetConstructs = await featureReaderService.GetIntValueAsync("MaxConstructHandles", 50);
+
+        if (handleCount >= maxBudgetConstructs)
+        {
+            _logger.LogError("Generate Territory({Territory}) Sector: Reached MAX Number of Construct Handles to Spawn: {Max}",
+                args.TerritoryId,
+                maxBudgetConstructs
+            );
+            return;
+        }
+
+        var allSectorInstances = await _sectorInstanceRepository.GetAllAsync();
+        var sectorInstanceMap = allSectorInstances
+            .Select(k => k.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap).ToLongVector3())
+            .ToHashSet();
+
+        var random = _randomProvider.GetRandom();
+
+        var randomMinutes = random.Next(0, 60);
+
+        for (var i = 0; i < missingQuantity; i++)
+        {
+            if (!args.Encounters.Any())
+            {
+                continue;
+            }
+
+            var encounter = random.PickOneAtRandom(args.Encounters);
+
+            // TODO
+            var radius = MathFunctions.Lerp(
+                encounter.Properties.MinRadius,
+                encounter.Properties.MaxRadius,
+                random.NextDouble()
+            );
+
+            Vec3 position;
+            var interactions = 0;
+            const int maxInteractions = 100;
+
+            do
+            {
+                position = random.RandomDirectionVec3() * radius;
+                position += encounter.Properties.CenterPosition;
+                position = position.GridSnap(SectorGridSnap);
+
+                interactions++;
+            } while (
+                interactions < maxInteractions ||
+                sectorInstanceMap
+                    .Contains(
+                        position.GridSnap(SectorGridSnap * args.SectorMinimumGap).ToLongVector3()
+                    )
+            );
+
+            var instance = new SectorInstance
+            {
+                Id = Guid.NewGuid(),
+                Sector = position,
+                FactionId = args.FactionId,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow + encounter.Properties.ExpirationTimeSpan +
+                            TimeSpan.FromMinutes(randomMinutes * i),
+                TerritoryId = args.TerritoryId,
+                OnLoadScript = encounter.OnLoadScript,
+                OnSectorEnterScript = encounter.OnSectorEnterScript,
+            };
+
+            if (position is { x: 0, y: 0, z: 0 })
+            {
+                _logger.LogWarning("BLOCKED Sector 0,0,0 creation");
+                return;
+            }
+
+            try
+            {
+                await _sectorInstanceRepository.AddAsync(instance);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to create sector. Likely violating unique constraint. It will be tried again on the next cycle");
+            }
+            
+            await Task.Delay(200);
+        }
+    }
+
     public async Task LoadUnloadedSectors()
     {
         var scriptService = serviceProvider.GetRequiredService<IScriptService>();

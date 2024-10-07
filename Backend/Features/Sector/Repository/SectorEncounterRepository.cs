@@ -137,6 +137,41 @@ public class SectorEncounterRepository(IServiceProvider provider) : ISectorEncou
         return queryResult.Select(DbRowWithTerritoryToModel);
     }
 
+    public async Task<IEnumerable<SectorEncounterItem>> FindActiveByFactionTerritoryAsync(long factionId, Guid territoryId)
+    {
+        using var db = _connectionFactory.Create();
+        db.Open();
+
+        var queryResult = await db.QueryAsync<DbRowWithTerritoryJoin>(
+            """
+            SELECT 
+                E.id,
+                E.name,
+                E.on_load_script,
+                E.on_sector_enter_script,
+                E.active,
+                E.faction_id,
+                T.spawn_position_x,
+                T.spawn_position_y,
+                T.spawn_position_z,
+                T.spawn_min_radius,
+                T.spawn_max_radius,
+                T.spawn_expiration_span,
+                T.active territory_active,
+                T.id territory_id
+            FROM public.mod_sector_encounter AS E
+            INNER JOIN public.mod_territory AS T ON (T.id = E.territory_id)
+            INNER JOIN public.mod_faction_territory AS FT ON (FT.faction_id = E.faction_id AND FT.territory_id = T.id)
+            WHERE E.active IS TRUE AND E.faction_id = @factionId AND
+                  T.active IS TRUE AND T.id = @territoryId AND
+                  FT.active IS TRUE
+            """,
+            new { factionId, territoryId }
+        );
+
+        return queryResult.Select(DbRowWithTerritoryToModel);
+    }
+
     private static SectorEncounterItem DbRowToModel(DbRow row)
     {
         return new SectorEncounterItem

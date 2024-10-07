@@ -9,5 +9,6 @@ public static class FactionRegistration
     public static void RegisterFaction(this IServiceCollection services)
     {
         services.AddSingleton<IFactionRepository, FactionRepository>();
+        services.AddSingleton<IFactionTerritoryRepository, FactionTerritoryRepository>();
     }
 }

@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Timers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
@@ -58,7 +57,7 @@ public class SectorLoop : ModBase
             .OnError(exception => { logger.LogError(exception, "Failed to Execute Sector Cleanup"); });
 
         var factionSectorPrepTasks = (await factionRepository.GetAllAsync())
-            .Select(PrepareSector);
+            .Select(PrepareFactionSector);
         await Task.WhenAll(factionSectorPrepTasks);
 
         await sectorPoolManager.LoadUnloadedSectors();
@@ -67,7 +66,7 @@ public class SectorLoop : ModBase
         logger.LogInformation("Sector Loop Action took {Time}ms", sw.ElapsedMilliseconds);
     }
 
-    private async Task PrepareSector(FactionItem faction)
+    private async Task PrepareFactionSector(FactionItem faction)
     {
         var logger = ServiceProvider.CreateLogger<SectorLoop>();
         logger.LogDebug("Preparing Sector for {Faction}", faction.Name);
@@ -77,24 +76,57 @@ public class SectorLoop : ModBase
         // a territory is owned by a faction
         // a territory is a point on a map - not constructs nor DU's territories - perhaps name it differently
         var sectorEncountersRepository = ServiceProvider.GetRequiredService<ISectorEncounterRepository>();
-        var encounters = (await sectorEncountersRepository.FindActiveByFactionAsync(faction.Id))
-            .ToList();
+        // var encounters = (await sectorEncountersRepository.FindActiveByFactionAsync(faction.Id))
+        //     .ToList();
+        //
+        // if (encounters.Count == 0)
+        // {
+        //     logger.LogDebug("No Encounters for Faction: {Faction}({Id})", faction.Name, faction.Id);
+        //     return;
+        // }
 
-        if (encounters.Count == 0)
-        {
-            logger.LogDebug("No Encounters for Faction: {Faction}({Id})", faction.Name, faction.Id);
-            return;
-        }
+        var factionTerritoryRepository = ServiceProvider.GetRequiredService<IFactionTerritoryRepository>();
+        var factionTerritories = await factionTerritoryRepository.GetAllByFactionAsync(faction.Id);
 
-        var generationArgs = new SectorGenerationArgs
-        {
-            Encounters = encounters,
-            Quantity = faction.Properties.SectorPoolCount,
-            FactionId = faction.Id,
-            Tag = faction.Tag
-        };
+        // var generationArgs = new SectorGenerationArgs
+        // {
+        //     Encounters = encounters,
+        //     Quantity = faction.Properties.SectorPoolCount,
+        //     FactionId = faction.Id,
+        //     Tag = faction.Tag,
+        // };
 
         var sectorPoolManager = ServiceProvider.GetRequiredService<ISectorPoolManager>();
-        await sectorPoolManager.GenerateSectors(generationArgs);
+        // await sectorPoolManager.GenerateSectors(generationArgs);
+
+        foreach (var ft in factionTerritories)
+        {
+            var encounters = (await sectorEncountersRepository.FindActiveByFactionTerritoryAsync(ft.FactionId, ft.TerritoryId))
+                .ToList();
+
+            if (encounters.Count == 0)
+            {
+                logger.LogInformation("No Encounters for Faction: {Faction}({Id}) Territory({Territory})", faction.Name, faction.Id, ft.TerritoryId);
+                continue;
+            }
+            
+            var args = new SectorGenerationArgs
+            {
+                Encounters = encounters,
+                Quantity = ft.SectorCount,
+                FactionId = faction.Id,
+                Tag = faction.Tag,
+                TerritoryId = ft.TerritoryId,
+            };
+
+            try
+            {
+                await sectorPoolManager.GenerateTerritorySectors(args);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to generate faction({F}) territory({T}) sectors", args.FactionId, args.TerritoryId);                
+            }
+        }
     }
 }
