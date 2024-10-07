@@ -13,25 +13,39 @@ namespace Mod.DynamicEncounters.Threads;
 
 public class ThreadManager : IThreadManager
 {
-    private readonly ILogger<ThreadManager> _logger = ModBase.ServiceProvider.CreateLogger<ThreadManager>();
-    
     private static ThreadManager? _instance;
+    private readonly ConcurrentDictionary<ThreadId, CancellationTokenSource> _cancellationTokenSources = new();
+
+    private readonly ConcurrentDictionary<ThreadId, DateTime> _heartbeatMap = new();
+    private readonly ILogger<ThreadManager> _logger = ModBase.ServiceProvider.CreateLogger<ThreadManager>();
+    private readonly ConcurrentDictionary<ThreadId, Thread> _threads = new();
 
     public static ThreadManager Instance
     {
         get { return _instance ??= new ThreadManager(); }
     }
 
-    private readonly ConcurrentDictionary<ThreadId, DateTime> _heartbeatMap = new();
-    private readonly ConcurrentDictionary<ThreadId, Thread> _threads = new();
-    private readonly ConcurrentDictionary<ThreadId, CancellationTokenSource> _cancellationTokenSources = new();
+    public void ReportHeartbeat(ThreadId threadId)
+    {
+        LoopStats.LastHeartbeatMap.AddOrUpdate(
+            $"{threadId}",
+            _ => DateTime.UtcNow,
+            (_, _) => DateTime.UtcNow
+        );
+
+        _heartbeatMap.AddOrUpdate(
+            threadId,
+            _ => DateTime.UtcNow,
+            (_, _) => DateTime.UtcNow
+        );
+    }
 
     public Task Start()
     {
         var taskCompletionSource = new TaskCompletionSource();
 
         var timer = new Timer(TimeSpan.FromSeconds(5));
-        timer.Elapsed += (sender, args) => { OnTimer(); };
+        timer.Elapsed += (_, _) => { OnTimer(); };
         timer.Start();
 
         return taskCompletionSource.Task;
@@ -54,10 +68,7 @@ public class ThreadManager : IThreadManager
 
             if (IsThreadCancelled(id))
             {
-                if (IsThreadStopped(id))
-                {
-                    RemoveThread(id);
-                }
+                if (IsThreadStopped(id)) RemoveThread(id);
                 continue;
             }
 
@@ -66,7 +77,6 @@ public class ThreadManager : IThreadManager
                 CancelThread(id);
                 InterruptThread(id);
                 RemoveThread(id);
-                continue;
             }
         }
     }
@@ -79,7 +89,7 @@ public class ThreadManager : IThreadManager
             {
                 _heartbeatMap.TryGetValue(v.Key, out var lastHeartbeat);
                 _cancellationTokenSources.TryGetValue(v.Key, out var cts);
-                
+
                 return (object)new
                 {
                     State = $"{v.Value.ThreadState}",
@@ -94,7 +104,7 @@ public class ThreadManager : IThreadManager
     private Thread CreateThread(ThreadId threadId)
     {
         _logger.LogInformation("Creating Thread {Thread}", threadId);
-        
+
         var cts = CreateCancellationTokenSource(threadId);
 
         switch (threadId)
@@ -175,21 +185,15 @@ public class ThreadManager : IThreadManager
     public void CancelThread(ThreadId threadId)
     {
         _logger.LogInformation("Cancel Thread {Thread}", threadId);
-        
-        if (_cancellationTokenSources.TryGetValue(threadId, out var cts))
-        {
-            cts.Cancel();
-        }
+
+        if (_cancellationTokenSources.TryGetValue(threadId, out var cts)) cts.Cancel();
     }
 
     private void RegisterThread(ThreadId threadId, Thread thread)
     {
         _logger.LogInformation("Registering Thread {Thread}", threadId);
-        
-        if (_threads.TryGetValue(threadId, out var oldThread))
-        {
-            oldThread.Interrupt();
-        }
+
+        if (_threads.TryGetValue(threadId, out var oldThread)) oldThread.Interrupt();
 
         _threads.AddOrUpdate(
             threadId,
@@ -197,21 +201,18 @@ public class ThreadManager : IThreadManager
             (_, _) => thread
         );
     }
-    
+
     public void InterruptThread(ThreadId threadId)
     {
         _logger.LogInformation("Interrupt Thread {Thread}", threadId);
-        
-        if (_threads.TryGetValue(threadId, out var thread))
-        {
-            thread.Interrupt();
-        }
+
+        if (_threads.TryGetValue(threadId, out var thread)) thread.Interrupt();
     }
-    
+
     private void RemoveThread(ThreadId threadId)
     {
         _logger.LogInformation("Remove Thread {Thread}", threadId);
-        
+
         _threads.TryRemove(threadId, out _);
     }
 
@@ -219,15 +220,16 @@ public class ThreadManager : IThreadManager
     {
         return new Thread(ThreadStart);
 
-        async void ThreadStart() => await ThreadLoop(threadId, action);
+        async void ThreadStart()
+        {
+            await ThreadLoop(threadId, action);
+        }
     }
 
     private async Task ThreadLoop(ThreadId threadId, Func<Task> action)
     {
         if (!_cancellationTokenSources.TryGetValue(threadId, out var cancellationTokenSource))
-        {
             throw new InvalidOperationException($"No Cancellation Token Source for ThreadId {threadId}");
-        }
 
         do
         {
@@ -239,7 +241,7 @@ public class ThreadManager : IThreadManager
             {
                 ModBase.ServiceProvider.CreateLogger<ThreadManager>()
                     .LogError(e, "Thread {Id} Tick Failed", threadId);
-                
+
                 CancelThread(threadId);
             }
         } while (!cancellationTokenSource.Token.IsCancellationRequested);
@@ -261,34 +263,23 @@ public class ThreadManager : IThreadManager
     private bool DidThreadHang(ThreadId threadId)
     {
         if (_heartbeatMap.TryGetValue(threadId, out var lastHeartbeat))
-        {
             return DateTime.UtcNow - lastHeartbeat > TimeSpan.FromMinutes(5);
-        }
 
         return false;
     }
 
     private bool IsThreadCancelled(ThreadId threadId)
     {
-        if (!DoesThreadExist(threadId))
-        {
-            return false;
-        }
+        if (!DoesThreadExist(threadId)) return false;
 
-        if (!_cancellationTokenSources.TryGetValue(threadId, out var cts))
-        {
-            return true;
-        }
+        if (!_cancellationTokenSources.TryGetValue(threadId, out var cts)) return true;
 
         return cts.IsCancellationRequested;
     }
 
     private bool IsThreadStopped(ThreadId threadId)
     {
-        if (!_threads.TryGetValue(threadId, out var thread))
-        {
-            return true;
-        }
+        if (!_threads.TryGetValue(threadId, out var thread)) return true;
 
         return thread.ThreadState != ThreadState.Running;
     }
@@ -296,20 +287,5 @@ public class ThreadManager : IThreadManager
     private bool DoesThreadExist(ThreadId threadId)
     {
         return _threads.ContainsKey(threadId);
-    }
-
-    public void ReportHeartbeat(ThreadId threadId)
-    {
-        LoopStats.LastHeartbeatMap.AddOrUpdate(
-            $"{threadId}",
-            _ => DateTime.UtcNow,
-            (_, _) => DateTime.UtcNow
-        );
-
-        _heartbeatMap.AddOrUpdate(
-            threadId,
-            _ => DateTime.UtcNow,
-            (_, _) => DateTime.UtcNow
-        );
     }
 }
