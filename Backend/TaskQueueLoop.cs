@@ -28,7 +28,7 @@ public class TaskQueueLoop : ModBase
         }
     }
 
-    public async Task Tick()
+    private async Task Tick()
     {
         try
         {

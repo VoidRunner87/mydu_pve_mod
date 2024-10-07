@@ -23,6 +23,7 @@ public class StatsController : Controller
                     k => k.Key,
                     v => DateTime.UtcNow - v.Value
                 )
+                .OrderBy(x => x.Key)
         });
     }
     

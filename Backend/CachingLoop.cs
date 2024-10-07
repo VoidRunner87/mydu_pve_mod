@@ -34,6 +34,8 @@ public class CachingLoop(TimeSpan timerSpan) : ModBase
                     {
                         SectorGridConstructCache.Data = [];
                     }
+                    
+                    await Task.Delay(timerSpan);
 
                     return;
                 }
