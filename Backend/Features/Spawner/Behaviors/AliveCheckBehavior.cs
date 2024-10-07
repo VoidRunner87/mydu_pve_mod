@@ -38,7 +38,9 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
     {
         if (!context.IsAlive)
         {
+            await context.NotifyConstructDestroyedAsync(new BehaviorEventArgs(constructId, prefab, context));
             await _handleRepository.RemoveHandleAsync(constructId);
+            ConstructBehaviorLoop.ConstructHandles.TryRemove(constructId, out _);
 
             return;
         }
@@ -82,5 +84,7 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
         }
 
         await _constructService.ActivateShieldsAsync(constructId);
+        
+        ConstructBehaviorLoop.RecordConstructHeartBeat(constructId);
     }
 }

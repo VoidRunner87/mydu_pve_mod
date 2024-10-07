@@ -24,6 +24,7 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
     public static bool FeatureEnabled;
     public static readonly ConcurrentDictionary<ulong, ConstructHandleItem> ConstructHandles = [];
+    public static readonly ConcurrentDictionary<ulong, DateTime> ConstructHandleHeartbeat = [];
     public static readonly object ListLock = new();
 
     public ConstructBehaviorLoop(int framesPerSecond, BehaviorTaskCategory category) : base(framesPerSecond)
@@ -120,5 +121,14 @@ public class ConstructBehaviorLoop : HighTickModLoop
         }
         
         RecordHeartBeat();
+    }
+
+    public static void RecordConstructHeartBeat(ulong constructId)
+    {
+        ConstructHandleHeartbeat.AddOrUpdate(
+            constructId,
+            _ => DateTime.UtcNow, 
+            (_, _) => DateTime.UtcNow
+        );
     }
 }

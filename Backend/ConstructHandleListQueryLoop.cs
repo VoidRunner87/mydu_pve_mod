@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,7 @@ public class ConstructHandleListQueryLoop : ModBase
 
                 lock (ConstructBehaviorLoop.ListLock)
                 {
-                    ConstructBehaviorLoop.ConstructHandles.Clear();
+                    // ConstructBehaviorLoop.ConstructHandles.Clear();
                     foreach (var item in items)
                     {
                         var added = ConstructBehaviorLoop.ConstructHandles.TryAdd(item.ConstructId, item);
@@ -31,6 +32,15 @@ public class ConstructHandleListQueryLoop : ModBase
                         {
                             logger.LogError("Failed to Add {Construct}", item.ConstructId);
                         }
+                    }
+
+                    var deadConstructHandles = ConstructBehaviorLoop.ConstructHandleHeartbeat
+                        .Where(x => DateTime.UtcNow - x.Value > TimeSpan.FromMinutes(30));
+
+                    foreach (var kvp in deadConstructHandles)
+                    {
+                        ConstructBehaviorLoop.ConstructHandles.TryRemove(kvp.Key, out _);
+                        logger.LogWarning("Removed Construct Handle {Construct} that failed to be removed", kvp.Value);
                     }
                 }
 

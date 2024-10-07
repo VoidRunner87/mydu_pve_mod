@@ -18,6 +18,7 @@ public class StatsController : Controller
         {
             BehaviorStats = StatsRecorder.GetStats(),
             ConstructsPendingDelete = ConstructsPendingDelete.Data.Count,
+            ConstructHandles = ConstructBehaviorLoop.ConstructHandles.Select(x => x.Key),
             LoopHeartBeatSpan = LoopStats.LastHeartbeatMap
                 .ToDictionary(
                     k => k.Key,
