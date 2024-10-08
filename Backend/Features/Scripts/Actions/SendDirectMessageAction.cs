@@ -28,7 +28,7 @@ public class SendDirectMessageAction(ScriptActionItem actionItem) : IScriptActio
         
         var logger = provider.CreateLogger<SendDirectMessageAction>();
         var constructService = provider.GetRequiredService<IConstructService>();
-        var gameAlertService = provider.GetRequiredService<IGameAlertService>();
+        // var gameAlertService = provider.GetRequiredService<IGameAlertService>();
         
         var constructCode = "?";
         var constructName = "???";
@@ -49,19 +49,20 @@ public class SendDirectMessageAction(ScriptActionItem actionItem) : IScriptActio
         {
             try
             {
-                await gameAlertService.PushErrorAlert(playerId, $"[{constructCode}] {constructName}: {actionItem.Message}");
+                var message = $"[{constructCode}] {constructName}: {actionItem.Message}";
+                // await gameAlertService.PushErrorAlert(playerId, $"[{constructCode}] {constructName}: {actionItem.Message}");
                 
-                // await ModBase.Bot.Req.ChatMessageSend(
-                //     new MessageContent
-                //     {
-                //         channel = new MessageChannel
-                //         {
-                //             channel = MessageChannelType.PRIVATE,
-                //             targetId = playerId
-                //         },
-                //         message = actionItem.Message
-                //     }
-                // );
+                await ModBase.Bot.Req.ChatMessageSend(
+                    new MessageContent
+                    {
+                        channel = new MessageChannel
+                        {
+                            channel = MessageChannelType.PRIVATE,
+                            targetId = playerId
+                        },
+                        message = message
+                    }
+                );
             }
             catch (BusinessException e)
             {
