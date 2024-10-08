@@ -58,7 +58,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var targetSpan = DateTime.UtcNow - context.TargetSelectedTime;
         if (targetSpan < TimeSpan.FromSeconds(10))
         {
-            context.TargetMovePosition = await GetTargetMovePosition(context);
+            SetTargetMovePosition(context, await GetTargetMovePosition(context));
 
             return;
         }
@@ -192,11 +192,12 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         if (returnToSector)
         {
-            context.TargetMovePosition = context.Sector;
+            SetTargetMovePosition(context, context.Sector);
         }
         else
         {
-            context.TargetMovePosition = await targetMovePositionTask;
+            SetTargetMovePosition(context, await targetMovePositionTask);
+
             await _sectorPoolManager.SetExpirationFromNow(context.Sector, TimeSpan.FromHours(1));
         }
 
@@ -248,6 +249,15 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to Takeover Ship");
+        }
+    }
+
+    private static void SetTargetMovePosition(BehaviorContext context, Vec3 position)
+    {
+        context.TryGetProperty(BehaviorContext.AutoTargetMovePositionEnabledProperty, out var autoTargetMovePositionEnabled, true);
+        if (autoTargetMovePositionEnabled)
+        {
+            context.TargetMovePosition = position;
         }
     }
 

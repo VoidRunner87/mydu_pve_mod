@@ -104,7 +104,7 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
         // TODO TerritoryId
         var context = await ConstructBehaviorContextCache.Data
-            .TryGetValue(
+            .TryGetOrSetValue(
                 handleItem.ConstructId,
                 () => Task.FromResult(
                     new BehaviorContext(

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Loot.Interfaces;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
@@ -66,13 +67,16 @@ public class ConstructController : Controller
 
     [HttpDelete]
     [Route("{constructId:long}")]
-    public async Task<IActionResult> Delete(long constructId)
+    public async Task<IActionResult> Delete(ulong constructId)
     {
         var provider = ModBase.ServiceProvider;
         var orleans = provider.GetOrleans();
 
+        var constructHandleRepository = provider.GetRequiredService<IConstructHandleRepository>();
+        await constructHandleRepository.DeleteByConstructId(constructId);
+        
         var gcGrain = orleans.GetConstructGCGrain();
-        await gcGrain.DeleteConstruct((ulong)constructId);
+        await gcGrain.DeleteConstruct(constructId);
 
         return Ok();
     }

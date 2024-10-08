@@ -21,7 +21,7 @@ public class CachedConstructService(
 
     public async Task<ConstructInfo?> GetConstructInfoAsync(ulong constructId)
     {
-        return await _constructInfos.TryGetValue(
+        return await _constructInfos.TryGetOrSetValue(
             constructId,
             async () => await service.GetConstructInfoAsync(constructId)
         );
@@ -35,7 +35,7 @@ public class CachedConstructService(
 
     public async Task<Velocities> GetConstructVelocities(ulong constructId)
     {
-        return await _velocities.TryGetValue(
+        return await _velocities.TryGetOrSetValue(
             constructId,
             async () =>
             {
@@ -58,7 +58,7 @@ public class CachedConstructService(
 
     public async Task<bool> IsBeingControlled(ulong constructId)
     {
-        return await _beingControlled.TryGetValue(
+        return await _beingControlled.TryGetOrSetValue(
             constructId,
             () => service.IsBeingControlled(constructId)
         );
@@ -81,7 +81,7 @@ public class CachedConstructService(
 
     public async Task<bool> IsInSafeZone(ulong constructId)
     {
-        return await _inSafeZone.TryGetValue(
+        return await _inSafeZone.TryGetOrSetValue(
             constructId,
             () => service.IsInSafeZone(constructId)
         );
@@ -89,7 +89,7 @@ public class CachedConstructService(
 
     public async Task SendIdentificationNotification(ulong constructId, TargetingConstructData targeting)
     {
-        await _identifyNotification.TryGetValue(
+        await _identifyNotification.TryGetOrSetValue(
             constructId,
             () => service.SendIdentificationNotification(constructId, targeting)
                 .ContinueWith(_ => true)
@@ -98,7 +98,7 @@ public class CachedConstructService(
 
     public async Task SendAttackingNotification(ulong constructId, TargetingConstructData targeting)
     {
-        await _attackingNotification.TryGetValue(
+        await _attackingNotification.TryGetOrSetValue(
             constructId,
             () => service.SendAttackingNotification(constructId, targeting)
                 .ContinueWith(_ => true)

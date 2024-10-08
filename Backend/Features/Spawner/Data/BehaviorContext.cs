@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,9 @@ public class BehaviorContext(
 {
     public ulong? TargetConstructId { get; set; }
     public Vec3 TargetMovePosition { get; set; }
+    
+    [Newtonsoft.Json.JsonIgnore]
+    [JsonIgnore]
     public IEnumerable<Vec3> TargetElementPositions { get; set; } = [];
     private double _deltaTime;
 
@@ -37,7 +41,9 @@ public class BehaviorContext(
         set => _deltaTime = Math.Clamp(value, 1 / 60f, 1 / 20f);
     }
 
-    public Dictionary<string, object> ExtraProperties = new();
+    public const string AutoTargetMovePositionEnabledProperty = "AutoTargetMovePositionEnabled";
+    
+    public ConcurrentDictionary<string, object> ExtraProperties = new();
 
     public Vec3 Velocity { get; set; }
     public Vec3? Position { get; set; }
@@ -47,9 +53,15 @@ public class BehaviorContext(
     public Guid? TerritoryId { get; } = territoryId;
     public Vec3 Sector { get; } = sector;
     public IServiceProvider ServiceProvider { get; init; } = serviceProvider;
+    
+    [Newtonsoft.Json.JsonIgnore]
+    [JsonIgnore]
     public Client Client { get; set; } = client;
 
     public ConcurrentDictionary<string, bool> PublishedEvents = [];
+    
+    [Newtonsoft.Json.JsonIgnore]
+    [JsonIgnore]
     public IPrefab Prefab { get; set; } = prefab;
     public List<Waypoint> Waypoints { get; set; } = [];
     public Waypoint? TargetWaypoint { get; set; }
@@ -282,6 +294,16 @@ public class BehaviorContext(
 
         return true;
     }
+    
+    public void DisableAutoTargetMovePosition()
+    {
+        SetProperty(AutoTargetMovePositionEnabledProperty, false);
+    }
+
+    public void EnableAutoTargetMovePosition()
+    {
+        RemoveProperty(AutoTargetMovePositionEnabledProperty);
+    }
 
     public bool TryGetProperty<T>(string name, out T value, T defaultValue)
     {
@@ -301,5 +323,10 @@ public class BehaviorContext(
         {
             ExtraProperties[name] = value;
         }
+    }
+
+    public void RemoveProperty(string name)
+    {
+        ExtraProperties.TryRemove(name, out _);
     }
 }

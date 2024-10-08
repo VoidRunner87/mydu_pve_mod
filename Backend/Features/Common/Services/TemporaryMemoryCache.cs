@@ -20,8 +20,26 @@ public class TemporaryMemoryCache<TKey, T>
 
         CacheRegistry.CacheMap.TryAdd(id, _cache);
     }
+
+    public bool TryGetValue(TKey key, out T outValue)
+    {
+        if (key == null)
+        {
+            outValue = default;
+            return false;
+        }
+        
+        if (!_cache.TryGetValue(key, out var entry))
+        {
+            outValue = default;
+            return false;
+        }
+
+        outValue = (T)entry;
+        return true;
+    }
     
-    public async Task<T> TryGetValue(TKey key, Func<Task<T>> defaultValueFn, Func<T, bool>? noCacheRule = null)
+    public async Task<T> TryGetOrSetValue(TKey key, Func<Task<T>> defaultValueFn, Func<T, bool>? noCacheRule = null)
     {
         if (key == null)
         {

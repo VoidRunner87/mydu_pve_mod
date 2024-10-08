@@ -48,33 +48,19 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             return;
         }
 
-        if (!context.TargetConstructId.HasValue)
-        {
-            return;
-        }
-
-        if (context.TargetConstructId is null or 0)
-        {
-            return;
-        }
-
-        var targetConstructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
-        var npcConstructInfo = await _constructService.GetConstructInfoAsync(constructId);
-
-        if (targetConstructInfo == null || npcConstructInfo == null)
-        {
-            return;
-        }
-        
         // first time initialize position
         if (!context.Position.HasValue)
         {
+            var npcConstructInfo = await _constructService.GetConstructInfoAsync(constructId);
+            if (npcConstructInfo == null)
+            {
+                return;
+            }
+            
             context.Position = npcConstructInfo.rData.position;
         }
 
-        var targetPos = targetConstructInfo.rData.position;
         var npcPos = context.Position.Value;
-        var targetDirection = targetPos - npcPos;
 
         var forward = VectorMathUtils.GetForward(context.Rotation.ToQuat())
             .ToNqVec3()
@@ -225,40 +211,5 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
                 _logger.LogError(e, "Failed to Reconnect");
             }
         }
-    }
-
-    public static Vec3 CalculateAngularVelocity(Quat q1, Quat q2, double deltaTime)
-    {
-        // Step 1: Compute relative rotation
-        var deltaQ = QuatHelpers.Multiply(q2, QuatHelpers.Inverse(q1));
-
-        // Step 2: Calculate the angle of rotation (theta)
-        var theta = 2 * Math.Acos(deltaQ.w);
-
-        // Step 3: Calculate the rotation axis
-        var sinHalfTheta = Math.Sqrt(1 - deltaQ.w * deltaQ.w);
-        var rotationAxis = new Vec3 { x = deltaQ.x, y = deltaQ.y, z = deltaQ.z };
-
-        if (sinHalfTheta > 0.001)
-        {
-            rotationAxis = new Vec3
-            {
-                x = deltaQ.x / sinHalfTheta, 
-                y = deltaQ.y / sinHalfTheta, 
-                z = deltaQ.z / sinHalfTheta
-            };
-        }
-        else
-        {
-            rotationAxis = new Vec3 { x = 1, y = 0, z = 0 }; // Arbitrary direction
-        }
-
-        // Step 4: Compute angular velocity
-        return new Vec3
-        {
-            x = rotationAxis.x * theta / deltaTime, 
-            y = rotationAxis.y * theta / deltaTime,
-            z = rotationAxis.z * theta / deltaTime
-        };
     }
 }
