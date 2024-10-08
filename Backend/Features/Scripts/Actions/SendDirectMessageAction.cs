@@ -1,7 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using BotLib.Generated;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Features.NQ.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
@@ -24,21 +26,26 @@ public class SendDirectMessageAction(ScriptActionItem actionItem) : IScriptActio
         var logger = context.ServiceProvider
             .CreateLogger<SendDirectMessageAction>();
 
+        var gameAlertService = context.ServiceProvider
+            .GetRequiredService<IGameAlertService>();
+
         foreach (var playerId in context.PlayerIds)
         {
             try
             {
-                await ModBase.Bot.Req.ChatMessageSend(
-                    new MessageContent
-                    {
-                        channel = new MessageChannel
-                        {
-                            channel = MessageChannelType.PRIVATE,
-                            targetId = playerId
-                        },
-                        message = actionItem.Message
-                    }
-                );
+                await gameAlertService.PushErrorAlert(playerId, actionItem.Message);
+                
+                // await ModBase.Bot.Req.ChatMessageSend(
+                //     new MessageContent
+                //     {
+                //         channel = new MessageChannel
+                //         {
+                //             channel = MessageChannelType.PRIVATE,
+                //             targetId = playerId
+                //         },
+                //         message = actionItem.Message
+                //     }
+                // );
             }
             catch (BusinessException e)
             {
