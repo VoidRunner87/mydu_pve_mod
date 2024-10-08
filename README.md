@@ -2,9 +2,12 @@
 
 Before starting, know this:
 * There were several hacky adjustments I had to make for this to work.
+  * UPDATE: Some of those were cleaned up
 * I first focused on getting the solution ready to run as a separate docker container.
 * After the basic functionality I envision for this mod is done, I'll start looking into optimizing the cycles "loops" that run and the code to make it cleaner and faster.
+  * UPDATE: Threading and caching greatly reduces overloading orleans
 * There is a cost of CPU to running this mod. You need a decent setup or scale down the sectors generated.
+  * UPDATE: CPU cost has been reduced with threading and caching
 
 # Advantages of Running the mod on a separate container
 
