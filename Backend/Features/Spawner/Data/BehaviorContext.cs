@@ -18,6 +18,7 @@ using NQ;
 namespace Mod.DynamicEncounters.Features.Spawner.Data;
 
 public class BehaviorContext(
+    ulong constructId,
     long factionId,
     Guid? territoryId,
     Vec3 sector,
@@ -48,6 +49,7 @@ public class BehaviorContext(
     public Vec3? Position { get; set; }
     public Quat Rotation { get; set; }
     public HashSet<ulong> PlayerIds { get; set; } = new();
+    public ulong ConstructId { get; } = constructId;
     public long FactionId { get; } = factionId;
     public Guid? TerritoryId { get; } = territoryId;
     public Vec3 Sector { get; } = sector;
@@ -297,6 +299,12 @@ public class BehaviorContext(
     
     public void SetTargetConstructId(ulong? constructId)
     {
+        // can't target itself
+        if (constructId == ConstructId)
+        {
+            return;
+        }
+        
         TargetConstructId = constructId;
         TargetSelectedTime = DateTime.UtcNow;
     }

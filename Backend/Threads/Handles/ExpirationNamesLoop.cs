@@ -26,6 +26,7 @@ public class ExpirationNamesLoop(IThreadManager tm, CancellationToken ct) :
                 await sectorPoolManager.UpdateExpirationNames();
             }
 
+            ReportHeartbeat();
             Thread.Sleep(TimeSpan.FromSeconds(30));
         }
         catch (Exception e)

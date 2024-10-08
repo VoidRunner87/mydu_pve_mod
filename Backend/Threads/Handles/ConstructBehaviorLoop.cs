@@ -108,6 +108,7 @@ public class ConstructBehaviorLoop : HighTickModLoop
                 handleItem.ConstructId,
                 () => Task.FromResult(
                     new BehaviorContext(
+                        handleItem.ConstructId,
                         handleItem.FactionId,
                         null,
                         handleItem.Sector,
