@@ -130,9 +130,10 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to create sector. Likely violating unique constraint. It will be tried again on the next cycle");
+                _logger.LogError(e,
+                    "Failed to create sector. Likely violating unique constraint. It will be tried again on the next cycle");
             }
-            
+
             await Task.Delay(200);
         }
     }
@@ -144,7 +145,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
         if (missingQuantity <= 0)
         {
-            _logger.LogInformation("No Territory({Territory}) Sectors Missing. Missing {Missing} of {Total}", args.TerritoryId, missingQuantity, args.Quantity);
+            // _logger.LogInformation("No Territory({Territory}) Sectors Missing. Missing {Missing} of {Total}", args.TerritoryId, missingQuantity, args.Quantity);
             return;
         }
 
@@ -154,7 +155,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
         if (handleCount >= maxBudgetConstructs)
         {
-            _logger.LogError("Generate Territory({Territory}) Sector: Reached MAX Number of Construct Handles to Spawn: {Max}",
+            _logger.LogError(
+                "Generate Territory({Territory}) Sector: Reached MAX Number of Construct Handles to Spawn: {Max}",
                 args.TerritoryId,
                 maxBudgetConstructs
             );
@@ -230,9 +232,10 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Failed to create sector. Likely violating unique constraint. It will be tried again on the next cycle");
+                _logger.LogError(e,
+                    "Failed to create sector. Likely violating unique constraint. It will be tried again on the next cycle");
             }
-            
+
             await Task.Delay(200);
         }
     }
@@ -365,100 +368,103 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             return;
         }
 
-        var spatialHashRepository = serviceProvider.GetRequiredService<IConstructSpatialHashRepository>();
+        foreach (var sectorInstance in sectorsToActivate)
+        {
+            await ActivateSector(sectorInstance);
+        }
+    }
 
+    public async Task ActivateSector(SectorInstance sectorInstance)
+    {
+        var spatialHashRepository = serviceProvider.GetRequiredService<IConstructSpatialHashRepository>();
+        var orleans = serviceProvider.GetOrleans();
         var scriptService = serviceProvider.GetRequiredService<IScriptService>();
         var eventService = serviceProvider.GetRequiredService<IEventService>();
         var random = serviceProvider.GetRandomProvider().GetRandom();
-        var orleans = serviceProvider.GetOrleans();
+        
+        var constructs = (await spatialHashRepository.FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
+            .ToList();
 
-        foreach (var sectorInstance in sectorsToActivate)
+        if (constructs.Count == 0)
         {
-            var constructs = (await spatialHashRepository
-                    .FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
-                .ToList();
+            return;
+        }
 
-            if (constructs.Count == 0)
-            {
-                continue;
-            }
+        HashSet<ulong> playerIds = [];
 
-            HashSet<ulong> playerIds = [];
+        try
+        {
+            var queryPilotsTasks = constructs
+                .Select(x => orleans.GetConstructInfoGrain(x)).Select(x => x.Get());
 
-            try
-            {
-                var queryPilotsTasks = constructs
-                    .Select(x => orleans.GetConstructInfoGrain(x)).Select(x => x.Get());
+            playerIds = (await Task.WhenAll(queryPilotsTasks))
+                .Select(x => x.mutableData.pilot)
+                .Where(x => x.HasValue)
+                .Select(x => x.Value.id)
+                .ToHashSet();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,
+                "Failed to query player IDS for Sector Startup. Sector will startup without that information");
+        }
 
-                playerIds = (await Task.WhenAll(queryPilotsTasks))
-                    .Select(x => x.mutableData.pilot)
-                    .Where(x => x.HasValue)
-                    .Select(x => x.Value.id)
-                    .ToHashSet();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e,
-                    "Failed to query player IDS for Sector Startup. Sector will startup without that information");
-            }
+        _logger.LogInformation(
+            "Starting up sector F({Faction}) ({Sector}) encounter: '{Encounter}'",
+            sectorInstance.FactionId,
+            sectorInstance.Sector,
+            sectorInstance.OnSectorEnterScript
+        );
 
-            _logger.LogInformation(
-                "Starting up sector F({Faction}) ({Sector}) encounter: '{Encounter}'",
-                sectorInstance.FactionId,
-                sectorInstance.Sector,
-                sectorInstance.OnSectorEnterScript
+        try
+        {
+            await scriptService.ExecuteScriptAsync(
+                sectorInstance.OnSectorEnterScript,
+                new ScriptContext(
+                    serviceProvider,
+                    sectorInstance.FactionId,
+                    [],
+                    sectorInstance.Sector,
+                    sectorInstance.TerritoryId
+                )
+                {
+                    PlayerIds = playerIds
+                }
             );
 
-            try
-            {
-                await scriptService.ExecuteScriptAsync(
-                    sectorInstance.OnSectorEnterScript,
-                    new ScriptContext(
-                        serviceProvider,
-                        sectorInstance.FactionId,
-                        [],
-                        sectorInstance.Sector,
-                        sectorInstance.TerritoryId
-                    )
-                    {
-                        PlayerIds = playerIds
-                    }
-                );
+            await _sectorInstanceRepository.TagAsStartedAsync(sectorInstance.Id);
+            await Task.Delay(200);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,
+                "Failed to start encounter({Encounter}) at sector({Sector})",
+                sectorInstance.OnSectorEnterScript,
+                sectorInstance.Sector
+            );
+        }
 
-                await _sectorInstanceRepository.TagAsStartedAsync(sectorInstance.Id);
-                await Task.Delay(200);
-            }
-            catch (Exception e)
+        try
+        {
+            ulong? playerId = null;
+            if (playerIds.Count > 0)
             {
-                _logger.LogError(e,
-                    "Failed to start encounter({Encounter}) at sector({Sector})",
-                    sectorInstance.OnSectorEnterScript,
-                    sectorInstance.Sector
-                );
+                playerId = random.PickOneAtRandom(playerIds);
             }
 
-            try
-            {
-                ulong? playerId = null;
-                if (playerIds.Count > 0)
-                {
-                    playerId = random.PickOneAtRandom(playerIds);
-                }
-
-                await eventService.PublishAsync(
-                    new SectorActivatedEvent(
-                        playerIds,
-                        playerId,
-                        sectorInstance.Sector,
-                        random.PickOneAtRandom(constructs),
-                        playerIds.Count
-                    )
-                );
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to publish {Event}", nameof(SectorActivatedEvent));
-            }
+            await eventService.PublishAsync(
+                new SectorActivatedEvent(
+                    playerIds,
+                    playerId,
+                    sectorInstance.Sector,
+                    random.PickOneAtRandom(constructs),
+                    playerIds.Count
+                )
+            );
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to publish {Event}", nameof(SectorActivatedEvent));
         }
     }
 

@@ -71,7 +71,12 @@ public class ThreadManager : IThreadManager
                 continue;
             }
 
-            if (IsThreadOld(id)) CancelThread(id);
+            if (IsThreadOld(id) && !IsThreadCancelled(id))
+            {
+                _logger.LogWarning("Thread {ThreadId} is old", id);
+                CancelThread(id);
+                continue;
+            }
 
             if (IsThreadCancelled(id))
             {
@@ -81,6 +86,8 @@ public class ThreadManager : IThreadManager
 
             if (DidThreadHang(id))
             {
+                _logger.LogWarning("Thread {ThreadId} Hang", id);
+                
                 if (!IsThreadCancelled(id))
                 {
                     CancelThread(id);
@@ -223,6 +230,12 @@ public class ThreadManager : IThreadManager
             _ => thread,
             (_, _) => thread
         );
+        
+        _heartbeatMap.AddOrUpdate(
+            threadId,
+            _ => DateTime.UtcNow,
+            (_, _) => DateTime.UtcNow
+        );
     }
 
     public void InterruptThread(ThreadId threadId)
@@ -236,6 +249,7 @@ public class ThreadManager : IThreadManager
     {
         _logger.LogInformation("Remove Thread {Thread}", threadId);
 
+        _threadStartMap.TryRemove(threadId, out _);
         _threads.TryRemove(threadId, out _);
     }
 
@@ -297,7 +311,8 @@ public class ThreadManager : IThreadManager
 
         if (!_threadStartMap.TryGetValue(threadId, out var threadStartDate)) return false;
 
-        return DateTime.UtcNow - threadStartDate > TimeSpan.FromHours(2);
+        var timeSpan = DateTime.UtcNow - threadStartDate;
+        return timeSpan  > TimeSpan.FromHours(3);
     }
 
     private bool IsThreadCancelled(ThreadId threadId)

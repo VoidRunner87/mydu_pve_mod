@@ -217,6 +217,13 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
     private async Task ShootAndCycleAsync(ShotContext context)
     {
+        var distance = (context.TargetPosition - context.ConstructPosition).Size();
+
+        if (distance > 2 * DistanceHelpers.OneSuInMeters)
+        {
+            return;
+        }
+        
         var functionalWeaponCount = await _constructElementsService.GetFunctionalDamageWeaponCount(constructId);
         if (functionalWeaponCount <= 0)
         {

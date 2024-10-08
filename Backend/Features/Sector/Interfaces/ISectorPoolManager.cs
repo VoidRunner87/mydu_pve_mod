@@ -16,6 +16,7 @@ public interface ISectorPoolManager
     Task SetExpirationFromNow(Vec3 sector, TimeSpan span);
 
     Task ActivateEnteredSectors();
+    Task ActivateSector(SectorInstance sectorInstance);
 
     Task UpdateExpirationNames();
 }

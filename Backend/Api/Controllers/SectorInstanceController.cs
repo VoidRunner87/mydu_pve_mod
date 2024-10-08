@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
+using NQ;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
@@ -17,6 +18,42 @@ public class SectorInstanceController(IServiceProvider provider) : Controller
     public async Task<IActionResult> GetAll()
     {
         return Ok(await _repository.GetAllAsync());
+    }
+
+    [HttpPost]
+    [Route("activate")]
+    public async Task<IActionResult> ActivateSector([FromBody] SectorRequest request)
+    {
+        var sectorInstance = await _repository.FindBySector(request.Sector);
+
+        if (sectorInstance == null)
+        {
+            return NotFound();
+        }
+        
+        var sectorPoolManager = provider.GetRequiredService<ISectorPoolManager>();
+
+        await sectorPoolManager.ActivateSector(sectorInstance);
+
+        return Ok(sectorInstance);
+    }
+    
+    [HttpPost]
+    [Route("expire")]
+    public async Task<IActionResult> ExpireSector([FromBody] SectorRequest request)
+    {
+        var sectorInstance = await _repository.FindBySector(request.Sector);
+
+        if (sectorInstance == null)
+        {
+            return NotFound();
+        }
+        
+        var sectorPoolManager = provider.GetRequiredService<ISectorPoolManager>();
+
+        await sectorPoolManager.SetExpirationFromNow(request.Sector, TimeSpan.Zero);
+
+        return Ok();
     }
 
     [HttpPost]
@@ -42,5 +79,10 @@ public class SectorInstanceController(IServiceProvider provider) : Controller
     public IActionResult GetGrid()
     {
         return Ok(SectorGridConstructCache.Data);
+    }
+    
+    public class SectorRequest
+    {
+        public Vec3 Sector { get; set; }
     }
 }
