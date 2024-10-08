@@ -55,7 +55,7 @@ public static class FeaturesRegistration
         services.RegisterSpawnerScripts();
         services.RegisterTaskQueue();
         services.RegisterEvents();
-        services.RegisterNQServices();
+        services.RegisterNqServices();
         services.RegisterLootSystem();
         services.RegisterFaction();
     }
