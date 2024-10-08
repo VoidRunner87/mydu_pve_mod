@@ -11,6 +11,15 @@ Before starting, know this:
 * No need to restart the server, just the mod container
 * The way the mod import is done is via assembly load and reflection. There are LOTS of conflicts with assemblies if you need anything extra like I do on this mode (see the code). Easier to have it as a separate container
 
+# Features
+
+* Sector Spawner
+* Sector Spatial Hashing
+* Factions
+* Faction Territory
+* Dynamic Scripts
+* Element Extended Properties
+
 # Quick Start
 
 * Pull the docker container: [Docker Container](https://hub.docker.com/repository/docker/voidrunner7891/dynamic_encounters/general)
