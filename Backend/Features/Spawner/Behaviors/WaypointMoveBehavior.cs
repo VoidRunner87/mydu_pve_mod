@@ -9,6 +9,7 @@ using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
+using Mod.DynamicEncounters.Features.Spawner.Extensions;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQutils.Exceptions;
@@ -46,7 +47,7 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
             context.TargetWaypoint = context.Waypoints.FirstOrDefault();
             if (context.TargetWaypoint != null)
             {
-                context.TargetMovePosition = context.TargetWaypoint.Position;
+                context.SetAutoTargetMovePosition(context.TargetWaypoint.Position);
             }
             else
             {
@@ -69,7 +70,7 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
             context.TargetWaypoint = context.Waypoints.FirstOrDefault(w => !w.Visited);
             if (context.TargetWaypoint != null)
             {
-                context.TargetMovePosition = context.TargetWaypoint.Position;
+                context.SetAutoTargetMovePosition(context.TargetWaypoint.Position);
             }
             else
             {

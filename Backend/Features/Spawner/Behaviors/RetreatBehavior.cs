@@ -6,6 +6,7 @@ using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
+using Mod.DynamicEncounters.Features.Spawner.Extensions;
 using Mod.DynamicEncounters.Helpers;
 using Mod.DynamicEncounters.Helpers.DU;
 using Orleans;
@@ -55,7 +56,7 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
         
         if (!context.TargetConstructId.HasValue)
         {
-            context.TargetMovePosition = context.Sector;
+            context.SetAutoTargetMovePosition(context.Sector);
             return;
         }
         
@@ -63,7 +64,7 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
 
         if (targetConstructInfo == null)
         {
-            context.TargetMovePosition = context.Sector;
+            context.SetAutoTargetMovePosition(context.Sector);
             return;
         }
         

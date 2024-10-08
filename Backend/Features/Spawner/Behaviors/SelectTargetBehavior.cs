@@ -13,6 +13,7 @@ using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Services;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
+using Mod.DynamicEncounters.Features.Spawner.Extensions;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
@@ -58,7 +59,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var targetSpan = DateTime.UtcNow - context.TargetSelectedTime;
         if (targetSpan < TimeSpan.FromSeconds(10))
         {
-            SetTargetMovePosition(context, await GetTargetMovePosition(context));
+            context.SetAutoTargetMovePosition(await GetTargetMovePosition(context));
 
             return;
         }
@@ -150,8 +151,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         if (targetId.HasValue && targetId.Value != 0)
         {
-            context.TargetConstructId = targetId;
-            context.TargetSelectedTime = DateTime.UtcNow;
+            context.SetAutoTargetConstructId(targetId);
         }
 
         if (!context.TargetConstructId.HasValue)
@@ -192,11 +192,11 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         if (returnToSector)
         {
-            SetTargetMovePosition(context, context.Sector);
+            context.SetAutoTargetMovePosition(context.Sector);
         }
         else
         {
-            SetTargetMovePosition(context, await targetMovePositionTask);
+            context.SetAutoTargetMovePosition(await targetMovePositionTask);
 
             await _sectorPoolManager.SetExpirationFromNow(context.Sector, TimeSpan.FromHours(1));
         }
@@ -249,15 +249,6 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to Takeover Ship");
-        }
-    }
-
-    private static void SetTargetMovePosition(BehaviorContext context, Vec3 position)
-    {
-        context.TryGetProperty(BehaviorContext.AutoTargetMovePositionEnabledProperty, out var autoTargetMovePositionEnabled, true);
-        if (autoTargetMovePositionEnabled)
-        {
-            context.TargetMovePosition = position;
         }
     }
 

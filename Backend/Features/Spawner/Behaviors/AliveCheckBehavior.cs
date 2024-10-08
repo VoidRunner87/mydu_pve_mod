@@ -82,6 +82,8 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
             
             return;
         }
+        
+        ConstructBehaviorContextCache.Data.ResetExpiration(constructId);
 
         await _constructService.ActivateShieldsAsync(constructId);
         

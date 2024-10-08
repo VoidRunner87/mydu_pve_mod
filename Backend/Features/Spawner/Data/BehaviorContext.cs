@@ -25,8 +25,8 @@ public class BehaviorContext(
     IPrefab prefab
 )
 {
-    public ulong? TargetConstructId { get; set; }
-    public Vec3 TargetMovePosition { get; set; }
+    public ulong? TargetConstructId { get; private set; }
+    public Vec3 TargetMovePosition { get; private set; }
     
     [Newtonsoft.Json.JsonIgnore]
     [JsonIgnore]
@@ -40,6 +40,7 @@ public class BehaviorContext(
     }
 
     public const string AutoTargetMovePositionEnabledProperty = "AutoTargetMovePositionEnabled";
+    public const string AutoSelectAttackTargetConstructProperty = "AutoSelectAttackTargetConstruct";
     
     public ConcurrentDictionary<string, object> ExtraProperties = new();
 
@@ -289,14 +290,15 @@ public class BehaviorContext(
         return true;
     }
     
-    public void DisableAutoTargetMovePosition()
+    public void SetTargetMovePosition(Vec3 position)
     {
-        SetProperty(AutoTargetMovePositionEnabledProperty, false);
+        TargetMovePosition = position;
     }
-
-    public void EnableAutoTargetMovePosition()
+    
+    public void SetTargetConstructId(ulong? constructId)
     {
-        RemoveProperty(AutoTargetMovePositionEnabledProperty);
+        TargetConstructId = constructId;
+        TargetSelectedTime = DateTime.UtcNow;
     }
 
     public bool TryGetProperty<T>(string name, out T value, T defaultValue)

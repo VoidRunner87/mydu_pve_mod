@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using BotLib.Generated;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.NQ.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
@@ -23,17 +24,32 @@ public class SendDirectMessageAction(ScriptActionItem actionItem) : IScriptActio
 
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {
-        var logger = context.ServiceProvider
-            .CreateLogger<SendDirectMessageAction>();
+        var provider = context.ServiceProvider;
+        
+        var logger = provider.CreateLogger<SendDirectMessageAction>();
+        var constructService = provider.GetRequiredService<IConstructService>();
+        var gameAlertService = provider.GetRequiredService<IGameAlertService>();
+        
+        var constructCode = "?";
+        var constructName = "???";
 
-        var gameAlertService = context.ServiceProvider
-            .GetRequiredService<IGameAlertService>();
+        if (context.ConstructId.HasValue)
+        {
+            constructCode = $"{context.ConstructId}";
+            constructCode = constructCode[^3..];
+            
+            var constructInfo = await constructService.GetConstructInfoAsync(context.ConstructId.Value);
+            if (constructInfo != null)
+            {
+                constructName = constructInfo.rData.name;
+            }
+        }
 
         foreach (var playerId in context.PlayerIds)
         {
             try
             {
-                await gameAlertService.PushErrorAlert(playerId, actionItem.Message);
+                await gameAlertService.PushErrorAlert(playerId, $"[{constructCode}] {constructName}: {actionItem.Message}");
                 
                 // await ModBase.Bot.Req.ChatMessageSend(
                 //     new MessageContent

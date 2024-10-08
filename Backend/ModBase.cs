@@ -140,6 +140,7 @@ public class ModBase
             .AddInitializableSingleton<IRDMSStorage, RDMSStorage>()
             .AddInitializableSingleton<IPlanetList, PlanetListStub>()
             .AddInitializableSingleton<IScenegraph, Scenegraph>()
+            .AddInitializableSingleton<IPub, Pub>()
             .AddInitializableSingleton<Internal.InternalClient, Internal.InternalClient>()
             .RegisterGRPCClient()
             .AddInitializableSingleton<IScenegraphAPI, ScenegraphAPI>()

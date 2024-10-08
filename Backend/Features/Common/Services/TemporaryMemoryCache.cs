@@ -50,7 +50,7 @@ public class TemporaryMemoryCache<TKey, T>
         {
             var data = await defaultValueFn();
             SetValue(key, data, noCacheRule);
-
+            
             return data;
         }
 
@@ -81,5 +81,18 @@ public class TemporaryMemoryCache<TKey, T>
         {
             AbsoluteExpirationRelativeToNow = _expirationSpan
         });
+    }
+
+    public void ResetExpiration(TKey key)
+    {
+        if (key == null)
+        {
+            return;
+        }
+        
+        if (_cache.TryGetValue(key, out var value))
+        {
+            SetValue(key, (T)value);
+        }
     }
 }
