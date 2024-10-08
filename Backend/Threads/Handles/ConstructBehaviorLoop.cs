@@ -111,7 +111,6 @@ public class ConstructBehaviorLoop : HighTickModLoop
                         handleItem.FactionId,
                         null,
                         handleItem.Sector,
-                        ModBase.Bot,
                         _provider,
                         constructDef
                     )

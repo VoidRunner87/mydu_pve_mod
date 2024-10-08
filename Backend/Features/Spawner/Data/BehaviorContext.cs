@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
@@ -22,7 +21,6 @@ public class BehaviorContext(
     long factionId,
     Guid? territoryId,
     Vec3 sector,
-    Client client,
     IServiceProvider serviceProvider,
     IPrefab prefab
 )
@@ -54,10 +52,6 @@ public class BehaviorContext(
     public Vec3 Sector { get; } = sector;
     public IServiceProvider ServiceProvider { get; init; } = serviceProvider;
     
-    [Newtonsoft.Json.JsonIgnore]
-    [JsonIgnore]
-    public Client Client { get; set; } = client;
-
     public ConcurrentDictionary<string, bool> PublishedEvents = [];
     
     [Newtonsoft.Json.JsonIgnore]
