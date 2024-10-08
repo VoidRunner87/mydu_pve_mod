@@ -49,14 +49,15 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             _logger.LogDebug("No Sectors Missing. Missing {Missing} of {Total}", missingQuantity, args.Quantity);
             return;
         }
-        
+
         var handleCount = await _constructHandleManager.GetActiveCount();
         var featureReaderService = serviceProvider.GetRequiredService<IFeatureReaderService>();
         var maxBudgetConstructs = await featureReaderService.GetIntValueAsync("MaxConstructHandles", 50);
 
         if (handleCount >= maxBudgetConstructs)
         {
-            _logger.LogError("Generate Sector: Reached MAX Number of Construct Handles to Spawn: {Max}", maxBudgetConstructs);
+            _logger.LogError("Generate Sector: Reached MAX Number of Construct Handles to Spawn: {Max}",
+                maxBudgetConstructs);
             return;
         }
 
@@ -117,7 +118,124 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 OnSectorEnterScript = encounter.OnSectorEnterScript,
             };
 
-            await _sectorInstanceRepository.AddAsync(instance);
+            if (position is { x: 0, y: 0, z: 0 })
+            {
+                _logger.LogWarning("BLOCKED Sector 0,0,0 creation");
+                return;
+            }
+
+            try
+            {
+                await _sectorInstanceRepository.AddAsync(instance);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e,
+                    "Failed to create sector. Likely violating unique constraint. It will be tried again on the next cycle");
+            }
+
+            await Task.Delay(200);
+        }
+    }
+
+    public async Task GenerateTerritorySectors(SectorGenerationArgs args)
+    {
+        var count = await _sectorInstanceRepository.GetCountByTerritoryAsync(args.TerritoryId);
+        var missingQuantity = args.Quantity - count;
+
+        if (missingQuantity <= 0)
+        {
+            // _logger.LogInformation("No Territory({Territory}) Sectors Missing. Missing {Missing} of {Total}", args.TerritoryId, missingQuantity, args.Quantity);
+            return;
+        }
+
+        var handleCount = await _constructHandleManager.GetActiveCount();
+        var featureReaderService = serviceProvider.GetRequiredService<IFeatureReaderService>();
+        var maxBudgetConstructs = await featureReaderService.GetIntValueAsync("MaxConstructHandles", 50);
+
+        if (handleCount >= maxBudgetConstructs)
+        {
+            _logger.LogError(
+                "Generate Territory({Territory}) Sector: Reached MAX Number of Construct Handles to Spawn: {Max}",
+                args.TerritoryId,
+                maxBudgetConstructs
+            );
+            return;
+        }
+
+        var allSectorInstances = await _sectorInstanceRepository.GetAllAsync();
+        var sectorInstanceMap = allSectorInstances
+            .Select(k => k.Sector.GridSnap(SectorGridSnap * args.SectorMinimumGap).ToLongVector3())
+            .ToHashSet();
+
+        var random = _randomProvider.GetRandom();
+
+        var randomMinutes = random.Next(0, 60);
+
+        for (var i = 0; i < missingQuantity; i++)
+        {
+            if (!args.Encounters.Any())
+            {
+                continue;
+            }
+
+            var encounter = random.PickOneAtRandom(args.Encounters);
+
+            // TODO
+            var radius = MathFunctions.Lerp(
+                encounter.Properties.MinRadius,
+                encounter.Properties.MaxRadius,
+                random.NextDouble()
+            );
+
+            Vec3 position;
+            var interactions = 0;
+            const int maxInteractions = 100;
+
+            do
+            {
+                position = random.RandomDirectionVec3() * radius;
+                position += encounter.Properties.CenterPosition;
+                position = position.GridSnap(SectorGridSnap);
+
+                interactions++;
+            } while (
+                interactions < maxInteractions ||
+                sectorInstanceMap
+                    .Contains(
+                        position.GridSnap(SectorGridSnap * args.SectorMinimumGap).ToLongVector3()
+                    )
+            );
+
+            var instance = new SectorInstance
+            {
+                Id = Guid.NewGuid(),
+                Sector = position,
+                FactionId = args.FactionId,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow + encounter.Properties.ExpirationTimeSpan +
+                            TimeSpan.FromMinutes(randomMinutes * i),
+                TerritoryId = args.TerritoryId,
+                OnLoadScript = encounter.OnLoadScript,
+                OnSectorEnterScript = encounter.OnSectorEnterScript,
+            };
+
+            if (position is { x: 0, y: 0, z: 0 })
+            {
+                _logger.LogWarning("BLOCKED Sector 0,0,0 creation");
+                return;
+            }
+
+            try
+            {
+                await _sectorInstanceRepository.AddAsync(instance);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e,
+                    "Failed to create sector. Likely violating unique constraint. It will be tried again on the next cycle");
+            }
+
             await Task.Delay(200);
         }
     }
@@ -139,7 +257,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
         if (handleCount >= maxBudgetConstructs)
         {
-            _logger.LogError("LoadUnloadedSectors: Reached MAX Number of Construct Handles to Spawn: {Max}", maxBudgetConstructs);
+            _logger.LogError("LoadUnloadedSectors: Reached MAX Number of Construct Handles to Spawn: {Max}",
+                maxBudgetConstructs);
             return;
         }
 
@@ -159,7 +278,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 ).OnError(exception =>
                 {
                     _logger.LogError(exception, "Failed to Execute On Load Script (Aggregate)");
-                    
+
                     foreach (var e in exception.InnerExceptions)
                     {
                         _logger.LogError(e, "Failed to Execute On Load Script");
@@ -169,7 +288,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 await Task.Delay(200);
                 await _sectorInstanceRepository.SetLoadedAsync(sector.Id, true);
 
-                _logger.LogInformation("Loaded Sector {Id}({Sector}) Territory = {Territory}", sector.Id, sector.Sector, sector.TerritoryId);
+                _logger.LogInformation("Loaded Sector {Id}({Sector}) Territory = {Territory}", sector.Id, sector.Sector,
+                    sector.TerritoryId);
             }
             catch (Exception e)
             {
@@ -193,7 +313,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         {
             _logger.LogError(e, "Failed to ExpireSectorsWithDeletedConstructHandles");
         }
-        
+
         var expiredSectors = await _sectorInstanceRepository.FindExpiredAsync();
 
         foreach (var sector in expiredSectors)
@@ -239,7 +359,6 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
     public async Task ActivateEnteredSectors()
     {
         var sectorsToActivate = (await _sectorInstanceRepository.FindSectorsRequiringStartupAsync())
-            .Where(x => x.Sector.x != 0 && x.Sector.y != 0 && x.Sector.z != 0)
             .DistinctBy(x => x.Sector)
             .ToList();
 
@@ -249,110 +368,103 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             return;
         }
 
-        var spatialHashRepository = serviceProvider.GetRequiredService<IConstructSpatialHashRepository>();
+        foreach (var sectorInstance in sectorsToActivate)
+        {
+            await ActivateSector(sectorInstance);
+        }
+    }
 
+    public async Task ActivateSector(SectorInstance sectorInstance)
+    {
+        var spatialHashRepository = serviceProvider.GetRequiredService<IConstructSpatialHashRepository>();
+        var orleans = serviceProvider.GetOrleans();
         var scriptService = serviceProvider.GetRequiredService<IScriptService>();
         var eventService = serviceProvider.GetRequiredService<IEventService>();
         var random = serviceProvider.GetRandomProvider().GetRandom();
-        var orleans = serviceProvider.GetOrleans();
-
-        const int maxIterations = 10;
-        var counter = 0;
         
-        foreach (var sectorInstance in sectorsToActivate)
+        var constructs = (await spatialHashRepository.FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
+            .ToList();
+
+        if (constructs.Count == 0)
         {
-            if (counter > maxIterations)
-            {
-                return;
-            }
-            
-            counter++;
-            
-            var constructs = (await spatialHashRepository
-                    .FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
-                .ToList();
+            return;
+        }
 
-            if (constructs.Count == 0)
-            {
-                continue;
-            }
+        HashSet<ulong> playerIds = [];
 
-            HashSet<ulong> playerIds = [];
+        try
+        {
+            var queryPilotsTasks = constructs
+                .Select(x => orleans.GetConstructInfoGrain(x)).Select(x => x.Get());
 
-            try
-            {
-                var queryPilotsTasks = constructs
-                    .Select(x => orleans.GetConstructInfoGrain(x)).Select(x => x.Get());
+            playerIds = (await Task.WhenAll(queryPilotsTasks))
+                .Select(x => x.mutableData.pilot)
+                .Where(x => x.HasValue)
+                .Select(x => x.Value.id)
+                .ToHashSet();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,
+                "Failed to query player IDS for Sector Startup. Sector will startup without that information");
+        }
 
-                playerIds = (await Task.WhenAll(queryPilotsTasks))
-                    .Select(x => x.mutableData.pilot)
-                    .Where(x => x.HasValue)
-                    .Select(x => x.Value.id)
-                    .ToHashSet();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e,
-                    "Failed to query player IDS for Sector Startup. Sector will startup without that information");
-            }
+        _logger.LogInformation(
+            "Starting up sector F({Faction}) ({Sector}) encounter: '{Encounter}'",
+            sectorInstance.FactionId,
+            sectorInstance.Sector,
+            sectorInstance.OnSectorEnterScript
+        );
 
-            _logger.LogInformation(
-                "Starting up sector F({Faction}) ({Sector}) encounter: '{Encounter}'",
-                sectorInstance.FactionId,
-                sectorInstance.Sector,
-                sectorInstance.OnSectorEnterScript
+        try
+        {
+            await scriptService.ExecuteScriptAsync(
+                sectorInstance.OnSectorEnterScript,
+                new ScriptContext(
+                    serviceProvider,
+                    sectorInstance.FactionId,
+                    [],
+                    sectorInstance.Sector,
+                    sectorInstance.TerritoryId
+                )
+                {
+                    PlayerIds = playerIds
+                }
             );
 
-            try
-            {
-                await scriptService.ExecuteScriptAsync(
-                    sectorInstance.OnSectorEnterScript,
-                    new ScriptContext(
-                        serviceProvider,
-                        sectorInstance.FactionId,
-                        [],
-                        sectorInstance.Sector,
-                        sectorInstance.TerritoryId
-                    )
-                    {
-                        PlayerIds = playerIds
-                    }
-                );
+            await _sectorInstanceRepository.TagAsStartedAsync(sectorInstance.Id);
+            await Task.Delay(200);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e,
+                "Failed to start encounter({Encounter}) at sector({Sector})",
+                sectorInstance.OnSectorEnterScript,
+                sectorInstance.Sector
+            );
+        }
 
-                await _sectorInstanceRepository.TagAsStartedAsync(sectorInstance.Id);
-                await Task.Delay(200);
-            }
-            catch (Exception e)
+        try
+        {
+            ulong? playerId = null;
+            if (playerIds.Count > 0)
             {
-                _logger.LogError(e,
-                    "Failed to start encounter({Encounter}) at sector({Sector})",
-                    sectorInstance.OnSectorEnterScript,
-                    sectorInstance.Sector
-                );
+                playerId = random.PickOneAtRandom(playerIds);
             }
 
-            try
-            {
-                ulong? playerId = null;
-                if (playerIds.Count > 0)
-                {
-                    playerId = random.PickOneAtRandom(playerIds);
-                }
-
-                await eventService.PublishAsync(
-                    new SectorActivatedEvent(
-                        playerIds,
-                        playerId,
-                        sectorInstance.Sector,
-                        random.PickOneAtRandom(constructs),
-                        playerIds.Count
-                    )
-                );
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to publish {Event}", nameof(SectorActivatedEvent));
-            }
+            await eventService.PublishAsync(
+                new SectorActivatedEvent(
+                    playerIds,
+                    playerId,
+                    sectorInstance.Sector,
+                    random.PickOneAtRandom(constructs),
+                    playerIds.Count
+                )
+            );
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to publish {Event}", nameof(SectorActivatedEvent));
         }
     }
 
@@ -361,12 +473,12 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         var constructHandleRepository = serviceProvider.GetRequiredService<IConstructHandleRepository>();
         var poiMap = await constructHandleRepository.GetPoiConstructExpirationTimeSpansAsync();
         var orleans = serviceProvider.GetOrleans();
-        
+
         _logger.LogInformation("Update Expiration Names found: {Count}", poiMap.Count);
 
         using var db = serviceProvider.GetRequiredService<IPostgresConnectionFactory>().Create();
         db.Open();
-        
+
         foreach (var kvp in poiMap)
         {
             try
@@ -390,7 +502,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     name = newName,
                     id = (long)kvp.Key
                 });
-            
+
                 _logger.LogDebug("Construct {Construct} Name Updated to: {Name}", kvp.Key, newName);
             }
             catch (Exception e)

@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Mod.DynamicEncounters.Api;
-using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
+using Mod.DynamicEncounters.Threads;
 using NQutils.Config;
 
 namespace Mod.DynamicEncounters;
@@ -45,21 +46,18 @@ public static class Program
             using var scope = ModBase.ServiceProvider.CreateScope();
             ModBase.UpdateDatabase(scope);
 
-            var taskList = new List<Task>
-            {
-                new CachingLoop(TimeSpan.FromSeconds(5)).Start(),
-                new SectorLoop().Start(),
-                new ConstructBehaviorLoop(1, BehaviorTaskCategory.MediumPriority).Start(),
-                new ConstructBehaviorLoop(10, BehaviorTaskCategory.HighPriority).Start(),
-                new ConstructBehaviorLoop(20, BehaviorTaskCategory.MovementPriority).Start(),
-                new TaskQueueLoop().Start(),
-                new CleanupLoop(TimeSpan.FromSeconds(5)).Start()
-            };
+            var tm = ThreadManager.Instance;
+            var cancellationTokenSource = new CancellationTokenSource();
+            var ct = cancellationTokenSource.Token;
 
+            var taskList = new List<Task>();
+            
             if (apiEnabled)
             {
-                taskList.Add(host.RunAsync());
+                taskList.Add(host.RunAsync(ct));
             }
+            
+            taskList.Add(tm.Start());
 
             await Task.WhenAll(taskList);
 

@@ -8,6 +8,7 @@ namespace Mod.DynamicEncounters.Features.Sector.Interfaces;
 public interface ISectorPoolManager
 {
     Task GenerateSectors(SectorGenerationArgs args);
+    Task GenerateTerritorySectors(SectorGenerationArgs args);
 
     Task LoadUnloadedSectors();
 
@@ -15,6 +16,7 @@ public interface ISectorPoolManager
     Task SetExpirationFromNow(Vec3 sector, TimeSpan span);
 
     Task ActivateEnteredSectors();
+    Task ActivateSector(SectorInstance sectorInstance);
 
     Task UpdateExpirationNames();
 }

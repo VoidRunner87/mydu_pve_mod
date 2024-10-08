@@ -15,8 +15,8 @@ public class ExpireSectorAction : IScriptAction
     
     public string GetKey() => Name;
 
-    public string Name { get; } = Guid.NewGuid().ToString();
-    
+    public string Name => ActionName;
+
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {
         var provider = context.ServiceProvider;

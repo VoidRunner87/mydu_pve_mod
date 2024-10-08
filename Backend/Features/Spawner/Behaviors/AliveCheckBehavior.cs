@@ -8,6 +8,7 @@ using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 using Mod.DynamicEncounters.Helpers.DU;
+using Mod.DynamicEncounters.Threads.Handles;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
@@ -36,15 +37,14 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
     public async Task TickAsync(BehaviorContext context)
     {
-        if (!context.IsAlive)
+        if (!context.IsAlive || !context.IsBehaviorActive<AliveCheckBehavior>())
         {
+            await context.NotifyConstructDestroyedAsync(new BehaviorEventArgs(constructId, prefab, context));
             await _handleRepository.RemoveHandleAsync(constructId);
+            ConstructBehaviorLoop.ConstructHandles.TryRemove(constructId, out _);
 
-            return;
-        }
-
-        if (!context.IsBehaviorActive<AliveCheckBehavior>())
-        {
+            _logger.LogInformation("Construct {Construct} NOT ALIVE", constructId);
+            
             return;
         }
 
@@ -78,9 +78,13 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
             await _handleRepository.RemoveHandleAsync(constructId);
             
+            _logger.LogInformation("Construct {Construct} CORE DESTROYED", constructId);
+            
             return;
         }
 
         await _constructService.ActivateShieldsAsync(constructId);
+        
+        ConstructBehaviorLoop.RecordConstructHeartBeat(constructId);
     }
 }

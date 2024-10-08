@@ -12,7 +12,7 @@ public class RunScriptAction(ScriptActionItem actionItem) : IScriptAction
 {
     public const string ActionName = "script";
 
-    public string Name { get; } = Guid.NewGuid().ToString();
+    public string Name => ActionName;
 
     public Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {

@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using Mod.DynamicEncounters.Features.Sector.Services;
+using Mod.DynamicEncounters.Threads.Handles;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
@@ -15,7 +18,14 @@ public class StatsController : Controller
         return Ok(new
         {
             BehaviorStats = StatsRecorder.GetStats(),
-            ConstructsPendingDelete = ConstructsPendingDelete.Data.Count
+            ConstructsPendingDelete = ConstructsPendingDelete.Data.Count,
+            ConstructHandles = ConstructBehaviorLoop.ConstructHandles.Select(x => x.Key),
+            LoopHeartBeatSpan = LoopStats.LastHeartbeatMap
+                .ToDictionary(
+                    k => k.Key,
+                    v => DateTime.UtcNow - v.Value
+                )
+                .OrderBy(x => x.Key)
         });
     }
     

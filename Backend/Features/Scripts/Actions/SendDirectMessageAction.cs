@@ -17,7 +17,7 @@ public class SendDirectMessageAction(ScriptActionItem actionItem) : IScriptActio
 {
     public const string ActionName = "message";
     
-    public string Name { get; } = Guid.NewGuid().ToString();
+    public string Name => ActionName;
 
     public async Task<ScriptActionResult> ExecuteAsync(ScriptContext context)
     {

@@ -22,7 +22,7 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
 {
     public const string ActionName = "give-quanta";
     public const string Description = "Gives an amount of quanta to all players in the context of the execution";
-    public string Name { get; } = Guid.NewGuid().ToString();
+    public string Name => ActionName;
 
     public string GetKey() => Name;
 

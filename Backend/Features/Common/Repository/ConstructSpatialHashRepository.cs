@@ -30,7 +30,7 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
             LEFT JOIN public.ownership O ON (C.owner_entity_id = O.id)
             WHERE C.sector_x = @x AND C.sector_y = @y AND C.sector_z = @z AND
                   C.deleted_at IS NULL AND
-                  C.json_properties->>'isUntargetable' = 'false' AND
+                  (C.json_properties->>'isUntargetable' = 'false' OR C.json_properties->>'isUntargetable' IS NULL) AND
                   C.owner_entity_id IS NOT NULL AND (O.player_id NOT IN({StaticPlayerId.Aphelia}, {StaticPlayerId.Unknown}) OR (O.player_id IS NULL AND O.organization_id IS NOT NULL))
             """,
             new
@@ -71,7 +71,7 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
              SELECT C.id, C.name, C.sector_x, C.sector_y, C.sector_z FROM public.construct C
              LEFT JOIN public.ownership O ON (C.owner_entity_id = O.id)
              WHERE C.deleted_at IS NULL AND
-             C.json_properties->>'isUntargetable' = 'false' AND
+             (C.json_properties->>'isUntargetable' = 'false' OR C.json_properties->>'isUntargetable' IS NULL) AND
              C.owner_entity_id IS NOT NULL AND
              (
              	O.player_id NOT IN({StaticPlayerId.Aphelia}, {StaticPlayerId.Unknown}) OR 

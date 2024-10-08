@@ -20,5 +20,6 @@ public interface ISectorInstanceRepository : IRepository<SectorInstance>
     Task ExpireAllAsync();
     Task ForceExpireAllAsync();
     Task<long> GetCountWithTagAsync(string tag);
+    Task<long> GetCountByTerritoryAsync(Guid territoryId);
     Task ExpireSectorsWithDeletedConstructHandles();
 }

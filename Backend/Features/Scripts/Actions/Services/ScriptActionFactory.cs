@@ -21,7 +21,6 @@ public class ScriptActionFactory : IScriptActionFactory
         return CreateInternalOrDefault(
             scriptActionItem,
             new CompositeScriptAction(
-                scriptActionItem.Name!,
                 scriptActionItem.Actions.Select(Create)
             )
         );
@@ -32,7 +31,7 @@ public class ScriptActionFactory : IScriptActionFactory
         var actions = scriptActionItem
             .Select(a => CreateInternalOrDefault(a, new NullScriptAction()));
 
-        return new CompositeScriptAction(Guid.NewGuid().ToString(), actions);
+        return new CompositeScriptAction(actions);
     }
 
     public IEnumerable<string> GetAllActions() => _actionMap.Keys;
@@ -106,7 +105,6 @@ public class ScriptActionFactory : IScriptActionFactory
                 );
             case "for-each-handle-with-tag":
                 return new CompositeScriptAction(
-                    Guid.NewGuid().ToString(),
                     actionItem.Tags
                         .Select(tag => new ForEachConstructHandleTaggedOnSectorAction(
                             tag,

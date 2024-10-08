@@ -10,6 +10,7 @@ public class SectorGenerationArgs
     public int Quantity { get; set; } = 10;
     public string Tag { get; set; } = "pooled";
     public long FactionId { get; set; }
+    public Guid TerritoryId { get; set; }
 
     /// <summary>
     /// Minimum Gap of SectorSize between Sectors 

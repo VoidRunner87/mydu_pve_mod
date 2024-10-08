@@ -221,6 +221,23 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         );
     }
 
+    public async Task<long> GetCountByTerritoryAsync(Guid territoryId)
+    {
+        using var db = _connectionFactory.Create();
+        db.Open();
+
+        return await db.ExecuteScalarAsync<long>(
+            """
+            SELECT COUNT(0) FROM public.mod_sector_instance AS SI
+            WHERE SI.territory_id = @territoryId
+            """,
+            new
+            {
+                territoryId
+            }
+        );
+    }
+
     public async Task ExpireSectorsWithDeletedConstructHandles()
     {
         using var db = _connectionFactory.Create();

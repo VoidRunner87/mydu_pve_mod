@@ -14,7 +14,7 @@ public class PublishWreckDiscoveredEvent : IScriptAction
 {
     public const string ActionName = "publish-wreck-discovered-event";
     public const string Description = "Tracks that a wreck was discovered. Useful for event handlers";
-    public string Name { get; } = Guid.NewGuid().ToString();
+    public string Name => ActionName;
 
     public string GetKey() => Name;
     

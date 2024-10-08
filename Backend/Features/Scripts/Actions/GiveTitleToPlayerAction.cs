@@ -16,7 +16,7 @@ public class GiveTitleToPlayerAction(ScriptActionItem actionItem) : IScriptActio
 {
     public const string ActionName = "give-title";
     
-    public string Name { get; } = Guid.NewGuid().ToString();
+    public string Name => ActionName;
 
     public string GetKey() => Name;
 
