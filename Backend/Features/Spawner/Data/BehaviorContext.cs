@@ -70,6 +70,8 @@ public class BehaviorContext(
 
     public bool IsActiveWreck { get; set; }
 
+    public double RealismFactor { get; set; } = 0.25d;
+
     public Task NotifyEvent(string @event, BehaviorEventArgs eventArgs)
     {
         // TODO for custom events

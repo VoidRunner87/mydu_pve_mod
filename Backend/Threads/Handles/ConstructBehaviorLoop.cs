@@ -58,6 +58,13 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
         lock (ListLock)
         {
+            if (ConstructHandles.Count == 0)
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(500));
+                ReportHeartbeat();
+                return;
+            }
+            
             foreach (var kvp in ConstructHandles)
             {
                 var task = Task.Run(() => RunIsolatedAsync(() => TickConstructHandle(deltaTime, kvp.Value)));
@@ -68,6 +75,7 @@ public class ConstructBehaviorLoop : HighTickModLoop
         await Task.WhenAll(taskList);
 
         StatsRecorder.Record(_category, sw.ElapsedMilliseconds);
+        ReportHeartbeat();
         // _logger.LogInformation("Behavior Loop Count({Count}) Took: {Time}ms", taskList.Count, sw.ElapsedMilliseconds);
     }
 

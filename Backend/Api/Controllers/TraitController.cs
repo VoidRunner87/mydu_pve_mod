@@ -17,4 +17,13 @@ public class TraitController(IServiceProvider provider) : Controller
 
         return Ok((await traitRepository.Get()).Map());
     }
+    
+    [Route("element-type/{elementTypeName}")]
+    [HttpGet]
+    public async Task<IActionResult> GetTraitOfElementType(string elementTypeName)
+    {
+        var traitRepository = provider.GetRequiredService<ITraitRepository>();
+
+        return Ok((await traitRepository.Get()).Map());
+    }
 }

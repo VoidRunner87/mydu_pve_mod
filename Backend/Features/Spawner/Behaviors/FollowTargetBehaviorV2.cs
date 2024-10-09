@@ -100,10 +100,8 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
             acceleration *= 1 + Math.Abs(velToTargetDot);
         }
 
-        const double realismFactor = 0.25d;
-
-        var accelForward = forward * acceleration * realismFactor;
-        var accelMove = moveDirection * acceleration * (1 - realismFactor);
+        var accelForward = forward * acceleration * context.RealismFactor;
+        var accelMove = moveDirection * acceleration * (1 - context.RealismFactor);
 
         var accelV = accelForward + accelMove;
 
