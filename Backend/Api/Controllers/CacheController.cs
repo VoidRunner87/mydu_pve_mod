@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Mod.DynamicEncounters.Features.Common.Services;
+using Mod.DynamicEncounters.Features.ExtendedProperties.Repository;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
@@ -20,6 +21,8 @@ public class CacheController : Controller
 
         var sw = new Stopwatch();
         sw.Start();
+        
+        CachedTraitRepository.Clear();
         
         return Ok($"Cache Cleared. Took: {sw.Elapsed.TotalMilliseconds}ms");
     }

@@ -48,10 +48,6 @@ public class ScriptActionItem
     public List<ScriptActionItem> Actions { get; set; } = new();
 
     public ScriptActionEvents Events { get; set; } = new();
-}
 
-public class ScriptActionOverrides
-{
-    public string? ConstructName { get; set; }
-    public ulong? PositionParentId { get; set; }
+    public Dictionary<string, object> Properties { get; set; } = new();
 }

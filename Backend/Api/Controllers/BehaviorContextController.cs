@@ -29,7 +29,7 @@ public class BehaviorContextController : Controller
         return Ok(new
         {
             Context = context,
-            ExtraProperties = context.ExtraProperties.ToDictionary(k => k.Key, v => v.Value)
+            ExtraProperties = context.Properties.ToDictionary(k => k.Key, v => v.Value)
         });
     }
 

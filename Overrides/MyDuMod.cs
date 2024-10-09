@@ -40,12 +40,12 @@ public class MyDuMod : IMod
         _weaponGrainOverrides = new WeaponGrainOverrides(_provider);
         
         var hookCallManager = provider.GetRequiredService<IHookCallManager>();
-        hookCallManager.Register(
-            "WeaponGrain.WeaponFireOnce",
-            HookMode.Replace,
-            _weaponGrainOverrides,
-            nameof(WeaponGrainOverrides.WeaponFireOnce)
-        );
+        // hookCallManager.Register(
+        //     "WeaponGrain.WeaponFireOnce",
+        //     HookMode.Replace,
+        //     _weaponGrainOverrides,
+        //     nameof(WeaponGrainOverrides.WeaponFireOnce)
+        // );
         
         return Task.CompletedTask;
     }

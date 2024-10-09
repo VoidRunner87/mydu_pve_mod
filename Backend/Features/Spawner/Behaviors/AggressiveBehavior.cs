@@ -67,7 +67,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
         _constructService = provider.GetRequiredService<IConstructService>();
 
-        context.ExtraProperties.TryAdd("CORE_ID", _coreUnitElementId);
+        context.Properties.TryAdd("CORE_ID", _coreUnitElementId);
 
         _pveVoxelDamageEnabled = await context.ServiceProvider
             .GetRequiredService<IFeatureReaderService>()
@@ -177,7 +177,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
     private double GetShootTotalDeltaTime(BehaviorContext context)
     {
-        if (context.ExtraProperties.TryGetValue(ShotTotalDeltaTimePropName, out var value))
+        if (context.Properties.TryGetValue(ShotTotalDeltaTimePropName, out var value))
         {
             return (double)value;
         }
@@ -187,9 +187,9 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
     private void SetShootTotalDeltaTime(BehaviorContext context, double value)
     {
-        if (!context.ExtraProperties.TryAdd(ShotTotalDeltaTimePropName, value))
+        if (!context.Properties.TryAdd(ShotTotalDeltaTimePropName, value))
         {
-            context.ExtraProperties[ShotTotalDeltaTimePropName] = value;
+            context.Properties[ShotTotalDeltaTimePropName] = value;
         }
     }
 

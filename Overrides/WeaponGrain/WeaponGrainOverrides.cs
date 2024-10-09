@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Backend;
 using Backend.Database;
@@ -50,11 +51,12 @@ public class WeaponGrainOverrides(IServiceProvider provider)
 
         var sceneGraph = provider.GetRequiredService<IScenegraph>();
 
-        IElementWeaponAim weaponAim = new ElementWeaponAim(
+        var weaponAim = new ElementWeaponAim(
             provider.GetRequiredService<ILoggerFactory>()
                 .CreateLogger<ElementWeaponAim>(),
             bank
         );
+        await weaponAim.InitializeAsync(CancellationToken.None);
 
         var weaponRay = weaponAim.GetRay(weaponInfo.elementType);
 

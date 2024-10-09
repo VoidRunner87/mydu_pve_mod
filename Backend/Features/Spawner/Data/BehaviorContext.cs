@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Features.Common.Data;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Events.Data;
 using Mod.DynamicEncounters.Features.Events.Interfaces;
@@ -24,14 +25,15 @@ public class BehaviorContext(
     Vec3 sector,
     IServiceProvider serviceProvider,
     IPrefab prefab
-)
+) : BaseContext
 {
     public ulong? TargetConstructId { get; private set; }
     public Vec3 TargetMovePosition { get; private set; }
-    
+
     [Newtonsoft.Json.JsonIgnore]
     [JsonIgnore]
     public IEnumerable<Vec3> TargetElementPositions { get; set; } = [];
+
     private double _deltaTime;
 
     public double DeltaTime
@@ -42,8 +44,6 @@ public class BehaviorContext(
 
     public const string AutoTargetMovePositionEnabledProperty = "AutoTargetMovePositionEnabled";
     public const string AutoSelectAttackTargetConstructProperty = "AutoSelectAttackTargetConstruct";
-    
-    public ConcurrentDictionary<string, object> ExtraProperties = new();
 
     public Vec3 Velocity { get; set; }
     public Vec3? Position { get; set; }
@@ -54,12 +54,13 @@ public class BehaviorContext(
     public Guid? TerritoryId { get; } = territoryId;
     public Vec3 Sector { get; } = sector;
     public IServiceProvider ServiceProvider { get; init; } = serviceProvider;
-    
+
     public ConcurrentDictionary<string, bool> PublishedEvents = [];
-    
+
     [Newtonsoft.Json.JsonIgnore]
     [JsonIgnore]
     public IPrefab Prefab { get; set; } = prefab;
+
     public List<Waypoint> Waypoints { get; set; } = [];
     public Waypoint? TargetWaypoint { get; set; }
 
@@ -123,13 +124,14 @@ public class BehaviorContext(
 
                     var constructService = eventArgs.Context.ServiceProvider
                         .GetRequiredService<IConstructService>();
-                    var constructInfo = await constructService.NoCache().GetConstructInfoAsync(eventArgs.Context.TargetConstructId.Value);
+                    var constructInfo = await constructService.NoCache()
+                        .GetConstructInfoAsync(eventArgs.Context.TargetConstructId.Value);
 
                     if (constructInfo?.mutableData.pilot != null)
                     {
                         var playerId = constructInfo.mutableData.pilot.Value;
                         eventArgs.Context.PlayerIds.Add(playerId);
-                        
+
                         logger.LogWarning("Found Player({Player}) on NOCACHE attempt", playerId);
                     }
                     else if (constructInfo != null && eventArgs.Context.PlayerIds.Count == 0)
@@ -143,7 +145,8 @@ public class BehaviorContext(
                         }
                         else
                         {
-                            logger.LogError("Owner is an Organization({Org}). This is not handled yet.", owner.organizationId);
+                            logger.LogError("Owner is an Organization({Org}). This is not handled yet.",
+                                owner.organizationId);
                         }
                     }
                 }
@@ -155,9 +158,10 @@ public class BehaviorContext(
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Failed to give quanta to Target Construct ({Construct}) Pilot", eventArgs.Context.TargetConstructId);
+            logger.LogError(e, "Failed to give quanta to Target Construct ({Construct}) Pilot",
+                eventArgs.Context.TargetConstructId);
         }
-        
+
         logger.LogInformation("NPC Defeated by players: {Players}", string.Join(", ", eventArgs.Context.PlayerIds));
 
         var tasks = eventArgs.Context.PlayerIds.Select(id =>
@@ -268,9 +272,9 @@ public class BehaviorContext(
         var name = typeof(T).FullName;
         var key = $"{name}_FINISHED";
 
-        if (!ExtraProperties.TryAdd(key, false))
+        if (!Properties.TryAdd(key, false))
         {
-            ExtraProperties[key] = false;
+            Properties[key] = false;
         }
     }
 
@@ -284,19 +288,19 @@ public class BehaviorContext(
         var name = type.FullName;
         var key = $"{name}_FINISHED";
 
-        if (ExtraProperties.TryGetValue(key, out var finished) && finished is bool finishedBool)
+        if (Properties.TryGetValue(key, out var finished) && finished is bool finishedBool)
         {
             return !finishedBool;
         }
 
         return true;
     }
-    
+
     public void SetTargetMovePosition(Vec3 position)
     {
         TargetMovePosition = position;
     }
-    
+
     public void SetTargetConstructId(ulong? constructId)
     {
         // can't target itself
@@ -304,33 +308,10 @@ public class BehaviorContext(
         {
             return;
         }
-        
+
         TargetConstructId = constructId;
         TargetSelectedTime = DateTime.UtcNow;
     }
 
-    public bool TryGetProperty<T>(string name, out T value, T defaultValue)
-    {
-        if (ExtraProperties.TryGetValue(name, out var objVal))
-        {
-            value = (T)objVal;
-            return true;
-        }
-
-        value = defaultValue;
-        return false;
-    }
-
-    public void SetProperty<T>(string name, T value)
-    {
-        if (!ExtraProperties.TryAdd(name, value))
-        {
-            ExtraProperties[name] = value;
-        }
-    }
-
-    public void RemoveProperty(string name)
-    {
-        ExtraProperties.TryRemove(name, out _);
-    }
+    
 }

@@ -49,7 +49,7 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
 
         _constructService = provider.GetRequiredService<IConstructService>();
         
-        context.ExtraProperties.TryAdd("CORE_ID", _coreUnitElementId);
+        context.Properties.TryAdd("CORE_ID", _coreUnitElementId);
         
         context.IsAlive = _coreUnitElementId.elementId > 0;
         _active = context.IsAlive;

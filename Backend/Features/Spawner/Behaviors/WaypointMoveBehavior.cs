@@ -1,23 +1,19 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using BotLib.Generated;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mod.DynamicEncounters.Common.Vector;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Features.Spawner.Extensions;
 using Mod.DynamicEncounters.Helpers;
-using NQ;
-using NQutils.Exceptions;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
 public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstructBehavior
 {
+    private readonly IPrefab _prefab = prefab;
     private IConstructService _constructService;
     private ILogger<WaypointMoveBehavior> _logger;
     private IConstructHandleRepository _constructHandleService;
@@ -42,18 +38,10 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
             return;
         }
 
-        if (context.TargetWaypoint == null)
+        context.TargetWaypoint = context.Waypoints.FirstOrDefault(x => !x.Visited);
+        if (context.TargetWaypoint != null)
         {
-            context.TargetWaypoint = context.Waypoints.FirstOrDefault();
-            if (context.TargetWaypoint != null)
-            {
-                context.SetAutoTargetMovePosition(context.TargetWaypoint.Position);
-            }
-            else
-            {
-                await Despawn();
-                return;
-            }
+            context.SetAutoTargetMovePosition(context.TargetWaypoint.Position);
         }
         
         var npcConstructInfo = await _constructService.GetConstructInfoAsync(constructId);
@@ -64,92 +52,9 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var npcPos = npcConstructInfo.rData.position;
 
         // Arrived Near Destination
-        if (context.TargetMovePosition.Dist(npcPos) <= 50000)
+        if (context.TargetMovePosition.Dist(npcPos) <= 50000 && context.TargetWaypoint != null)
         {
             context.TargetWaypoint.Visited = true;
-            context.TargetWaypoint = context.Waypoints.FirstOrDefault(w => !w.Visited);
-            if (context.TargetWaypoint != null)
-            {
-                context.SetAutoTargetMovePosition(context.TargetWaypoint.Position);
-            }
-            else
-            {
-                // No more waypoints. Arrived. Despawn
-                await Despawn();
-                return;
-            }
-        }
-        
-        var moveDirection = (context.TargetMovePosition - npcPos).NormalizeSafe();
-
-        var velocityDirection = context.Velocity.NormalizeSafe();
-        var velToTargetDot = velocityDirection.Dot(moveDirection);
-
-        double acceleration = prefab.DefinitionItem.AccelerationG * 9.81f;
-
-        if (velToTargetDot < 0)
-        {
-            acceleration *= 1 + Math.Abs(velToTargetDot);
-        }
-
-        var accelV = moveDirection * acceleration;
-
-        context.Velocity += accelV * context.DeltaTime;
-        var velocity = context.Velocity;
-
-        var position = VelocityHelper.LinearInterpolateWithVelocity(
-            npcPos,
-            context.TargetMovePosition,
-            ref velocity,
-            accelV,
-            prefab.DefinitionItem.MaxSpeedKph / 3.6d,
-            context.DeltaTime
-        );
-
-        context.Velocity = velocity;
-
-        // Make the ship point to where it's accelerating
-        var accelerationFuturePos = npcPos + moveDirection * 200000;
-
-        var rotation = VectorMathUtils.SetRotationToMatchDirection(
-            npcPos.ToVector3(),
-            accelerationFuturePos.ToVector3()
-        );
-
-        context.Rotation = rotation.ToNqQuat();
-
-        var timePoint = TimePoint.Now();
-
-        try
-        {
-            var cUpdate = new ConstructUpdate
-            {
-                pilotId = ModBase.Bot.PlayerId,
-                constructId = constructId,
-                rotation = context.Rotation,
-                position = position,
-                worldAbsoluteVelocity = context.Velocity,
-                worldRelativeVelocity = context.Velocity,
-                // worldAbsoluteAngVelocity = relativeAngularVel,
-                // worldRelativeAngVelocity = relativeAngularVel,
-                time = timePoint,
-                grounded = false,
-            };
-
-            await ModBase.Bot.Req.ConstructUpdate(cUpdate);
-        }
-        catch (BusinessException be)
-        {
-            _logger.LogError(be, "Failed to update construct transform. Attempting a restart of the bot connection.");
-
-            try
-            {
-                await ModBase.Bot.Reconnect();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to Reconnect");
-            }
         }
     }
 

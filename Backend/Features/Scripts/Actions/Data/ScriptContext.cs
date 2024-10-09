@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Mod.DynamicEncounters.Features.Common.Data;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions.Data;
@@ -10,7 +11,7 @@ public class ScriptContext(
     HashSet<ulong> playerIds, 
     Vec3 sector,
     Guid? territoryId
-)
+) : BaseContext
 {
     public IServiceProvider ServiceProvider { get; set; } = serviceProvider;
     public long? FactionId { get; } = factionId;

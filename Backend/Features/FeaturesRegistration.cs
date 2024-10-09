@@ -7,6 +7,7 @@ using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Repository;
 using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Features.Events;
+using Mod.DynamicEncounters.Features.ExtendedProperties;
 using Mod.DynamicEncounters.Features.Faction;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Loot;
@@ -58,5 +59,6 @@ public static class FeaturesRegistration
         services.RegisterNqServices();
         services.RegisterLootSystem();
         services.RegisterFaction();
+        services.RegisterExtendedProperties();
     }
 }
