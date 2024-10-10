@@ -52,7 +52,7 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var npcPos = npcConstructInfo.rData.position;
 
         // Arrived Near Destination
-        if (context.TargetMovePosition.Dist(npcPos) <= 50000 && context.TargetWaypoint != null)
+        if (context.GetTargetMovePosition().Dist(npcPos) <= 50000 && context.TargetWaypoint != null)
         {
             context.TargetWaypoint.Visited = true;
         }

@@ -85,7 +85,9 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             return;
         }
 
-        if (!context.TargetConstructId.HasValue)
+        var targetConstructId = context.GetTargetConstructId();
+
+        if (!targetConstructId.HasValue)
         {
             return;
         }
@@ -102,12 +104,12 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         
         var constructPos = constructInfo.rData.position;
 
-        if (context.TargetConstructId is null or 0)
+        if (targetConstructId is null or 0)
         {
             return;
         }
 
-        var targetInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
+        var targetInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
         if (targetInfo == null)
         {
             return;
@@ -142,7 +144,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
                 weapon,
                 constructPos,
                 constructSize,
-                context.TargetConstructId.Value,
+                targetConstructId.Value,
                 targetPos,
                 hitPos,
                 _weaponUnits.Count // One shot equivalent of all weapons for performance reasons

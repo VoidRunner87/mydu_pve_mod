@@ -9,7 +9,6 @@ using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Features.Spawner.Extensions;
 using Mod.DynamicEncounters.Helpers;
 using Mod.DynamicEncounters.Helpers.DU;
-using Orleans;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
@@ -17,7 +16,6 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
 {
     private readonly IPrefab _prefab = prefab;
     private ILogger<RetreatBehavior> _logger;
-    private IClusterClient _orleans;
     private IConstructService _constructService;
 
     public BehaviorTaskCategory Category => BehaviorTaskCategory.HighPriority;
@@ -25,7 +23,6 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
     public Task InitializeAsync(BehaviorContext context)
     {
         var provider = context.ServiceProvider;
-        _orleans = provider.GetOrleans();
         _constructService = provider.GetRequiredService<IConstructService>();
         _logger = provider.CreateLogger<RetreatBehavior>();
 
@@ -38,6 +35,8 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
         {
             return;
         }
+
+        var targetConstructId = context.GetTargetConstructId();
         
         var npcInfo = await _constructService.GetConstructInfoAsync(constructId);
 
@@ -54,13 +53,13 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
         
         var npcPos = context.Position.Value;
         
-        if (!context.TargetConstructId.HasValue)
+        if (!targetConstructId.HasValue)
         {
             context.SetAutoTargetMovePosition(context.Sector);
             return;
         }
         
-        var targetConstructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
+        var targetConstructInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
 
         if (targetConstructInfo == null)
         {
@@ -79,7 +78,7 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
         {
             var retreatDirection = (npcPos - targetPos).NormalizeSafe();
             var npcVel = await _constructService.GetConstructVelocities(constructId);
-            var targetVel = await _constructService.GetConstructVelocities(context.TargetConstructId.Value);
+            var targetVel = await _constructService.GetConstructVelocities(targetConstructId.Value);
 
             var npcVelDir = npcVel.Linear.NormalizeSafe();
             var targetVelDir = targetVel.Linear.NormalizeSafe();

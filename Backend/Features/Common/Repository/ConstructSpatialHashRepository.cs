@@ -44,7 +44,7 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
         return result;
     }
 
-    public async Task<IEnumerable<ConstructSectorRow>> FindPlayerLiveConstructsOnSectorInstances()
+    public async Task<IEnumerable<ConstructSectorRow>> FindPlayerLiveConstructsOnSectorInstances(IEnumerable<Vec3> excludeSectorList)
     {
         using var db = _factory.Create();
         db.Open();
@@ -63,8 +63,11 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
             return new List<ConstructSectorRow>();
         }
 
-        var sectorQueries = sectors.Select(v => $"(C.sector_x = {(long)v.x} AND C.sector_y = {(long)v.y} AND C.sector_z = {(long)v.z})");
-        var sectorQuery = string.Join(" OR ", sectorQueries);
+        var includeSectorQueries = sectors.Select(v => $"(C.sector_x = {(long)v.x} AND C.sector_y = {(long)v.y} AND C.sector_z = {(long)v.z})");
+        var includeSectorQuery = string.Join(" OR ", includeSectorQueries);
+        
+        var excludeSectorQueries = excludeSectorList.Select(v => $"(C.sector_x != {(long)v.x} AND C.sector_y != {(long)v.y} AND C.sector_z != {(long)v.z})");
+        var excludeSectorQuery = string.Join(" AND ", excludeSectorQueries);
         
         var result = (await db.QueryAsync<ConstructSectorRow>(
             $"""
@@ -72,12 +75,17 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
              LEFT JOIN public.ownership O ON (C.owner_entity_id = O.id)
              WHERE C.deleted_at IS NULL AND
              (C.json_properties->>'isUntargetable' = 'false' OR C.json_properties->>'isUntargetable' IS NULL) AND
+             C.sector_x IS NOT NULL AND C.sector_y IS NOT NULL AND C.sector_z IS NOT NULL AND
+             C.json_properties->>'kind' IN ('4', '5') AND
+             (C.idle_since IS NULL OR NOW() - C.idle_since < INTERVAL '30 Minutes') AND
              C.owner_entity_id IS NOT NULL AND
              (
              	O.player_id NOT IN({StaticPlayerId.Aphelia}, {StaticPlayerId.Unknown}) OR 
              	(O.player_id IS NULL AND O.organization_id IS NOT NULL)
              ) AND (
-                 {sectorQuery}
+                 {includeSectorQuery}
+             ) AND (
+                 {excludeSectorQuery}
              )
              """
         )).ToList();

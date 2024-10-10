@@ -1,13 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Backend;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
+using Mod.DynamicEncounters.Features.Spawner.Extensions;
 using Mod.DynamicEncounters.Helpers;
 using Mod.DynamicEncounters.Helpers.DU;
 using NQ;
@@ -19,9 +18,8 @@ namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
 public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBehavior
 {
-    private List<ElementId> _weaponsElements;
     private IClusterClient _orleans;
-    private ILogger<AggressiveBehavior> _logger;
+    private ILogger<NotifierBehavior> _logger;
     private IConstructElementsGrain _constructElementsGrain;
 
     private ElementId _coreUnitElementId;
@@ -40,11 +38,6 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
 
         _constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
 
-        _weaponsElements = await _constructElementsGrain.GetElementsOfType<WeaponUnit>();
-        var elementInfos = await Task.WhenAll(
-            _weaponsElements.Select(_constructElementsGrain.GetElement)
-        );
-
         _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
 
         _constructService = provider.GetRequiredService<IConstructService>();
@@ -54,11 +47,14 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
         context.IsAlive = _coreUnitElementId.elementId > 0;
         _active = context.IsAlive;
         
-        _logger = provider.CreateLogger<AggressiveBehavior>();
+        _logger = provider.CreateLogger<NotifierBehavior>();
     }
 
     public async Task TickAsync(BehaviorContext context)
     {
+        // TODO consider a better place for this in the future
+        context.ClearExpiredTimerProperties();
+        
         var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
 
         if (coreUnit.IsCoreStressHigh())
@@ -79,6 +75,7 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
             await context.NotifyShieldHpLowAsync(new BehaviorEventArgs(constructId, prefab, context));
         }
 
+        // TODO move this to a separate behavior - VentBehavior
         context.TryGetProperty("ShieldVentTimer", out var shieldVentTimer, 0d);
         shieldVentTimer += context.DeltaTime;
 

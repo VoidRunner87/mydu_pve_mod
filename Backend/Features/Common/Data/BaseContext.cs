@@ -21,10 +21,11 @@ public abstract class BaseContext
 
     public void SetProperty<T>(string name, T value)
     {
-        if (!Properties.TryAdd(name, value))
-        {
-            Properties[name] = value;
-        }
+        Properties.AddOrUpdate(
+            name,
+            _ => value,
+            (_, _) => value
+        );
     }
 
     public void RemoveProperty(string name)

@@ -65,7 +65,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         var forward = VectorMathUtils.GetForward(context.Rotation.ToQuat())
             .ToNqVec3()
             .NormalizeSafe();
-        var moveDirection = (context.TargetMovePosition - npcPos).NormalizeSafe();
+        var moveDirection = (context.GetTargetMovePosition() - npcPos).NormalizeSafe();
 
         var velocityDirection = context.Velocity.NormalizeSafe();
         // var velToTargetDot = velocityDirection.Dot(moveDirection);
@@ -117,7 +117,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         
         var position = VelocityHelper.LinearInterpolateWithVelocity(
             npcPos,
-            context.TargetMovePosition,
+            context.GetTargetMovePosition(),
             ref velocity,
             accelV,
             prefab.DefinitionItem.MaxSpeedKph / 3.6d,

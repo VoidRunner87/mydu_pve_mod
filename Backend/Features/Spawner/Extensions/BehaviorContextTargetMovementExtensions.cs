@@ -3,7 +3,7 @@ using NQ;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Extensions;
 
-public static class BehaviorContextExtensions
+public static class BehaviorContextTargetMovementExtensions
 {
     /// <summary>
     /// Checks if auto set move position is enabled before setting the value. If not noops

@@ -55,11 +55,13 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             _active = false;
             return;
         }
+        
+        var targetConstructId = context.GetTargetConstructId();
 
         var targetSpan = DateTime.UtcNow - context.TargetSelectedTime;
         if (targetSpan < TimeSpan.FromSeconds(10))
         {
-            context.SetAutoTargetMovePosition(await GetTargetMovePosition(context));
+            context.SetAutoTargetMovePosition(await GetTargetMovePosition(targetConstructId));
 
             return;
         }
@@ -154,7 +156,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             context.SetAutoTargetConstructId(targetId);
         }
 
-        if (!context.TargetConstructId.HasValue)
+        if (!targetConstructId.HasValue)
         {
             return;
         }
@@ -162,7 +164,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var returnToSector = false;
         if (context.Position.HasValue)
         {
-            var targetConstructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
+            var targetConstructInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
             if (targetConstructInfo != null)
             {
                 var targetPos = targetConstructInfo.rData.position;
@@ -174,7 +176,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                 }
             }
 
-            if (await _constructService.IsInSafeZone(context.TargetConstructId.Value))
+            if (await _constructService.IsInSafeZone(targetConstructId.Value))
             {
                 returnToSector = true;
             }
@@ -185,8 +187,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             _logger.LogInformation("Construct {Construct} Returning to Sector", constructId);
         }
 
-        var targetMovePositionTask = GetTargetMovePosition(context);
-        var cacheTargetElementPositionsTask = CacheTargetElementPositions(context);
+        var targetMovePositionTask = GetTargetMovePosition(targetConstructId);
+        var cacheTargetElementPositionsTask = CacheTargetElementPositions(context, targetConstructId);
 
         await Task.WhenAll([targetMovePositionTask, cacheTargetElementPositionsTask]);
 
@@ -214,7 +216,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                 return;
             }
 
-            var constructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
+            var constructInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
             if (constructInfo == null)
             {
                 return;
@@ -228,12 +230,12 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             };
 
             await _constructService.SendIdentificationNotification(
-                context.TargetConstructId.Value,
+                targetConstructId.Value,
                 targeting
             );
 
             await _constructService.SendAttackingNotification(
-                context.TargetConstructId.Value,
+                targetConstructId.Value,
                 targeting
             );
         }
@@ -252,14 +254,14 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         }
     }
 
-    private async Task CacheTargetElementPositions(BehaviorContext context)
+    private async Task CacheTargetElementPositions(BehaviorContext context, ulong? targetConstructId)
     {
-        if (!context.TargetConstructId.HasValue)
+        if (!targetConstructId.HasValue)
         {
             return;
         }
 
-        var constructElementsGrain = _orleans.GetConstructElementsGrain(context.TargetConstructId.Value);
+        var constructElementsGrain = _orleans.GetConstructElementsGrain(targetConstructId.Value);
         var elements = (await constructElementsGrain.GetElementsOfType<ConstructElement>()).ToList();
 
         var elementInfoListTasks = elements
@@ -277,18 +279,20 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         }
     }
 
-    private async Task<Vec3> GetTargetMovePosition(BehaviorContext context)
+    private async Task<Vec3> GetTargetMovePosition(ulong? targetConstructId)
     {
-        if (!context.TargetConstructId.HasValue)
+        if (!targetConstructId.HasValue)
         {
             return new Vec3();
         }
 
-        var targetConstructInfo = await _constructService.GetConstructInfoAsync(context.TargetConstructId.Value);
+        var targetConstructInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
         if (targetConstructInfo == null)
         {
-            _logger.LogError("Construct {Construct} Target construct info {Target} is null", constructId,
-                context.TargetConstructId.Value);
+            _logger.LogError(
+                "Construct {Construct} Target construct info {Target} is null", constructId,
+                targetConstructId.Value
+            );
             return new Vec3();
         }
 

@@ -92,8 +92,8 @@ public class BehaviorContextController : Controller
         return Ok(
             new
             {
-                context.TargetConstructId,
-                context.TargetMovePosition
+                TargetConstructId = context.GetTargetConstructId(),
+                TargetMovePosition = context.GetTargetMovePosition()
             }
         );
     }
@@ -125,8 +125,8 @@ public class BehaviorContextController : Controller
         return Ok(
             new
             {
-                context.TargetConstructId,
-                context.TargetMovePosition
+                TargetConstructId = context.GetTargetConstructId(),
+                TargetMovePosition = context.GetTargetMovePosition()
             }
         );
     }

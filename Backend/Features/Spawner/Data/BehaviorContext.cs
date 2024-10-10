@@ -4,16 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Data;
-using Mod.DynamicEncounters.Features.Common.Interfaces;
-using Mod.DynamicEncounters.Features.Events.Data;
-using Mod.DynamicEncounters.Features.Events.Interfaces;
-using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
-using Mod.DynamicEncounters.Helpers;
+using Mod.DynamicEncounters.Features.Spawner.Extensions;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Data;
@@ -27,9 +21,6 @@ public class BehaviorContext(
     IPrefab prefab
 ) : BaseContext
 {
-    public ulong? TargetConstructId { get; private set; }
-    public Vec3 TargetMovePosition { get; private set; }
-
     [Newtonsoft.Json.JsonIgnore]
     [JsonIgnore]
     public IEnumerable<Vec3> TargetElementPositions { get; set; } = [];
@@ -45,6 +36,7 @@ public class BehaviorContext(
     public const string AutoTargetMovePositionEnabledProperty = "AutoTargetMovePositionEnabled";
     public const string AutoSelectAttackTargetConstructProperty = "AutoSelectAttackTargetConstruct";
 
+    public DateTime StartedAt { get; } = DateTime.UtcNow;
     public Vec3 Velocity { get; set; }
     public Vec3? Position { get; set; }
     public Quat Rotation { get; set; }
@@ -56,6 +48,8 @@ public class BehaviorContext(
     public IServiceProvider ServiceProvider { get; init; } = serviceProvider;
 
     public ConcurrentDictionary<string, bool> PublishedEvents = [];
+
+    public ConcurrentDictionary<string, TimerPropertyValue> PropertyOverrides { get; } = [];
 
     [Newtonsoft.Json.JsonIgnore]
     [JsonIgnore]
@@ -76,197 +70,6 @@ public class BehaviorContext(
     {
         // TODO for custom events
         return Task.CompletedTask;
-    }
-
-    public async Task NotifyCoreStressHighAsync(BehaviorEventArgs eventArgs)
-    {
-        if (PublishedEvents.ContainsKey(nameof(NotifyCoreStressHighAsync)))
-        {
-            return;
-        }
-
-        await Prefab.Events.OnCoreStressHigh.ExecuteAsync(
-            new ScriptContext(
-                eventArgs.Context.ServiceProvider,
-                eventArgs.Context.FactionId,
-                eventArgs.Context.PlayerIds.ToHashSet(),
-                eventArgs.Context.Sector,
-                eventArgs.Context.TerritoryId
-            )
-            {
-                ConstructId = eventArgs.ConstructId
-            }
-        );
-
-        PublishedEvents.TryAdd(nameof(NotifyCoreStressHighAsync), true);
-    }
-
-    public async Task NotifyConstructDestroyedAsync(BehaviorEventArgs eventArgs)
-    {
-        if (PublishedEvents.ContainsKey(nameof(NotifyConstructDestroyedAsync)))
-        {
-            return;
-        }
-
-        var eventService = ServiceProvider.GetRequiredService<IEventService>();
-
-        var taskList = new List<Task>();
-
-        // send event for all players piloting constructs
-        // TODO #limitation = not considering gunners and boarders
-        var logger = eventArgs.Context.ServiceProvider.CreateLogger<BehaviorContext>();
-
-        try
-        {
-            if (eventArgs.Context.PlayerIds.Count == 0)
-            {
-                if (eventArgs.Context.TargetConstructId.HasValue)
-                {
-                    logger.LogWarning("Could not find any players. Fallback logic will use target construct owner");
-
-                    var constructService = eventArgs.Context.ServiceProvider
-                        .GetRequiredService<IConstructService>();
-                    var constructInfo = await constructService.NoCache()
-                        .GetConstructInfoAsync(eventArgs.Context.TargetConstructId.Value);
-
-                    if (constructInfo?.mutableData.pilot != null)
-                    {
-                        var playerId = constructInfo.mutableData.pilot.Value;
-                        eventArgs.Context.PlayerIds.Add(playerId);
-
-                        logger.LogWarning("Found Player({Player}) on NOCACHE attempt", playerId);
-                    }
-                    else if (constructInfo != null && eventArgs.Context.PlayerIds.Count == 0)
-                    {
-                        var owner = constructInfo.mutableData.ownerId;
-
-                        if (owner.IsPlayer())
-                        {
-                            eventArgs.Context.PlayerIds.Add(owner.playerId);
-                            logger.LogWarning("Found Player({Player}) OWNER", owner.playerId);
-                        }
-                        else
-                        {
-                            logger.LogError("Owner is an Organization({Org}). This is not handled yet.",
-                                owner.organizationId);
-                        }
-                    }
-                }
-                else
-                {
-                    logger.LogError("Can't use fallback - no target construct");
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Failed to give quanta to Target Construct ({Construct}) Pilot",
-                eventArgs.Context.TargetConstructId);
-        }
-
-        logger.LogInformation("NPC Defeated by players: {Players}", string.Join(", ", eventArgs.Context.PlayerIds));
-
-        var tasks = eventArgs.Context.PlayerIds.Select(id =>
-            eventService.PublishAsync(
-                new PlayerDefeatedNpcEvent(
-                    id,
-                    eventArgs.Context.Sector,
-                    eventArgs.ConstructId,
-                    eventArgs.Context.FactionId,
-                    eventArgs.Context.PlayerIds.Count
-                )
-            )
-        );
-
-        taskList.AddRange(tasks);
-
-        var scriptExecutionTask = Prefab.Events.OnDestruction.ExecuteAsync(
-            new ScriptContext(
-                eventArgs.Context.ServiceProvider,
-                eventArgs.Context.FactionId,
-                eventArgs.Context.PlayerIds.ToHashSet(),
-                eventArgs.Context.Sector,
-                eventArgs.Context.TerritoryId
-            )
-            {
-                ConstructId = eventArgs.ConstructId
-            }
-        );
-
-        taskList.Add(scriptExecutionTask);
-
-        await Task.WhenAll(taskList);
-
-        PublishedEvents.TryAdd(nameof(NotifyConstructDestroyedAsync), true);
-    }
-
-    public async Task NotifyShieldHpHalfAsync(BehaviorEventArgs eventArgs)
-    {
-        if (PublishedEvents.ContainsKey(nameof(NotifyShieldHpHalfAsync)))
-        {
-            return;
-        }
-
-        await Prefab.Events.OnShieldHalfAction.ExecuteAsync(
-            new ScriptContext(
-                eventArgs.Context.ServiceProvider,
-                eventArgs.Context.FactionId,
-                eventArgs.Context.PlayerIds,
-                eventArgs.Context.Sector,
-                eventArgs.Context.TerritoryId
-            )
-            {
-                ConstructId = eventArgs.ConstructId
-            }
-        );
-
-        PublishedEvents.TryAdd(nameof(NotifyShieldHpHalfAsync), true);
-    }
-
-    public async Task NotifyShieldHpLowAsync(BehaviorEventArgs eventArgs)
-    {
-        if (PublishedEvents.ContainsKey(nameof(NotifyShieldHpLowAsync)))
-        {
-            return;
-        }
-
-        await Prefab.Events.OnShieldLowAction.ExecuteAsync(
-            new ScriptContext(
-                eventArgs.Context.ServiceProvider,
-                eventArgs.Context.FactionId,
-                eventArgs.Context.PlayerIds,
-                eventArgs.Context.Sector,
-                eventArgs.Context.TerritoryId
-            )
-            {
-                ConstructId = eventArgs.ConstructId
-            }
-        );
-
-        PublishedEvents.TryAdd(nameof(NotifyShieldHpLowAsync), true);
-    }
-
-    public async Task NotifyShieldHpDownAsync(BehaviorEventArgs eventArgs)
-    {
-        if (PublishedEvents.ContainsKey(nameof(NotifyShieldHpDownAsync)))
-        {
-            return;
-        }
-
-        await Prefab.Events.OnShieldDownAction.ExecuteAsync(
-            new ScriptContext(
-                eventArgs.Context.ServiceProvider,
-                eventArgs.Context.FactionId,
-                eventArgs.Context.PlayerIds,
-                eventArgs.Context.Sector,
-                eventArgs.Context.TerritoryId
-            )
-            {
-                ConstructId = eventArgs.ConstructId
-            }
-        );
-
-        PublishedEvents.TryAdd(nameof(NotifyShieldHpDownAsync), true);
     }
 
     public void Deactivate<T>() where T : IConstructBehavior
@@ -300,7 +103,25 @@ public class BehaviorContext(
 
     public void SetTargetMovePosition(Vec3 position)
     {
-        TargetMovePosition = position;
+        Properties.Set(nameof(DynamicProperties.TargetMovePosition), position);
+    }
+
+    public Vec3 GetTargetMovePosition()
+    {
+        return this.GetOverrideOrDefault(
+            nameof(DynamicProperties.TargetMovePosition),
+            new Vec3()
+        );
+        
+        // return (Vec3)Properties.GetOrDefault(nameof(DynamicProperties.TargetMovePosition), new Vec3());
+    }
+
+    public ulong? GetTargetConstructId()
+    {
+        return this.GetOverrideOrDefault(
+            nameof(DynamicProperties.TargetConstructId),
+            (ulong?)null
+        );
     }
 
     public void SetTargetConstructId(ulong? constructId)
@@ -311,9 +132,37 @@ public class BehaviorContext(
             return;
         }
 
-        TargetConstructId = constructId;
-        TargetSelectedTime = DateTime.UtcNow;
+        Properties.Set(nameof(DynamicProperties.TargetConstructId), constructId);
+        Properties.Set(nameof(DynamicProperties.TargetSelectedTime), DateTime.UtcNow);
     }
 
-    
+    public void ClearExpiredTimerProperties()
+    {
+        var expiredList = PropertyOverrides
+            .Where(kvp => kvp.Value.IsExpired(DateTime.UtcNow))
+            .ToList();
+
+        foreach (var kvp in expiredList)
+        {
+            PropertyOverrides.TryRemove(kvp.Key, out _);
+        }
+    }
+
+    private static class DynamicProperties
+    {
+        public const byte TargetMovePosition = 1;
+        public const byte TargetConstructId = 2;
+        public const byte TargetSelectedTime = 3;
+    }
+
+    public class TimerPropertyValue(DateTime expiresAt, object? value)
+    {
+        public DateTime ExpiresAt { get; } = expiresAt;
+        public object? Value { get; } = value;
+
+        public bool IsExpired(DateTime now)
+        {
+            return now > ExpiresAt;
+        }
+    }
 }

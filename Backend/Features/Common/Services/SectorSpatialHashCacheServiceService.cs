@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +9,7 @@ using Mod.DynamicEncounters.Common.Vector;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Services;
 using Mod.DynamicEncounters.Helpers;
+using NQ;
 
 namespace Mod.DynamicEncounters.Features.Common.Services;
 
@@ -25,17 +25,22 @@ public class SectorSpatialHashCacheServiceService(IServiceProvider provider) : I
     {
         var sw = new Stopwatch();
         sw.Start();
-        
+
         const long gridSnap = (long)SectorPoolManager.SectorGridSnap;
-        
-        var items = await _repository.FindPlayerLiveConstructsOnSectorInstances();
-        
+
+        var items = await _repository.FindPlayerLiveConstructsOnSectorInstances(
+            excludeSectorList:
+            [
+                new Vec3() // Sector 0,0,0
+            ]
+        );
+
         _logger.LogDebug("Query GetPlayerConstructsSectorMapAsync Took: {Time}ms", sw.ElapsedMilliseconds);
 
         var map = new ConcurrentDictionary<LongVector3, ConcurrentBag<ulong>>();
 
         var offsets = SectorGridConstructCache.GetOffsets(gridSnap).ToList();
-        
+
         foreach (var item in items)
         {
             foreach (var offset in offsets)
