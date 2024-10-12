@@ -60,15 +60,14 @@ public class BehaviorContextController : Controller
             context.DisableAutoTargetMovePosition();
 
             var constructService = ModBase.ServiceProvider.GetRequiredService<IConstructService>();
-            var constructInfoOutcome = await constructService.GetConstructInfoAsync(request.TargetConstructId.Value);
-            var constructInfo = constructInfoOutcome.Info;
+            var transformOutcome = await constructService.GetConstructTransformAsync(request.TargetConstructId.Value);
 
-            if (constructInfo == null)
+            if (!transformOutcome.ConstructExists)
             {
                 return NotFound($"Target Construct {request.TargetConstructId} Not Found");
             }
 
-            context.SetTargetMovePosition(constructInfo.rData.position);
+            context.SetTargetMovePosition(transformOutcome.Position);
         }
 
         if (request.FromPlayerIdWaypoint.HasValue)
@@ -112,9 +111,9 @@ public class BehaviorContextController : Controller
         if (request.TargetConstructId.HasValue)
         {
             var constructService = ModBase.ServiceProvider.GetRequiredService<IConstructService>();
-            var constructInfo = await constructService.GetConstructInfoAsync(request.TargetConstructId.Value);
+            var exists = await constructService.Exists(request.TargetConstructId.Value);
 
-            if (constructInfo == null)
+            if (!exists)
             {
                 return NotFound($"Target Construct {request.TargetConstructId} Not Found");
             }

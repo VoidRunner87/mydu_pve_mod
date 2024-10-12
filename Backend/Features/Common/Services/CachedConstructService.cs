@@ -27,6 +27,32 @@ public class CachedConstructService(
         );
     }
 
+    public Task<ConstructTransformOutcome> GetConstructTransformFromDbAsync(ulong constructId)
+    {
+        return service.GetConstructTransformFromDbAsync(constructId);
+    }
+
+    public async Task<ConstructTransformOutcome> GetConstructTransformAsync(ulong constructId)
+    {
+        var constructInfoOutcome = await GetConstructInfoAsync(constructId);
+        
+        if (constructInfoOutcome.ConstructExists && constructInfoOutcome.Info == null)
+        {
+            return await GetConstructTransformFromDbAsync(constructId);
+        }
+
+        if (!constructInfoOutcome.ConstructExists)
+        {
+            return ConstructTransformOutcome.DoesNotExist();
+        }
+
+        return new ConstructTransformOutcome(
+            constructInfoOutcome.ConstructExists,
+            constructInfoOutcome.Info!.rData.position,
+            constructInfoOutcome.Info!.rData.rotation
+        );
+    }
+
     public Task ResetConstructCombatLock(ulong constructId)
         => service.ResetConstructCombatLock(constructId);
 

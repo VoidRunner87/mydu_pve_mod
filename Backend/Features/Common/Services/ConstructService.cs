@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Backend;
 using Backend.Database;
@@ -15,6 +16,8 @@ using NQ.Visibility;
 using NQutils.Def;
 using NQutils.Sql;
 using Orleans;
+using Quat = NQ.Quat;
+using Vec3 = NQ.Vec3;
 
 namespace Mod.DynamicEncounters.Features.Common.Services;
 
@@ -49,6 +52,77 @@ public class ConstructService(IServiceProvider provider) : IConstructService
 
             return ConstructInfoOutcome.DoesNotExist();
         }
+    }
+
+    public async Task<ConstructTransformOutcome> GetConstructTransformAsync(ulong constructId)
+    {
+        var constructInfoOutcome = await GetConstructInfoAsync(constructId);
+        if (!constructInfoOutcome.ConstructExists)
+        {
+            return ConstructTransformOutcome.DoesNotExist();
+        }
+
+        if (constructInfoOutcome.ConstructExists && constructInfoOutcome.Info == null)
+        {
+            return await GetConstructTransformFromDbAsync(constructId);
+        }
+
+        var info = constructInfoOutcome.Info;
+
+        return new ConstructTransformOutcome(
+            info != null,
+            info?.rData.position ?? new Vec3(),
+            info?.rData.rotation ?? Quat.Identity
+        );
+    }
+
+    public async Task<ConstructTransformOutcome> GetConstructTransformFromDbAsync(ulong constructId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var result = (await db.QueryAsync<ConstructTransformRow>(
+            """
+            SELECT position_x, position_y, position_z, rotation_x, rotation_y, rotation_z, rotation_w 
+            FROM public.construct WHERE id = @constructId
+            """,
+            new { constructId = (long)constructId }
+        )).ToList();
+
+        if (result.Count == 0)
+        {
+            return ConstructTransformOutcome.DoesNotExist();
+        }
+        
+        var item = result[0];
+        
+        return new ConstructTransformOutcome(
+            true,
+            new Vec3
+            {
+                x = item.position_x,
+                y = item.position_y,
+                z = item.position_z
+            },
+            new Quat
+            {
+                x = item.rotation_x,
+                y = item.rotation_y,
+                z = item.rotation_z,
+                w = item.rotation_w,
+            }
+        );
+    }
+    
+    public struct ConstructTransformRow
+    {
+        public double position_x;
+        public double position_y;
+        public double position_z;
+        public float rotation_x;
+        public float rotation_y;
+        public float rotation_z;
+        public float rotation_w;
     }
 
     public async Task ResetConstructCombatLock(ulong constructId)

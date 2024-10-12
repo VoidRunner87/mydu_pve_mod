@@ -8,6 +8,8 @@ namespace Mod.DynamicEncounters.Features.Common.Interfaces;
 public interface IConstructService
 {
     Task<ConstructInfoOutcome> GetConstructInfoAsync(ulong constructId);
+    Task<ConstructTransformOutcome> GetConstructTransformFromDbAsync(ulong constructId);
+    Task<ConstructTransformOutcome> GetConstructTransformAsync(ulong constructId);
     Task ResetConstructCombatLock(ulong constructId);
     Task SetDynamicWreckAsync(ulong constructId, bool isDynamicWreck);
     Task<Velocities> GetConstructVelocities(ulong constructId);
