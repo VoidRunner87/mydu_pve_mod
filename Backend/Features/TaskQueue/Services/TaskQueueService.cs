@@ -44,15 +44,26 @@ public class TaskQueueService(IServiceProvider provider) : ITaskQueueService
 
                     var scriptAction = scriptActionFactory.Create(scriptActionItem);
 
-                    var task = scriptAction.ExecuteAsync(
-                        new ScriptContext(
-                            provider,
-                            scriptActionItem.FactionId,
-                            new HashSet<ulong>(),
-                            scriptActionItem.Sector ?? new Vec3(),
-                            scriptActionItem.TerritoryId
-                        )
-                    ).OnError(exception =>
+                    HashSet<ulong> playerIds = [];
+                    if (scriptActionItem.Properties.TryGetValue("PlayerIds", out JArray playerIdsJArray))
+                    {
+                        foreach (var item in playerIdsJArray)
+                        {
+                            playerIds.Add(item.Value<ulong>());
+                        }
+                    }
+
+                    var context = new ScriptContext(
+                        provider,
+                        scriptActionItem.FactionId,
+                        [..playerIds],
+                        scriptActionItem.Sector ?? new Vec3(),
+                        scriptActionItem.TerritoryId
+                    );
+                    
+                    context.AddProperties(scriptActionItem.Properties);
+                    
+                    var task = scriptAction.ExecuteAsync(context).OnError(exception =>
                     {
                         _logger.LogError(exception, "Failed to Dequeue Script Task");
                         foreach (var e in exception.InnerExceptions)
