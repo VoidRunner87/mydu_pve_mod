@@ -73,7 +73,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         if (!context.Position.HasValue)
         {
-            var npcConstructInfo = await _constructService.NoCache().GetConstructInfoAsync(constructId);
+            var npcConstructInfoOutcome = await _constructService.NoCache().GetConstructInfoAsync(constructId);
+            var npcConstructInfo = npcConstructInfoOutcome.Info;
             if (npcConstructInfo == null)
             {
                 return;
@@ -96,7 +97,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         {
             try
             {
-                result.Add(await _constructService.GetConstructInfoAsync(id));
+                var constructInfoOutcome = await _constructService.GetConstructInfoAsync(id);
+                result.Add(constructInfoOutcome.Info);
             }
             catch (Exception)
             {
@@ -164,7 +166,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var returnToSector = false;
         if (context.Position.HasValue)
         {
-            var targetConstructInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
+            var targetConstructInfoOutcome = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
+            var targetConstructInfo = targetConstructInfoOutcome.Info;
             if (targetConstructInfo != null)
             {
                 var targetPos = targetConstructInfo.rData.position;
@@ -210,13 +213,15 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         try
         {
-            var npcConstructInfo = await _constructService.GetConstructInfoAsync(constructId);
+            var npcConstructInfoOutcome = await _constructService.GetConstructInfoAsync(constructId);
+            var npcConstructInfo = npcConstructInfoOutcome.Info;
             if (npcConstructInfo == null)
             {
                 return;
             }
 
-            var constructInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
+            var constructInfoOutcome = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
+            var constructInfo = constructInfoOutcome.Info;
             if (constructInfo == null)
             {
                 return;
@@ -286,7 +291,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             return new Vec3();
         }
 
-        var targetConstructInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
+        var targetConstructInfoOutcome = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
+        var targetConstructInfo = targetConstructInfoOutcome.Info;
         if (targetConstructInfo == null)
         {
             _logger.LogError(

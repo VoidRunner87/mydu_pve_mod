@@ -60,7 +60,8 @@ public class BehaviorContextController : Controller
             context.DisableAutoTargetMovePosition();
 
             var constructService = ModBase.ServiceProvider.GetRequiredService<IConstructService>();
-            var constructInfo = await constructService.GetConstructInfoAsync(request.TargetConstructId.Value);
+            var constructInfoOutcome = await constructService.GetConstructInfoAsync(request.TargetConstructId.Value);
+            var constructInfo = constructInfoOutcome.Info;
 
             if (constructInfo == null)
             {

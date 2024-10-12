@@ -67,7 +67,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Data\" />
-    <Folder Include="Common\Interfaces\" />
     <Folder Include="Features\Sector\Scripts\" />
     <Folder Include="Resources\" />
   </ItemGroup>

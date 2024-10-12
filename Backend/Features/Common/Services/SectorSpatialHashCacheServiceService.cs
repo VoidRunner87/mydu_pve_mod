@@ -31,7 +31,7 @@ public class SectorSpatialHashCacheServiceService(IServiceProvider provider) : I
         var items = await _repository.FindPlayerLiveConstructsOnSectorInstances(
             excludeSectorList:
             [
-                new Vec3() // Sector 0,0,0
+                // new Vec3() // Sector 0,0,0
             ]
         );
 

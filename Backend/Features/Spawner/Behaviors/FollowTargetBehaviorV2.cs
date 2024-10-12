@@ -51,7 +51,8 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         // first time initialize position
         if (!context.Position.HasValue)
         {
-            var npcConstructInfo = await _constructService.GetConstructInfoAsync(constructId);
+            var npcConstructInfoOutcome = await _constructService.GetConstructInfoAsync(constructId);
+            var npcConstructInfo = npcConstructInfoOutcome.Info;
             if (npcConstructInfo == null)
             {
                 return;

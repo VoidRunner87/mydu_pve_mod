@@ -134,8 +134,9 @@ public static class BehaviorContextNotificationExtensions
 
                     var constructService = eventArgs.Context.ServiceProvider
                         .GetRequiredService<IConstructService>();
-                    var constructInfo = await constructService.NoCache()
+                    var constructInfoOutcome = await constructService.NoCache()
                         .GetConstructInfoAsync(targetConstructId.Value);
+                    var constructInfo = constructInfoOutcome.Info;
 
                     if (constructInfo?.mutableData.pilot != null)
                     {

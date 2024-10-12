@@ -65,7 +65,16 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
         );
 
         var coreUnit = await _constructElementsService.NoCache().GetElement(constructId, _coreUnitElementId);
-        var constructInfo = await _constructService.GetConstructInfoAsync(constructId);
+        var constructInfoOutcome = await _constructService.GetConstructInfoAsync(constructId);
+        var constructInfo = constructInfoOutcome.Info;
+
+        if (!constructInfoOutcome.ConstructExists)
+        {
+            context.IsAlive = false;
+            context.Deactivate<AliveCheckBehavior>();
+            return;
+        }
+        
         if (constructInfo == null)
         {
             return;

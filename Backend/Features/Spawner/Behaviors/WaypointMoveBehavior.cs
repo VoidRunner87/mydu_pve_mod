@@ -44,7 +44,8 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
             context.SetAutoTargetMovePosition(context.TargetWaypoint.Position);
         }
         
-        var npcConstructInfo = await _constructService.GetConstructInfoAsync(constructId);
+        var npcConstructInfoOutcome = await _constructService.GetConstructInfoAsync(constructId);
+        var npcConstructInfo = npcConstructInfoOutcome.Info;
         if (npcConstructInfo == null)
         {
             return;

@@ -38,7 +38,8 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
 
         var targetConstructId = context.GetTargetConstructId();
         
-        var npcInfo = await _constructService.GetConstructInfoAsync(constructId);
+        var npcInfoOutcome = await _constructService.GetConstructInfoAsync(constructId);
+        var npcInfo = npcInfoOutcome.Info;
 
         if (npcInfo == null)
         {
@@ -59,8 +60,8 @@ public class RetreatBehavior(ulong constructId, IPrefab prefab) : IConstructBeha
             return;
         }
         
-        var targetConstructInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
-
+        var targetConstructInfoOutcome = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
+        var targetConstructInfo = targetConstructInfoOutcome.Info;
         if (targetConstructInfo == null)
         {
             context.SetAutoTargetMovePosition(context.Sector);

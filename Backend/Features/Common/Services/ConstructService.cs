@@ -24,22 +24,30 @@ public class ConstructService(IServiceProvider provider) : IConstructService
     private readonly IPostgresConnectionFactory _factory = provider.GetRequiredService<IPostgresConnectionFactory>();
     private readonly IClusterClient _orleans = provider.GetOrleans();
 
-    public async Task<ConstructInfo?> GetConstructInfoAsync(ulong constructId)
+    public async Task<ConstructInfoOutcome> GetConstructInfoAsync(ulong constructId)
     {
         try
         {
             if (constructId == 0)
             {
-                return null;
+                return ConstructInfoOutcome.DoesNotExist();
             }
 
-            return await _orleans.GetConstructInfoGrain(constructId).Get();
+            var info = await _orleans.GetConstructInfoGrain(constructId).Get();
+
+            return new ConstructInfoOutcome(true, info);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to fetch construct information for {ConstructId}", constructId);
 
-            return null;
+            if (await Exists(constructId))
+            {
+                // indicates that the construct exists, but we failed to get info on it
+                return new ConstructInfoOutcome(true, null);
+            }
+
+            return ConstructInfoOutcome.DoesNotExist();
         }
     }
 
