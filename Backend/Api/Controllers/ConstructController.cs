@@ -119,7 +119,8 @@ public class ConstructController : Controller
         
         foreach (var elementId in elementIds)
         {
-            var def = bank.GetDefinition(elementId);
+            var element = await constructElementsGrain.GetElement(elementId);
+            var def = bank.GetDefinition(element.elementType);
 
             if (def == null)
             {
@@ -148,7 +149,7 @@ public class ConstructController : Controller
                     }
                 );
                 
-                report.Add($"Updated {elementId} | {def.ItemType().itemType} | {def.Name} to {propertyValue.value}");
+                report.Add($"Updated {elementId} | {def.ItemType().itemType} | {def.Name} | {propName} = {propertyValue.value}");
             }
         }
 
