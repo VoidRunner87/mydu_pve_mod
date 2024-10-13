@@ -10,6 +10,7 @@ using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
 using NQutils.Def;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
@@ -104,6 +105,7 @@ public class ConstructController : Controller
         return Ok(result);
     }
 
+    [SwaggerOperation("Remove a construct's buffs, by resetting their properties back to the original values on the BO")]
     [Route("{constructId:long}/sanitize")]
     [HttpPost]
     public async Task<IActionResult> Sanitize(ulong constructId)
