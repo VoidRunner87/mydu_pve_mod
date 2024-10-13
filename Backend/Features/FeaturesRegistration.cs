@@ -48,6 +48,7 @@ public static class FeaturesRegistration
                 TimeSpan.FromSeconds(5)
             )
         );
+        services.AddSingleton<INpcRadarService, NpcRadarService>();
         services.AddSingleton<IErrorRepository, ErrorRepository>();
         services.AddSingleton<IErrorService, ErrorService>();
         services.AddSingleton<IErrorService, ErrorService>();

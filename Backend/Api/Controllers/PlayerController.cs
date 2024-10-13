@@ -81,22 +81,17 @@ public class PlayerController : Controller
     {
         public TimeSpan Interval { get; set; }
         public IEnumerable<Item> Items { get; set; }
-        
-        public class Item
-        {
-            public string ElementTypeName { get; set; }
-            public string Skin { get; set; }
-        }
     }
     
     public class GiveElementSkinsRequest
     {
         public IEnumerable<Item> Items { get; set; }
-        
-        public class Item
-        {
-            public ulong ElementTypeId { get; set; }
-            public string Skin { get; set; }
-        }
+    }
+    
+    public class Item
+    {
+        public string ElementTypeName { get; set; }
+        public ulong ElementTypeId { get; set; }
+        public string Skin { get; set; }
     }
 }
