@@ -65,7 +65,7 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
             {
                 logger.LogError(e, "Failed to send {Q:N2}h quanta to player {Player}", valuePerPlayer, playerId);
             }
-            
+
             try
             {
                 var transfer = new WalletTransfer
@@ -110,7 +110,8 @@ public class GiveQuantaToPlayer(ScriptActionItem actionItem) : IScriptAction
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Failed to Execute Quanta Transfer Auxiliary operations for Player {Player}", playerId);
+                logger.LogError(e, "Failed to Execute Quanta Transfer Auxiliary operations for Player {Player}",
+                    playerId);
             }
         }
 

@@ -73,13 +73,13 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         if (!context.Position.HasValue)
         {
-            var npcConstructInfo = await _constructService.NoCache().GetConstructInfoAsync(constructId);
-            if (npcConstructInfo == null)
+            var npcConstructTransform = await _constructService.NoCache().GetConstructTransformAsync(constructId);
+            if (!npcConstructTransform.ConstructExists)
             {
                 return;
             }
 
-            context.Position = npcConstructInfo.rData.position;
+            context.Position = npcConstructTransform.Position;
         }
 
         var npcPos = context.Position.Value;
@@ -96,7 +96,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         {
             try
             {
-                result.Add(await _constructService.GetConstructInfoAsync(id));
+                var constructInfoOutcome = await _constructService.GetConstructInfoAsync(id);
+                result.Add(constructInfoOutcome.Info);
             }
             catch (Exception)
             {
@@ -164,10 +165,10 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var returnToSector = false;
         if (context.Position.HasValue)
         {
-            var targetConstructInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
-            if (targetConstructInfo != null)
+            var targetConstructTransformOutcome = await _constructService.GetConstructTransformAsync(targetConstructId.Value);
+            if (!targetConstructTransformOutcome.ConstructExists)
             {
-                var targetPos = targetConstructInfo.rData.position;
+                var targetPos = targetConstructTransformOutcome.Position;
 
                 var targetDistance = (targetPos - context.Position.Value).Size();
                 if (targetDistance > 10 * DistanceHelpers.OneSuInMeters)
@@ -210,14 +211,15 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         try
         {
-            var npcConstructInfo = await _constructService.GetConstructInfoAsync(constructId);
+            var npcConstructInfoOutcome = await _constructService.GetConstructInfoAsync(constructId);
+            var npcConstructInfo = npcConstructInfoOutcome.Info;
             if (npcConstructInfo == null)
             {
                 return;
             }
 
-            var constructInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
-            if (constructInfo == null)
+            var targetConstructExists = await _constructService.Exists(targetConstructId.Value);
+            if (!targetConstructExists)
             {
                 return;
             }
@@ -286,8 +288,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             return new Vec3();
         }
 
-        var targetConstructInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
-        if (targetConstructInfo == null)
+        var targetConstructTransformOutcome = await _constructService.GetConstructTransformAsync(targetConstructId.Value);
+        if (!targetConstructTransformOutcome.ConstructExists)
         {
             _logger.LogError(
                 "Construct {Construct} Target construct info {Target} is null", constructId,
@@ -296,7 +298,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             return new Vec3();
         }
 
-        var targetPos = targetConstructInfo.rData.position;
+        var targetPos = targetConstructTransformOutcome.Position;
 
         var distanceGoal = prefab.DefinitionItem.TargetDistance;
         var offset = new Vec3 { y = distanceGoal };

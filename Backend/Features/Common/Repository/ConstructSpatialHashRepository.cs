@@ -68,6 +68,12 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
         
         var excludeSectorQueries = excludeSectorList.Select(v => $"(C.sector_x != {(long)v.x} AND C.sector_y != {(long)v.y} AND C.sector_z != {(long)v.z})");
         var excludeSectorQuery = string.Join(" AND ", excludeSectorQueries);
+        var excludeSectorQueryAnd = $" AND ({excludeSectorQuery})";
+
+        if (!excludeSectorList.Any())
+        {
+            excludeSectorQueryAnd = "";
+        }
         
         var result = (await db.QueryAsync<ConstructSectorRow>(
             $"""
@@ -84,9 +90,7 @@ public class ConstructSpatialHashRepository(IServiceProvider serviceProvider) : 
              	(O.player_id IS NULL AND O.organization_id IS NOT NULL)
              ) AND (
                  {includeSectorQuery}
-             ) AND (
-                 {excludeSectorQuery}
-             )
+             ) {excludeSectorQueryAnd}
              """
         )).ToList();
 

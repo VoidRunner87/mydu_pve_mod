@@ -15,6 +15,7 @@ namespace Mod.DynamicEncounters.Api.Controllers;
 [Route("warp")]
 public class WarpController : Controller
 {
+    [HttpPost]
     [Route("anchor")]
     public async Task<IActionResult> CreateWarpAnchor([FromBody] WarpAnchorRequest request)
     {

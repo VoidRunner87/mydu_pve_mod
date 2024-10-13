@@ -12,18 +12,44 @@ public class CachedConstructService(
     TimeSpan controlCheckCacheSpan
 ) : IConstructService
 {
-    private readonly TemporaryMemoryCache<ulong, ConstructInfo> _constructInfos = new(nameof(_constructInfos), constructInfoCacheSpan);
+    private readonly TemporaryMemoryCache<ulong, ConstructInfoOutcome> _constructInfos = new(nameof(_constructInfos), constructInfoCacheSpan);
     private readonly TemporaryMemoryCache<ulong, Velocities> _velocities = new(nameof(_velocities), constructInfoCacheSpan);
     private readonly TemporaryMemoryCache<ulong, bool> _beingControlled = new(nameof(_beingControlled), controlCheckCacheSpan);
     private readonly TemporaryMemoryCache<ulong, bool> _inSafeZone = new(nameof(_inSafeZone), controlCheckCacheSpan);
     private readonly TemporaryMemoryCache<ulong, bool> _identifyNotification = new(nameof(_identifyNotification), constructInfoCacheSpan);
     private readonly TemporaryMemoryCache<ulong, bool> _attackingNotification = new(nameof(_attackingNotification), constructInfoCacheSpan);
 
-    public async Task<ConstructInfo?> GetConstructInfoAsync(ulong constructId)
+    public async Task<ConstructInfoOutcome> GetConstructInfoAsync(ulong constructId)
     {
         return await _constructInfos.TryGetOrSetValue(
             constructId,
             async () => await service.GetConstructInfoAsync(constructId)
+        );
+    }
+
+    public Task<ConstructTransformOutcome> GetConstructTransformFromDbAsync(ulong constructId)
+    {
+        return service.GetConstructTransformFromDbAsync(constructId);
+    }
+
+    public async Task<ConstructTransformOutcome> GetConstructTransformAsync(ulong constructId)
+    {
+        var constructInfoOutcome = await GetConstructInfoAsync(constructId);
+        
+        if (constructInfoOutcome.ConstructExists && constructInfoOutcome.Info == null)
+        {
+            return await GetConstructTransformFromDbAsync(constructId);
+        }
+
+        if (!constructInfoOutcome.ConstructExists)
+        {
+            return ConstructTransformOutcome.DoesNotExist();
+        }
+
+        return new ConstructTransformOutcome(
+            constructInfoOutcome.ConstructExists,
+            constructInfoOutcome.Info!.rData.position,
+            constructInfoOutcome.Info!.rData.rotation
         );
     }
 

@@ -38,7 +38,8 @@ public class SendDirectMessageAction(ScriptActionItem actionItem) : IScriptActio
             constructCode = $"{context.ConstructId}";
             constructCode = constructCode[^3..];
             
-            var constructInfo = await constructService.GetConstructInfoAsync(context.ConstructId.Value);
+            var constructInfoOutcome = await constructService.GetConstructInfoAsync(context.ConstructId.Value);
+            var constructInfo = constructInfoOutcome.Info;
             if (constructInfo != null)
             {
                 constructName = constructInfo.rData.name;

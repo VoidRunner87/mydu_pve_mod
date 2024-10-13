@@ -96,7 +96,8 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
         var npcShotGrain = _orleans.GetNpcShotGrain();
 
-        var constructInfo = await _constructService.GetConstructInfoAsync(constructId);
+        var constructInfoOutcome = await _constructService.GetConstructInfoAsync(constructId);
+        var constructInfo = constructInfoOutcome.Info;
         if (constructInfo == null)
         {
             return;
@@ -109,7 +110,8 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
             return;
         }
 
-        var targetInfo = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
+        var targetInfoOutcome = await _constructService.GetConstructInfoAsync(targetConstructId.Value);
+        var targetInfo = targetInfoOutcome.Info;
         if (targetInfo == null)
         {
             return;

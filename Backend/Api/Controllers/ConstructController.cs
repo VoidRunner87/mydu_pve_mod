@@ -1,20 +1,16 @@
-﻿using System;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Backend;
-using BotLib.Generated;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Loot.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
-using Mod.DynamicEncounters.Features.Spawner.Behaviors;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
-using NQ.Visibility;
 using NQutils.Def;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
@@ -109,5 +105,56 @@ public class ConstructController : Controller
         return Ok(result);
     }
 
-    
+    [SwaggerOperation("Remove a construct's buffs, by resetting their properties back to the original values on the BO")]
+    [Route("{constructId:long}/sanitize")]
+    [HttpPost]
+    public async Task<IActionResult> Sanitize(ulong constructId)
+    {
+        var provider = ModBase.ServiceProvider;
+        var orleans = provider.GetOrleans();
+        var bank = provider.GetGameplayBank();
+        
+        var constructElementsGrain = orleans.GetConstructElementsGrain(constructId);
+        var elementIds = await constructElementsGrain.GetElementsOfType<Element>();
+
+        var report = new List<string>();
+        
+        foreach (var elementId in elementIds)
+        {
+            var element = await constructElementsGrain.GetElement(elementId);
+            var def = bank.GetDefinition(element.elementType);
+
+            if (def == null)
+            {
+                report.Add($"Definition for {elementId} was null");
+                continue;
+            }
+            
+            foreach (var dynamicProperty in def.GetDynamicProperties())
+            {
+                var propName = dynamicProperty.Name;
+
+                var propertyValue = def.GetStaticPropertyOpt(propName);
+                if (propertyValue == null)
+                {
+                    continue;
+                }
+
+                await constructElementsGrain.UpdateElementProperty(
+                    new ElementPropertyUpdate
+                    {
+                        name = propName,
+                        constructId = constructId,
+                        elementId = elementId,
+                        value = propertyValue,
+                        timePoint = TimePoint.Now()
+                    }
+                );
+                
+                report.Add($"Updated {elementId} | {def.ItemType().itemType} | {def.Name} | {propName} = {propertyValue.value}");
+            }
+        }
+
+        return Ok(report);
+    }
 }
