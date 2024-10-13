@@ -49,7 +49,7 @@ public class PlayerController : Controller
             );
         }
 
-        return Ok($"Sent {playerIds.Count} messages");
+        return Ok($"Enqueued {playerIds.Count} messages");
     }
     
     [HttpPost]
