@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
@@ -38,13 +39,27 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
 
     public async Task TickAsync(BehaviorContext context)
     {
+        // waits a bit before evaluating if alive or dead
+        var lifeTimeSpan = DateTime.UtcNow - context.StartedAt;
+        if (lifeTimeSpan < TimeSpan.FromSeconds(3))
+        {
+            return;
+        }
+        
         if (!context.IsAlive || !context.IsBehaviorActive<AliveCheckBehavior>())
         {
-            await context.NotifyConstructDestroyedAsync(new BehaviorEventArgs(constructId, prefab, context));
-            await _handleRepository.RemoveHandleAsync(constructId);
             ConstructBehaviorLoop.ConstructHandles.TryRemove(constructId, out _);
+            
+            var notAliveCoreUnit = await _constructElementsService
+                .NoCache()
+                .GetElement(constructId, _coreUnitElementId);
+            if (notAliveCoreUnit.IsCoreDestroyed())
+            {
+                await context.NotifyConstructDestroyedAsync(new BehaviorEventArgs(constructId, prefab, context));
+            }
 
             _logger.LogInformation("Construct {Construct} NOT ALIVE", constructId);
+            await _handleRepository.RemoveHandleAsync(constructId);
             
             return;
         }
@@ -64,7 +79,9 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
             }
         );
 
-        var coreUnit = await _constructElementsService.NoCache().GetElement(constructId, _coreUnitElementId);
+        var coreUnit = await _constructElementsService
+            .NoCache()
+            .GetElement(constructId, _coreUnitElementId);
         var constructInfoOutcome = await _constructService.GetConstructInfoAsync(constructId);
         var constructInfo = constructInfoOutcome.Info;
 
@@ -80,7 +97,7 @@ public class AliveCheckBehavior(ulong constructId, IPrefab prefab) : IConstructB
             return;
         }
 
-        if (coreUnit.IsCoreDestroyed() || constructInfo.IsAbandoned())
+        if (coreUnit.IsCoreDestroyed())
         {
             await context.NotifyConstructDestroyedAsync(new BehaviorEventArgs(constructId, prefab, context));
             context.Deactivate<AliveCheckBehavior>();

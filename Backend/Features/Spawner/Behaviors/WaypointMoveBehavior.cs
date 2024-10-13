@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -8,6 +9,7 @@ using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Features.Spawner.Extensions;
 using Mod.DynamicEncounters.Helpers;
+using Newtonsoft.Json.Linq;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors;
 
@@ -38,10 +40,18 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
             return;
         }
 
-        context.TargetWaypoint = context.Waypoints.FirstOrDefault(x => !x.Visited);
-        if (context.TargetWaypoint != null)
+        if (!context.IsWaypointListInitialized())
         {
-            context.SetAutoTargetMovePosition(context.TargetWaypoint.Position);
+            var unparsedWaypointList = context.GetUnparsedWaypointList();
+            var waypointList = ParseWaypointList(unparsedWaypointList);
+            context.SetWaypointList(waypointList);
+            context.TagWaypointListInitialized();
+        }
+
+        var targetWaypoint = context.GetNextNotVisited();
+        if (targetWaypoint != null)
+        {
+            context.SetAutoTargetMovePosition(targetWaypoint.Position);
         }
         
         var npcTransformOutcome = await _constructService.GetConstructTransformAsync(constructId);
@@ -52,9 +62,22 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var npcPos = npcTransformOutcome.Position;
 
         // Arrived Near Destination
-        if (context.GetTargetMovePosition().Dist(npcPos) <= 50000 && context.TargetWaypoint != null)
+        if (context.GetTargetMovePosition().Dist(npcPos) <= 50000 && targetWaypoint != null)
         {
-            context.TargetWaypoint.Visited = true;
+            targetWaypoint.Visited = true;
+        }
+    }
+
+    private IEnumerable<Waypoint> ParseWaypointList(object obj)
+    {
+        try
+        {
+            return JArray.FromObject(obj).ToObject<List<Waypoint>>();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to parse Waypoint List. Assume Empty");
+            return new List<Waypoint>();
         }
     }
 

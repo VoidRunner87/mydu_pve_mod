@@ -55,9 +55,6 @@ public class BehaviorContext(
     [JsonIgnore]
     public IPrefab Prefab { get; set; } = prefab;
 
-    public List<Waypoint> Waypoints { get; set; } = [];
-    public Waypoint? TargetWaypoint { get; set; }
-
     public DateTime? TargetSelectedTime { get; set; }
 
     public bool IsAlive { get; set; } = true;
@@ -136,6 +133,54 @@ public class BehaviorContext(
         Properties.Set(nameof(DynamicProperties.TargetSelectedTime), DateTime.UtcNow);
     }
 
+    public void SetWaypointList(IEnumerable<Waypoint> waypoints)
+    {
+        Properties.Set(nameof(DynamicProperties.WaypointList), waypoints.ToList());
+    }
+
+    public Waypoint? GetNextNotVisited()
+    {
+        return GetWaypointList().FirstOrDefault(x => !x.Visited);
+    }
+
+    public object GetUnparsedWaypointList()
+    {
+        TryGetProperty(
+            nameof(DynamicProperties.WaypointList),
+            out object waypointList,
+            new List<Waypoint>()
+        );
+
+        return waypointList;
+    }
+
+    public IEnumerable<Waypoint> GetWaypointList()
+    {
+        return this.GetOverrideOrDefault(
+            nameof(DynamicProperties.WaypointList),
+            (List<Waypoint>?) []
+        );
+    }
+
+    public bool IsWaypointListInitialized()
+    {
+        TryGetProperty(
+            nameof(DynamicProperties.WaypointListInitialized),
+            out var initDone,
+            false
+        );
+
+        return initDone;
+    }
+
+    public void TagWaypointListInitialized()
+    {
+        SetProperty(
+            nameof(DynamicProperties.WaypointListInitialized),
+            true
+        );
+    }
+
     public void ClearExpiredTimerProperties()
     {
         var expiredList = PropertyOverrides
@@ -153,6 +198,8 @@ public class BehaviorContext(
         public const byte TargetMovePosition = 1;
         public const byte TargetConstructId = 2;
         public const byte TargetSelectedTime = 3;
+        public const byte WaypointList = 4;
+        public const byte WaypointListInitialized = 5;
     }
 
     public class TimerPropertyValue(DateTime expiresAt, object? value)

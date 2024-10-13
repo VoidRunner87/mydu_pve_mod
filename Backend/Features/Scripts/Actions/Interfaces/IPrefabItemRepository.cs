@@ -10,5 +10,5 @@ public interface IPrefabItemRepository
     Task<IEnumerable<PrefabItem>> GetAllAsync();
     Task AddAsync(PrefabItem model);
     Task DeleteAsync(Guid id);
-    Task<PrefabItem> FindAsync(string name);
+    Task<PrefabItem?> FindAsync(string name);
 }

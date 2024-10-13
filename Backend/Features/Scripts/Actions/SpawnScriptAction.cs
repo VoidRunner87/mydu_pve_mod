@@ -150,7 +150,6 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
             behaviorList.AddRange(constructDefItem.InitialBehaviors);
         }
 
-        // Keeping track of what this script instance spawned
         await constructHandleRepo.AddAsync(
             new ConstructHandleItem
             {
@@ -166,6 +165,11 @@ public class SpawnScriptAction(ScriptActionItem actionItem) : IScriptAction
                 {
                     Tags = actionItem.Tags,
                     Behaviors = behaviorList,
+                    Context = context.Properties
+                        .ToDictionary(
+                            k => k.Key,
+                            v => v.Value
+                        )
                 },
                 OnCleanupScript = constructDef.DefinitionItem.ServerProperties.IsDynamicWreck
                     ? "despawn-wreck"

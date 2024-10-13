@@ -110,7 +110,7 @@ public class PrefabItemDatabaseRepository(IServiceProvider provider) : IPrefabIt
         throw new NotImplementedException();
     }
 
-    private PrefabItem MapToModel(DbRow row)
+    private PrefabItem? MapToModel(DbRow row)
     {
         var result = JsonConvert.DeserializeObject<PrefabItem>(row.content);
         result.Id = row.id;

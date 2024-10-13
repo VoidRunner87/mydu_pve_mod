@@ -23,7 +23,8 @@ public class CachedConstructService(
     {
         return await _constructInfos.TryGetOrSetValue(
             constructId,
-            async () => await service.GetConstructInfoAsync(constructId)
+            async () => await service.GetConstructInfoAsync(constructId),
+            outcome => !outcome.ConstructExists || outcome.Info == null
         );
     }
 
