@@ -52,6 +52,18 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
         if (targetWaypoint != null)
         {
             context.SetAutoTargetMovePosition(targetWaypoint.Position);
+
+            if (context.Position.HasValue)
+            {
+                var distance = (targetWaypoint.Position! - context.Position.Value).Size();
+
+                _logger.LogDebug(
+                    "Construct {Construct} Navigates to Waypoint {TargetWaypoint}. Distance {Distance}",
+                    constructId,
+                    targetWaypoint.Position,
+                    Math.Round(distance / DistanceHelpers.OneSuInMeters)
+                );
+            }
         }
         
         var npcTransformOutcome = await _constructService.GetConstructTransformAsync(constructId);

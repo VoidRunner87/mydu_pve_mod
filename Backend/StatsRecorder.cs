@@ -46,6 +46,7 @@ public static class StatsRecorder
 
     // Static members to store stats for Movement and Targeting
     private static readonly ConcurrentDictionary<BehaviorTaskCategory, Stat> Stats = new();
+    private static readonly ConcurrentDictionary<string, Stat> CustomStats = new();
 
     // Methods to record movement stats
     public static void Record(BehaviorTaskCategory category, long time)
@@ -64,12 +65,35 @@ public static class StatsRecorder
                 return stat;
             });
     }
+    
+    public static void Record(string name, long time)
+    {
+        CustomStats.AddOrUpdate(
+            name,
+            _ =>
+            {
+                var stat = new Stat();
+                stat.AddTime(time);
+                return stat;
+            },
+            (taskCategory, stat) =>
+            {
+                stat.AddTime(time);
+                return stat;
+            });
+    }
 
     public static ConcurrentDictionary<BehaviorTaskCategory, Stat> GetStats() => Stats;
+    public static ConcurrentDictionary<string, Stat> GetCustomStats() => CustomStats;
     
     public static void ClearAll()
     {
         foreach (var kvp in Stats)
+        {
+            kvp.Value.Clear();
+        }
+
+        foreach (var kvp in CustomStats)
         {
             kvp.Value.Clear();
         }

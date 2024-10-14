@@ -287,8 +287,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
             SELECT CH.construct_id, SI.expires_at - NOW() time_span FROM public.mod_npc_construct_handle CH
             INNER JOIN public.mod_sector_instance SI ON (SI.sector_x = CH.sector_x AND SI.sector_y = CH.sector_y AND SI.sector_z = CH.sector_z)
             INNER JOIN public.construct C ON (C.id = CH.construct_id)
-            WHERE CH.json_properties->'Tags' @> '"poi"' AND
-            	CH.deleted_at IS NULL AND
+            WHERE CH.deleted_at IS NULL AND
             	C.owner_entity_id IS NULL AND
             	C.deleted_at IS NULL
             """)).ToList();

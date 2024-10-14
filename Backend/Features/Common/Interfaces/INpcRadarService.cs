@@ -7,5 +7,10 @@ namespace Mod.DynamicEncounters.Features.Common.Interfaces;
 
 public interface INpcRadarService
 {
-    Task<IEnumerable<NpcRadarContact>> ScanForContacts(ulong constructId, Vec3 position, double radius);
+    Task<IEnumerable<NpcRadarContact>> ScanForPlayerContacts(
+        ulong constructId,
+        Vec3 position,
+        double radius,
+        int limit = 5
+    );
 }

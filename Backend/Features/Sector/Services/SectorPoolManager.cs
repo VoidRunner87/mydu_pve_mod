@@ -358,7 +358,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
 
     public async Task ActivateEnteredSectors()
     {
-        var sectorsToActivate = (await _sectorInstanceRepository.FindSectorsRequiringStartupAsync())
+        var sectorsToActivate = (await _sectorInstanceRepository
+                .ScanForInactiveSectorsVisitedByPlayers(DistanceHelpers.OneSuInMeters * 10))
             .DistinctBy(x => x.Sector)
             .ToList();
 
@@ -381,7 +382,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         var scriptService = serviceProvider.GetRequiredService<IScriptService>();
         var eventService = serviceProvider.GetRequiredService<IEventService>();
         var random = serviceProvider.GetRandomProvider().GetRandom();
-        
+
         var constructs = (await spatialHashRepository.FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
             .ToList();
 

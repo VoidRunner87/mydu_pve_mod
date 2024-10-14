@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Backend.Database;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Common.Vector;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
+using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Features.Spawner.Extensions;
 using NQ;
 using NQutils.Def;
@@ -173,6 +175,20 @@ public class BehaviorContextController : Controller
         }
 
         context.EnableAutoSelectAttackTargetConstruct();
+
+        return Ok();
+    }
+
+    [HttpPost]
+    [Route("update-waypoints")]
+    public IActionResult UpdateWaypointList(ulong constructId, [FromBody] IEnumerable<Waypoint> waypoints)
+    {
+        if (!ConstructBehaviorContextCache.Data.TryGetValue(constructId, out var context))
+        {
+            return NotFound();
+        }
+        
+        context.SetWaypointList(waypoints);
 
         return Ok();
     }

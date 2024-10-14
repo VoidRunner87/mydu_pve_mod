@@ -17,6 +17,7 @@ public interface ISectorInstanceRepository : IRepository<SectorInstance>
     Task SetLoadedAsync(Guid id, bool loaded);
     Task TagAsStartedAsync(Guid id);
     Task<IEnumerable<SectorInstance>> FindSectorsRequiringStartupAsync();
+    Task<IEnumerable<SectorInstance>> ScanForInactiveSectorsVisitedByPlayers(double distance);
     Task ExpireAllAsync();
     Task ForceExpireAllAsync();
     Task<long> GetCountWithTagAsync(string tag);

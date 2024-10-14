@@ -326,6 +326,37 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
 
         return queryResult.Select(MapToModel);
     }
+    
+    public async Task<IEnumerable<SectorInstance>> ScanForInactiveSectorsVisitedByPlayers(double distance)
+    {
+        using var db = _connectionFactory.Create();
+        db.Open();
+
+        var queryResult = await db.QueryAsync<DbRow>(
+            """
+            SELECT 
+            	SI.* 
+            FROM public.construct C
+            LEFT JOIN mod_npc_construct_handle CH ON (CH.construct_id = C.id)
+            INNER JOIN public.mod_sector_instance SI 
+            	ON ST_DWithin(
+            		ST_MakePoint(SI.sector_x, SI.sector_y, SI.sector_z),
+            		C.position,
+            		@distance
+            	)
+            WHERE SI.started_at IS NULL
+            	AND CH.id IS NULL
+            	AND C.deleted_at IS NULL
+            	AND (C.json_properties->>'isUntargetable' = 'false' OR C.json_properties->>'isUntargetable' IS NULL)
+            	AND (C.json_properties->>'kind' IN ('4', '5'))
+            	AND (C.owner_entity_id IS NOT NULL)
+            	AND ST_3DDistance(C.position, ST_MakePoint(SI.sector_x, SI.sector_y, SI.sector_z)) <= @distance
+            """,
+            new { distance }
+        );
+        
+        return queryResult.Select(MapToModel);
+    }
 
     private struct DbRow
     {

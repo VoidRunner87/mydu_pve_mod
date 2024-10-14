@@ -8,6 +8,7 @@ using Mod.DynamicEncounters.Features.Common.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Extensions;
+using Mod.DynamicEncounters.Helpers;
 using NQ;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Data;
@@ -152,6 +153,14 @@ public class BehaviorContext(
         );
 
         return waypointList;
+    }
+
+    public double CalculateBrakingDistance()
+    {
+        var velSize = Velocity.Size();
+        var brakingAcceleration = Prefab.DefinitionItem.AccelerationG * 9.81f;
+        
+        return velSize * velSize / (2 * brakingAcceleration);
     }
 
     public IEnumerable<Waypoint> GetWaypointList()

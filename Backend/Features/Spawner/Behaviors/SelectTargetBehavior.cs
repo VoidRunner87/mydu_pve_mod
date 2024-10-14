@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentMigrator.Runner;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common.Vector;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
-using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using Mod.DynamicEncounters.Features.Sector.Services;
@@ -30,6 +30,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
     private IConstructGrain _constructGrain;
     private IConstructService _constructService;
     private ISectorPoolManager _sectorPoolManager;
+    private INpcRadarService _npcRadarService;
 
     public bool IsActive() => _active;
 
@@ -44,6 +45,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         _constructGrain = _orleans.GetConstructGrain(constructId);
         _constructService = provider.GetRequiredService<IConstructService>();
         _sectorPoolManager = provider.GetRequiredService<ISectorPoolManager>();
+        _npcRadarService = provider.GetRequiredService<INpcRadarService>();
 
         return Task.CompletedTask;
     }
@@ -55,7 +57,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             _active = false;
             return;
         }
-        
+
         var targetConstructId = context.GetTargetConstructId();
 
         var targetSpan = DateTime.UtcNow - context.TargetSelectedTime;
@@ -89,10 +91,28 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         _logger.LogInformation("Construct {Construct} at Grid {Grid}", constructId, sectorGrid);
 
-        var constructsOnSector = SectorGridConstructCache.FindAroundGrid(sectorGrid);
+        // var constructsOnSector = SectorGridConstructCache.FindAroundGrid(sectorGrid);
+        HashSet<ulong> radarContacts = [];
+
+        if (context.Position.HasValue)
+        {
+            var spatialQuerySw = new StopWatch();
+            spatialQuerySw.Start();
+            
+            radarContacts = (await _npcRadarService.ScanForPlayerContacts(constructId, context.Position.Value,
+                    DistanceHelpers.OneSuInMeters * 2.5)
+                )
+                .Select(x => x.ConstructId)
+                .ToHashSet();
+
+            // remove self
+            radarContacts.Remove(constructId);
+            
+            StatsRecorder.Record("NPC_Radar", sw.ElapsedMilliseconds);
+        }
 
         var result = new List<ConstructInfo>();
-        foreach (var id in constructsOnSector)
+        foreach (var id in radarContacts)
         {
             try
             {
@@ -165,7 +185,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var returnToSector = false;
         if (context.Position.HasValue)
         {
-            var targetConstructTransformOutcome = await _constructService.GetConstructTransformAsync(targetConstructId.Value);
+            var targetConstructTransformOutcome =
+                await _constructService.GetConstructTransformAsync(targetConstructId.Value);
             if (!targetConstructTransformOutcome.ConstructExists)
             {
                 var targetPos = targetConstructTransformOutcome.Position;
@@ -288,7 +309,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             return new Vec3();
         }
 
-        var targetConstructTransformOutcome = await _constructService.GetConstructTransformAsync(targetConstructId.Value);
+        var targetConstructTransformOutcome =
+            await _constructService.GetConstructTransformAsync(targetConstructId.Value);
         if (!targetConstructTransformOutcome.ConstructExists)
         {
             _logger.LogError(
