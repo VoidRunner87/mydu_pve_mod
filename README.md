@@ -43,6 +43,11 @@ Before starting, know this:
       vpcbr:
         ipv4_address: 10.5.0.21
 ```
+* Modify your postgres image to use postgis - for geo-spatial querying
+```yaml
+  postgres:
+    image: postgis/postgis:11-3.3
+```
 
 * Create a bot account on the backoffice - you need the roles Game and Bot at least
 * Append to the `.env` file on mydu-server root folder with the credentials of the bot and a name for the Chat window - PVE for instance
