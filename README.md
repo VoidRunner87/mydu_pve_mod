@@ -30,11 +30,16 @@ Before starting, know this:
 * Add it to the docker-compose of myDU:
 ```yaml
   mod_dynamic_encounters:
-    image: voidrunner7891/dynamic_encounters:latest
+    image: voidrunner7891/dynamic_encounters
+    ports:
+      - "8080:8080"
     environment:
+      QUEUEING: http://queueing:9630
       BOT_LOGIN: ${PVE_BOT_USERNAME}
       BOT_PASSWORD: ${PVE_BOT_PASSWORD}
       BOT_PREFIX: ${PVE_BOT_PREFIX}
+      CORS_ALLOW_ALL: 'true'
+      API_ENABLED: 'true'
     volumes:
       - ${DATAPATH}:/data
       - ${LOGPATH}:/logs
