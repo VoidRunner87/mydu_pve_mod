@@ -123,7 +123,7 @@ public class ModBase
             .AddInitializableSingleton<IGameplayBank, GameplayBank>()
             .AddSingleton<ILocalizationManager, LocalizationManager>()
             .AddTransient<IDataAccessor, DataAccessor>()
-            .AddLogging(logging => logging.Setup(logWebHostInfo: true))
+            .AddLogging(logging => logging.SetupPveModLog(logWebHostInfo: true))
             .AddOrleansClient("IntegrationTests")
             .AddHttpClient()
             .AddTransient<NQutils.Stats.IStats, NQutils.Stats.FakeIStats>()

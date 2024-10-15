@@ -76,6 +76,10 @@ public class MyDuMod : IMod
         switch ((ActionType)action.actionId)
         {
             case ActionType.LoadNpcApp:
+                await InjectJs(playerId, Resources.CommonJs);
+                await InjectJs(playerId, Resources.CreateRootDivJs);
+                await InjectCss(playerId, Resources.NpcAppCss);
+                await InjectJs(playerId, Resources.NpcAppJs);
                 await UploadJson(playerId, "faction-quests", new object[]{
                     new { faction = 3, title = "Disrupt UEF Supplies", description = "" },
                     new { faction = 3, title = "Disrupt UEF Supplies", description = "" },
@@ -83,10 +87,6 @@ public class MyDuMod : IMod
                     new { faction = 3, title = "Disrupt UEF Supplies", description = "" },
                     new { faction = 3, title = "Disrupt UEF Supplies", description = "" },
                 });
-                await InjectJs(playerId, Resources.CommonJs);
-                await InjectJs(playerId, Resources.CreateRootDivJs);
-                await InjectCss(playerId, Resources.NpcAppCss);
-                await InjectJs(playerId, Resources.NpcAppJs);
                 break;
             case ActionType.CloseNpcApp:
                 await InjectJs(playerId, "modApi.removeAppRoot()");

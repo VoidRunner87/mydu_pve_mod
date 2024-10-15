@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Backend;
 using Microsoft.AspNetCore.Mvc;
@@ -103,6 +104,39 @@ public class ConstructController : Controller
         var result = await constructService.TryVentShieldsAsync((ulong)constructId);
         
         return Ok(result);
+    }
+
+    [Route("{constructId:long}/containers")]
+    [HttpGet]
+    public async Task<IActionResult> ListElements(ulong constructId)
+    {
+        var provider = ModBase.ServiceProvider;
+        var bank = provider.GetGameplayBank();
+        var constructElementsService = provider.GetRequiredService<IConstructElementsService>();
+        var containerElements = await constructElementsService.GetContainerElements(constructId);
+
+        var elementInfoListTask = containerElements
+            .Select(x => constructElementsService.GetElement(constructId, x));
+
+        var elementInfos = (await Task.WhenAll(elementInfoListTask))
+            .Select(x => new
+            {
+                x.elementType,
+                elementName = bank.GetDefinition(x.elementType)?.Name,
+                x.position,
+                x.elementId,
+                x.rotation,
+                serverProps = x.serverProperties.ToDictionary(
+                    k => k.Key,
+                    v => v.Value.value
+                ),
+                props = x.properties.ToDictionary(
+                    k => k.Key,
+                    v => v.Value.value
+                )
+            });
+        
+        return Ok(elementInfos);
     }
 
     [SwaggerOperation("Remove a construct's buffs, by resetting their properties back to the original values on the BO")]

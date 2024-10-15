@@ -6,6 +6,7 @@ namespace Mod.DynamicEncounters.Features.Common.Interfaces;
 
 public interface IConstructElementsService
 {
+    Task<IEnumerable<ElementId>> GetContainerElements(ulong constructId);
     Task<IEnumerable<ElementId>> GetPvpRadarElements(ulong constructId);
     Task<IEnumerable<ElementId>> GetPvpSeatElements(ulong constructId);
     Task<IEnumerable<ElementId>> GetWeaponUnits(ulong constructId);

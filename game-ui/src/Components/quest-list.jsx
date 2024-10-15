@@ -57,7 +57,7 @@ const QuestList = (props) => {
             fetch(url)
                 .then(res => {
                     if (!res.ok) {
-                        setError("Failed HTTP Status");
+                        setError(`Failed HTTP Status: ${res.status}`);
                         return [];
                     }
 

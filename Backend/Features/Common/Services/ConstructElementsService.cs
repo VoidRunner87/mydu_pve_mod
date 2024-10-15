@@ -15,6 +15,11 @@ public class ConstructElementsService(IServiceProvider provider) : IConstructEle
 {
     private readonly IClusterClient _orleans = provider.GetOrleans();
 
+    public async Task<IEnumerable<ElementId>> GetContainerElements(ulong constructId)
+    {
+        return await _orleans.GetConstructElementsGrain(constructId).GetElementsOfType<ContainerUnit>();
+    }
+
     public async Task<IEnumerable<ElementId>> GetPvpRadarElements(ulong constructId)
     {
         return await _orleans.GetConstructElementsGrain(constructId).GetElementsOfType<RadarPVPUnit>();

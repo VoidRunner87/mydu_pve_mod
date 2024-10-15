@@ -15,6 +15,7 @@ public class CachedConstructElementsService(
 )
     : IConstructElementsService
 {
+    private readonly TemporaryMemoryCache<ulong, IEnumerable<ElementId>> _containers = new(nameof(_containers), expirationTimeSpan);
     private readonly TemporaryMemoryCache<ulong, IEnumerable<ElementId>> _pvpRadarUnits = new(nameof(_pvpRadarUnits), expirationTimeSpan);
     private readonly TemporaryMemoryCache<ulong, IEnumerable<ElementId>> _weaponUnits = new(nameof(_weaponUnits), expirationTimeSpan);
     private readonly TemporaryMemoryCache<ulong, IEnumerable<ElementId>> _pvpSeatUnits = new(nameof(_pvpSeatUnits), expirationTimeSpan);
@@ -23,6 +24,15 @@ public class CachedConstructElementsService(
     private readonly TemporaryMemoryCache<ulong, int> _functionalWeaponCount = new(nameof(_functionalWeaponCount), powerCheckTimeSpan);
     private readonly TemporaryMemoryCache<ulong, ElementId> _coreUnits = new(nameof(_coreUnits), coreUnitCacheTimeSpan);
     private readonly TemporaryMemoryCache<ulong, ElementInfo> _elementInfos = new(nameof(_elementInfos), expirationTimeSpan);
+
+    public Task<IEnumerable<ElementId>> GetContainerElements(ulong constructId)
+    {
+        return _containers.TryGetOrSetValue(
+            constructId,
+            () => service.GetContainerElements(constructId),
+            ids => !ids.Any()
+        );
+    }
 
     public Task<IEnumerable<ElementId>> GetPvpRadarElements(ulong constructId)
     {
