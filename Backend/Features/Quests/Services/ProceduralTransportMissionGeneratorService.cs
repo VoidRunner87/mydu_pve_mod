@@ -151,14 +151,14 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                         pickupConstructInfo.Info.rData.position,
                         new ScriptActionItem
                         {
-                            Type = "assert-event-received",
+                            Type = "assert-task-completion",
                             FactionId = factionId,
                             TerritoryId = territoryId,
                             ConstructId = pickupConstructInfo.Info.rData.constructId,
                             Properties =
                             {
                                 { "questId", questGuid },
-                                { "eventName", $"event-{questGuid}--{pickupGuid}" }
+                                { "questTaskId", pickupGuid }
                             }
                         },
                         new PickupItemTaskItemDefinition(questPickupContainer)
@@ -170,14 +170,14 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                         dropConstructInfo.Info.rData.position,
                         new ScriptActionItem
                         {
-                            Type = "assert-event-received",
+                            Type = "assert-task-completion",
                             FactionId = factionId,
                             TerritoryId = territoryId,
                             ConstructId = pickupConstructInfo.Info.rData.constructId,
                             Properties =
                             {
                                 { "questId", questGuid },
-                                { "eventName", $"event-{questGuid}--{dropGuid}" }
+                                { "questTaskId", dropGuid }
                             }
                         },
                         new DropItemTaskDefinition(dropContainer)

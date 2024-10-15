@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Faction.Interfaces;
 using Mod.DynamicEncounters.Features.Quests.Data;
 using Mod.DynamicEncounters.Features.Quests.Interfaces;
@@ -15,7 +16,43 @@ public class QuestController(IServiceProvider provider) : Controller
 {
     private readonly IProceduralQuestGeneratorService _proceduralQuestGeneratorService
         = provider.GetRequiredService<IProceduralQuestGeneratorService>();
-    
+
+    [HttpPost]
+    [Route("accept")]
+    public async Task<IActionResult> AcceptQuest([FromBody] AcceptQuestRequest request)
+    {
+        var quests = await _proceduralQuestGeneratorService
+            .Generate(
+                request.PlayerId,
+                request.FactionId,
+                request.TerritoryId,
+                request.Seed,
+                10
+            );
+
+        var questMap = quests.QuestList
+            .ToDictionary(
+                k => k.Id,
+                v => v
+            );
+
+        if (!questMap.TryGetValue(request.QuestId, out var questItem))
+        {
+            return Ok(AcceptQuestResponse.Failed("No longer available. Refresh the board"));
+        }
+
+        return Ok(AcceptQuestResponse.Success($"Accepted '{questItem.Title}'"));
+    }
+
+    [HttpPost]
+    [Route("task/complete")]
+    public async Task<IActionResult> CompleteQuestTask([FromBody] CompleteQuestTaskRequest request)
+    {
+        await Task.Yield();
+
+        return Ok();
+    }
+
     [HttpPost]
     [Route("list")]
     public async Task<IActionResult> Generate([FromBody] GenerateQuestsRequest request)
@@ -50,6 +87,31 @@ public class QuestController(IServiceProvider provider) : Controller
         );
     }
 
+    public class AcceptQuestRequest
+    {
+        public Guid QuestId { get; set; }
+        public ulong PlayerId { get; set; }
+        public long FactionId { get; set; }
+        public Guid TerritoryId { get; set; }
+        public int Seed { get; set; }
+    }
+
+    public class AcceptQuestResponse(bool isSuccess, string message) : IOutcome
+    {
+        public bool IsSuccess { get; } = isSuccess;
+        public string Message { get; } = message;
+
+        public static AcceptQuestResponse Success(string message) => new(true, message);
+        public static AcceptQuestResponse Failed(string message) => new(false, message);
+    }
+
+    public class CompleteQuestTaskRequest
+    {
+        public ulong ConstructId { get; set; }
+        public ulong ElementId { get; set; }
+        public ulong PlayerId { get; set; }
+    }
+
     public class QuestPanelViewModel
     {
         public long FactionId { get; set; }
@@ -60,10 +122,12 @@ public class QuestController(IServiceProvider provider) : Controller
         {
             FactionId = factionId;
             Faction = factionName;
-            Jobs = outcome.QuestList.Select(pq => new QuestViewModel(pq));
+            Jobs = outcome.QuestList
+                .Select(pq => new QuestViewModel(pq))
+                .OrderBy(q => q.Title);
         }
     }
-    
+
     public class QuestViewModel
     {
         public Guid Id { get; set; }
@@ -86,7 +150,9 @@ public class QuestController(IServiceProvider provider) : Controller
     public class QuestTaskViewModel(QuestTaskItem questTaskItem)
     {
         public string Title { get; set; } = questTaskItem.Text;
-        public string Position { get; set; } = $"::pos{{0,{questTaskItem.BaseConstruct ?? 0},{questTaskItem.Position.x}, {questTaskItem.Position.y}, {questTaskItem.Position.z}}}";
+
+        public string Position { get; set; } =
+            $"::pos{{0,{questTaskItem.BaseConstruct ?? 0},{questTaskItem.Position.x}, {questTaskItem.Position.y}, {questTaskItem.Position.z}}}";
     }
 
     public class GenerateQuestsRequest
