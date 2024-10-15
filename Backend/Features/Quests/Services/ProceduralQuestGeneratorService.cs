@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features.Faction.Data;
-using Mod.DynamicEncounters.Features.Faction.Interfaces;
 using Mod.DynamicEncounters.Features.Quests.Data;
 using Mod.DynamicEncounters.Features.Quests.Interfaces;
 using Mod.DynamicEncounters.Helpers;
@@ -20,7 +19,7 @@ public class ProceduralQuestGeneratorService(IServiceProvider provider) : IProce
         provider.CreateLogger<ProceduralQuestGeneratorService>();
 
     public async Task<GenerateQuestListOutcome> Generate(
-        PlayerId playerId, 
+        PlayerId playerId,
         FactionId factionId,
         TerritoryId territoryId,
         int seed,
@@ -33,84 +32,29 @@ public class ProceduralQuestGeneratorService(IServiceProvider provider) : IProce
         var questSeed = random.Next();
         var questType = random.PickOneAtRandom(QuestTypes.All());
 
-        var factionTerritoryRepository = provider.GetRequiredService<IFactionTerritoryRepository>();
-        var factionTerritoryMap = (await factionTerritoryRepository.GetAllByFactionAsync(factionId))
-            .ToDictionary(
-                k => k.TerritoryId,
-                v => v
-            );
-        
-        // remove param territory
-        factionTerritoryMap.Remove(territoryId);
-
-        if (factionTerritoryMap.Keys.Count == 0)
+        for (var i = 0; i < quantity; i++)
         {
-            return GenerateQuestListOutcome.NoQuestsAvailable("No other faction territories available");
+            switch (questType)
+            {
+                case QuestTypes.Transport:
+                    var generator = provider.GetRequiredService<IProceduralTransportMissionGeneratorService>();
+                    var outcome = await generator.GenerateAsync(playerId, factionId, territoryId, questSeed);
+                    if (outcome.Success)
+                    {
+                        result.Add(outcome.QuestItem);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to Generate Quest: {Message}", outcome.Message);
+                    }
+
+                    break;
+            }
         }
-        
-        var territoryContainerRepository = provider.GetRequiredService<ITerritoryContainerRepository>();
-        var fromContainerList = (await territoryContainerRepository.GetAll(territoryId)).ToList();
 
-        if (fromContainerList.Count == 0)
-        {
-            return GenerateQuestListOutcome.NoQuestsAvailable("No pickup containers available");
-        }
-        
-        var questPickupContainer = random.PickOneAtRandom(fromContainerList);
+        // remove duplicates of the same mission
+        result = result.DistinctBy(x => x.Id).ToList();
 
-        var dropContainerTerritory = random.PickOneAtRandom(factionTerritoryMap.Keys);
-        var dropContainerList = (await territoryContainerRepository.GetAll(dropContainerTerritory)).ToList();
-
-        if (dropContainerList.Count == 0)
-        {
-            return GenerateQuestListOutcome.NoQuestsAvailable("No drop containers available");
-        }
-        
-        var dropPickupContainer = random.PickOneAtRandom(dropContainerList);
-
-        var questGuid = GuidUtility.Create(
-            territoryId,
-            $"{questType}-{factionId.Id}-{territoryId.Id}-{timeFactor}"
-        );
-        var pickupGuid = GuidUtility.Create(
-            territoryId,
-            $"{QuestTaskItemType.PickupItem}-{factionId.Id}-{territoryId.Id}-{timeFactor}"
-        );
-        var dropGuid = GuidUtility.Create(
-            territoryId,
-            $"{QuestTaskItemType.DropItem}-{factionId.Id}-{territoryId.Id}-{timeFactor}"
-        );
-        
-        result.Add(
-            new ProceduralQuestItem(
-                questGuid,
-                factionId,
-                questType,
-                questSeed,
-                new List<QuestTaskItem>
-                {
-                    new(
-                        pickupGuid,
-                        "",
-                        QuestTaskItemType.PickupItem,
-                        new Vec3(),
-                        null,
-                        null,
-                        new PickupItemTaskItemDefinition(questPickupContainer)
-                    ),
-                    new(
-                        dropGuid,
-                        "",
-                        QuestTaskItemType.DropItem,
-                        new Vec3(),
-                        null,
-                        null,
-                        new DropItemTaskDefinition(dropPickupContainer)
-                    )
-                }
-            )
-        );
-        
         return GenerateQuestListOutcome.WithAvailableQuests(result);
     }
 }

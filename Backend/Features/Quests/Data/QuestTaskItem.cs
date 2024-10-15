@@ -9,16 +9,15 @@ public class QuestTaskItem(
     string text,
     string type,
     Vec3 position,
-    ScriptActionItem? onSuccessScript,
-    ScriptActionItem? onFailureScript,
+    ScriptActionItem onCheckScript,
     IQuestTaskItemDefinition definition)
 {
     public Guid Id { get; } = id;
     public string Text { get; } = text;
     public string Type { get; } = type;
+    public ulong? BaseConstruct { get; set; } = 0;
     public Vec3 Position { get; } = position;
-    public ScriptActionItem? OnSuccessScript { get; } = onSuccessScript;
-    public ScriptActionItem? OnFailureScript { get; } = onFailureScript;
+    public ScriptActionItem OnCheckScript { get; } = onCheckScript;
     public IQuestTaskItemDefinition Definition { get; } = definition;
 }
 

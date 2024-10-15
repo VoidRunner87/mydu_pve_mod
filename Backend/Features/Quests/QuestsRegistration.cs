@@ -11,5 +11,6 @@ public static class QuestsRegistration
     {
         services.AddSingleton<ITerritoryContainerRepository, TerritoryContainerRepository>();
         services.AddSingleton<IProceduralQuestGeneratorService, ProceduralQuestGeneratorService>();
+        services.AddSingleton<IProceduralTransportMissionGeneratorService, ProceduralTransportMissionGeneratorService>();
     }
 }

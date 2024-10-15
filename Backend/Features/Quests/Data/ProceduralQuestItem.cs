@@ -9,6 +9,8 @@ public class ProceduralQuestItem(
     FactionId factionId,
     string type,
     int seed,
+    string title,
+    ProceduralQuestProperties properties,
     IEnumerable<QuestTaskItem> taskItems
 )
 {
@@ -16,5 +18,7 @@ public class ProceduralQuestItem(
     public FactionId FactionId { get; } = factionId;
     public string Type { get; } = type;
     public int Seed { get; } = seed;
+    public string Title { get; } = title;
+    public ProceduralQuestProperties Properties { get; } = properties;
     public IEnumerable<QuestTaskItem> TaskItems { get; } = taskItems;
 }
