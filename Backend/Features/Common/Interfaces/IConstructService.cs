@@ -20,6 +20,7 @@ public interface IConstructService
     Task<bool> IsBeingControlled(ulong constructId);
     IConstructService NoCache();
     Task<bool> Exists(ulong constructId);
+    Task<bool> ExistsAndNotDeleted(ulong constructId);
     Task ActivateShieldsAsync(ulong constructId);
     Task<bool> IsInSafeZone(ulong constructId);
     Task SendIdentificationNotification(ulong constructId, TargetingConstructData targeting);

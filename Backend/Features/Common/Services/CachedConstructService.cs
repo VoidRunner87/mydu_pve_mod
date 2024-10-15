@@ -101,6 +101,11 @@ public class CachedConstructService(
         return service.Exists(constructId);
     }
 
+    public Task<bool> ExistsAndNotDeleted(ulong constructId)
+    {
+        return service.ExistsAndNotDeleted(constructId);
+    }
+
     public Task ActivateShieldsAsync(ulong constructId)
     {
         return service.ActivateShieldsAsync(constructId);
