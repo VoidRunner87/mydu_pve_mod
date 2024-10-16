@@ -16,6 +16,32 @@ namespace Mod.DynamicEncounters.Api.Controllers;
 public class PlayerController : Controller
 {
     [HttpPost]
+    [Route("script/give-element-skin")]
+    public IActionResult GetGiveElementSkinScript([FromBody] GiveElementSkinsToAllActivePlayersRequest request)
+    {
+        var provider = ModBase.ServiceProvider;
+
+        var bank = provider.GetGameplayBank();
+
+        var scriptActionItem = new ScriptActionItem
+        {
+            Type = GiveElementSkinToPlayer.ActionName,
+            Properties =
+            {
+                {
+                    "Skins", request.Items.Select(x => new GiveElementSkinToPlayer.ElementSkinItem
+                    {
+                        ElementTypeId = bank.GetDefinition(x.ElementTypeName)!.Id,
+                        Skin = x.Skin
+                    })
+                },
+            }
+        };
+
+        return Ok(scriptActionItem);
+    }
+
+    [HttpPost]
     [Route("all/give-element-skin")]
     public async Task<IActionResult> GiveElementSkin([FromBody] GiveElementSkinsToAllActivePlayersRequest request)
     {
