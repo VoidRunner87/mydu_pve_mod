@@ -1,6 +1,7 @@
 import {useEffect, useState} from "react";
 import {CloseButton, Container, Header, Panel, PanelBody, Title, Tab} from "./panel";
 import styled from "styled-components";
+import QuestItem from "./quest-item";
 
 const CategoryPanel = styled.div`
     background-color: rgb(13, 24, 28);
@@ -25,24 +26,20 @@ const ContentPanel = styled.div`
 
 const QuestList = (props) => {
 
-    const [items, setItems] = useState([]);
+    const [jobs, setJobs] = useState([]);
+    const [factionName, setFactionName] = useState("Unknown");
+    const [factionId, setFactionId] = useState(0);
     const [error, setError] = useState("");
 
-    // useEffect(() => {
-    //
-    //     if (!window.global_resources)
-    //     {
-    //         return;
-    //     }
-    //
-    //     let url = window.global_resources["faction-quests"];
-    //
-    //     fetch(url)
-    //         .then(res => {
-    //             setItems(res.json());
-    //         });
-    //
-    // }, [setItems]);
+    useEffect(() => {
+
+        if (!window.global_resources) {
+            return;
+        }
+
+        fetchData();
+
+    }, []);
 
     const fetchData = () => {
 
@@ -63,10 +60,12 @@ const QuestList = (props) => {
 
                     return res.json();
                 })
-                .then(data => setItems(data));
-        }
-        catch (e)
-        {
+                .then(data => {
+                    setJobs(data.jobs);
+                    setFactionName(data.faction);
+                    setFactionId(data.factionId);
+                });
+        } catch (e) {
             setError(`Thrown Error ${e}`);
         }
     };
@@ -75,29 +74,31 @@ const QuestList = (props) => {
         document.getElementById("root").remove();
     };
 
-    const itemElements = items.map((item, index) =>
-        <div key={index}>{item.title}</div>
+    const questItems = jobs.map((item, index) =>
+        <QuestItem key={index} title={item.title} tasks={item.tasks} type={item.type} />
     );
 
     return (
         <Container>
             <Panel>
                 <Header>
-                    <Title>Red Talon Enclave Jobs</Title>
+                    <Title>{factionName} Faction Board</Title>
                     <CloseButton onClick={handleClose}>&times;</CloseButton>
                 </Header>
                 <PanelBody>
                     <CategoryPanel>
                         <TabContainer>
-                            <Tab onClick={fetchData} selected={true}>Combat</Tab>
-                            <Tab>Package Delivery</Tab>
+                            <Tab selected={true}>Missions</Tab>
+                            {/*<Tab>Combat</Tab>*/}
+                            {/*<Tab>Package Delivery</Tab>*/}
+                            <br/>
                             <Tab>Reputation</Tab>
                             <Tab>Faction Info</Tab>
                         </TabContainer>
                     </CategoryPanel>
                     <ContentPanel>
                         <div>{error}</div>
-                        {itemElements}
+                        {questItems}
                     </ContentPanel>
                 </PanelBody>
             </Panel>

@@ -1,0 +1,101 @@
+{
+  "factionId": 1,
+  "faction": "Pirates",
+  "jobs": [
+    {
+      "id": "8b90f5d6-1d3b-5360-aff7-8ff56ffddba3",
+      "title": "Transport of Goods from The Dome City to Pirate Hideout Omega [487.15su]",
+      "type": "transport",
+      "tasks": [
+        {
+          "title": "Pickup items at: The Dome City",
+          "position": "::pos{0,0,29669400.7129, 100759738.0343, 24616992.3843}"
+        },
+        {
+          "title": "Deliver items to: Pirate Hideout Omega",
+          "position": "::pos{0,0,37737092.8441533, 3664629.5466028643, 24616956.154136393}"
+        }
+      ],
+      "rewards": [
+        "7,063,654.00h",
+        "Influence with Pirates +1"
+      ]
+    },
+    {
+      "id": "8b90f5d6-1d3b-5360-aff7-8ff56ffddba3",
+      "title": "Transport of Goods from The Dome City to Pirate Hideout Omega [487.15su]",
+      "type": "transport",
+      "tasks": [
+        {
+          "title": "Pickup items at: The Dome City",
+          "position": "::pos{0,0,29669400.7129, 100759738.0343, 24616992.3843}"
+        },
+        {
+          "title": "Deliver items to: Pirate Hideout Omega",
+          "position": "::pos{0,0,37737092.8441533, 3664629.5466028643, 24616956.154136393}"
+        }
+      ],
+      "rewards": [
+        "7,063,654.00h",
+        "Influence with Pirates +1"
+      ]
+    },
+    {
+      "id": "8b90f5d6-1d3b-5360-aff7-8ff56ffddba3",
+      "title": "Transport of Goods from The Dome City to Pirate Hideout Omega [487.15su]",
+      "type": "transport",
+      "tasks": [
+        {
+          "title": "Pickup items at: The Dome City",
+          "position": "::pos{0,0,29669400.7129, 100759738.0343, 24616992.3843}"
+        },
+        {
+          "title": "Deliver items to: Pirate Hideout Omega",
+          "position": "::pos{0,0,37737092.8441533, 3664629.5466028643, 24616956.154136393}"
+        }
+      ],
+      "rewards": [
+        "7,063,654.00h",
+        "Influence with Pirates +1"
+      ]
+    },
+    {
+      "id": "8b90f5d6-1d3b-5360-aff7-8ff56ffddba3",
+      "title": "Transport of Goods from The Dome City to Pirate Hideout Omega [487.15su]",
+      "type": "transport",
+      "tasks": [
+        {
+          "title": "Pickup items at: The Dome City",
+          "position": "::pos{0,0,29669400.7129, 100759738.0343, 24616992.3843}"
+        },
+        {
+          "title": "Deliver items to: Pirate Hideout Omega",
+          "position": "::pos{0,0,37737092.8441533, 3664629.5466028643, 24616956.154136393}"
+        }
+      ],
+      "rewards": [
+        "7,063,654.00h",
+        "Influence with Pirates +1"
+      ]
+    },
+    {
+      "id": "8b90f5d6-1d3b-5360-aff7-8ff56ffddba3",
+      "title": "Transport of Goods from The Dome City to Pirate Hideout Omega [487.15su]",
+      "type": "transport",
+      "tasks": [
+        {
+          "title": "Pickup items at: The Dome City",
+          "position": "::pos{0,0,29669400.7129, 100759738.0343, 24616992.3843}"
+        },
+        {
+          "title": "Deliver items to: Pirate Hideout Omega",
+          "position": "::pos{0,0,37737092.8441533, 3664629.5466028643, 24616956.154136393}"
+        }
+      ],
+      "rewards": [
+        "7,063,654.00h",
+        "Influence with Pirates +1"
+      ]
+    }
+  ]
+}

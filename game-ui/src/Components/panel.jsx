@@ -9,6 +9,7 @@ export const Container = styled.div`
 `;
 
 export const Panel = styled.div`
+    min-width: 1000px;
     width: 55vw;
     height: 75vh;
     background-color: rgb(25, 34, 41);
@@ -87,6 +88,17 @@ export const UnselectedCategoryButton = styled.button`
     cursor: pointer;
 `;
 
+export const Button = styled.button`
+    background-color: rgb(27, 48, 56);
+    padding: 16px;
+    font-weight: bold;
+    text-align: left;
+    text-transform: uppercase;
+    color: rgb(180, 221, 235);
+    border: none;
+    cursor: pointer;
+`;
+
 export const Tab = (props) => {
     return props.selected ? (<SelectedCategoryButton onClick={props.onClick}>{props.children}</SelectedCategoryButton>) :
         (<UnselectedCategoryButton onClick={props.onClick}>{props.children}</UnselectedCategoryButton>);
@@ -96,8 +108,8 @@ export const CloseButton = (props) => {
     return (
         <PanelCloseButton onClick={props.onClick}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                <line x1="4" y1="4" x2="20" y2="20" stroke="white" stroke-width="2" stroke-linecap="round"/>
-                <line x1="4" y1="20" x2="20" y2="4" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <line x1="4" y1="4" x2="20" y2="20" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="4" y1="20" x2="20" y2="4" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
         </PanelCloseButton>
     );
