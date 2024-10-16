@@ -88,17 +88,6 @@ export const UnselectedCategoryButton = styled.button`
     cursor: pointer;
 `;
 
-export const Button = styled.button`
-    background-color: rgb(27, 48, 56);
-    padding: 16px;
-    font-weight: bold;
-    text-align: left;
-    text-transform: uppercase;
-    color: rgb(180, 221, 235);
-    border: none;
-    cursor: pointer;
-`;
-
 export const Tab = (props) => {
     return props.selected ? (<SelectedCategoryButton onClick={props.onClick}>{props.children}</SelectedCategoryButton>) :
         (<UnselectedCategoryButton onClick={props.onClick}>{props.children}</UnselectedCategoryButton>);

@@ -27,6 +27,7 @@ const ContentPanel = styled.div`
 const QuestList = (props) => {
 
     const [jobs, setJobs] = useState([]);
+    const [expandedMap, setExpandedMap] = useState({});
     const [factionName, setFactionName] = useState("Unknown");
     const [factionId, setFactionId] = useState(0);
     const [error, setError] = useState("");
@@ -74,8 +75,23 @@ const QuestList = (props) => {
         document.getElementById("root").remove();
     };
 
+    const handleSelect = (item) => {
+        if (expandedMap[item.id] === true) {
+            setExpandedMap({});
+        }
+        else {
+            setExpandedMap({[item.id]: true});
+        }
+    };
+
     const questItems = jobs.map((item, index) =>
-        <QuestItem key={index} title={item.title} tasks={item.tasks} type={item.type} />
+        <QuestItem key={index}
+                   onSelect={() => handleSelect(item)}
+                   rewards={item.rewards}
+                   title={item.title}
+                   tasks={item.tasks}
+                   type={item.type}
+                   expanded={expandedMap[item.id]} />
     );
 
     return (
@@ -88,7 +104,7 @@ const QuestList = (props) => {
                 <PanelBody>
                     <CategoryPanel>
                         <TabContainer>
-                            <Tab selected={true}>Missions</Tab>
+                            <Tab selected={true}>Missions ({jobs.length})</Tab>
                             {/*<Tab>Combat</Tab>*/}
                             {/*<Tab>Package Delivery</Tab>*/}
                             <br/>

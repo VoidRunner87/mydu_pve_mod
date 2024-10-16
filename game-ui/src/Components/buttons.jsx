@@ -1,0 +1,30 @@
+import styled from "styled-components";
+import {TargetIcon2} from "./icons";
+
+export const IconButton = styled.button`
+    background-color: rgb(250, 212, 122);
+    padding: 2px 2px 0;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: black;
+    text-align: left;
+    border: none;
+    cursor: pointer;
+`;
+
+export const Button = styled.button`
+    background-color: rgb(250, 212, 122);
+    padding: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: black;
+    text-align: left;
+    border: none;
+    cursor: pointer;
+`;
+
+export const TargetButton = () => {
+    return (
+        <IconButton><TargetIcon2 /></IconButton>
+    );
+}
