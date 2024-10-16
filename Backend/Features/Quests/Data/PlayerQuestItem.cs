@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Mod.DynamicEncounters.Features.Faction.Data;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 
 namespace Mod.DynamicEncounters.Features.Quests.Data;
 
@@ -9,21 +10,28 @@ public class PlayerQuestItem(
     FactionId factionId,
     ulong playerId,
     string type,
+    string status,
     int seed,
     PlayerQuestItem.QuestProperties properties,
     DateTime createdAt,
     DateTime? expiresAt,
-    IEnumerable<QuestTaskItem> taskItems)
+    IList<QuestTaskItem> taskItems,
+    ScriptActionItem onSuccessScript,
+    ScriptActionItem onFailureScript
+)
 {
     public Guid Id { get; } = id;
     public FactionId FactionId { get; } = factionId;
     public ulong PlayerId { get; } = playerId;
     public string Type { get; } = type;
+    public string Status { get; } = status;
     public int Seed { get; } = seed;
     public QuestProperties Properties { get; } = properties;
     public DateTime CreatedAt { get; } = createdAt;
     public DateTime? ExpiresAt { get; } = expiresAt;
-    public IEnumerable<QuestTaskItem> TaskItems { get; } = taskItems;
+    public IList<QuestTaskItem> TaskItems { get; } = taskItems;
+    public ScriptActionItem OnSuccessScript { get; } = onSuccessScript;
+    public ScriptActionItem OnFailureScript { get; } = onFailureScript;
 
     public bool IsExpired(DateTime now)
     {
@@ -32,7 +40,11 @@ public class PlayerQuestItem(
 
     public class QuestProperties(string title, string description)
     {
-        public string Title { get; } = title;
-        public string Description { get; } = description;
+        public string Title { get; set; } = title;
+        public string Description { get; set; } = description;
+        public IEnumerable<string> RewardTextList { get; set; } = [];
+        public long QuantaReward { get; set; } = 0;
+        public Dictionary<long, long> InfluenceReward { get; set; } = [];
+        public Dictionary<string, long> ItemRewardMap { get; set; } = [];
     }
 }

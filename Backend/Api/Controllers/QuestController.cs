@@ -17,8 +17,11 @@ public class QuestController(IServiceProvider provider) : Controller
     private readonly IProceduralQuestGeneratorService _proceduralQuestGeneratorService
         = provider.GetRequiredService<IProceduralQuestGeneratorService>();
 
+    private readonly IPlayerQuestService _playerQuestService
+        = provider.GetRequiredService<IPlayerQuestService>();
+
     [HttpPost]
-    [Route("accept")]
+    [Route("player/accept")]
     public async Task<IActionResult> AcceptQuest([FromBody] AcceptQuestRequest request)
     {
         var quests = await _proceduralQuestGeneratorService
@@ -41,7 +44,39 @@ public class QuestController(IServiceProvider provider) : Controller
             return Ok(AcceptQuestResponse.Failed("No longer available. Refresh the board"));
         }
 
-        return Ok(AcceptQuestResponse.Success($"Accepted '{questItem.Title}'"));
+        var outcome = await _playerQuestService.AcceptQuestAsync(
+            request.PlayerId,
+            questMap[request.QuestId]
+        );
+
+        if (!outcome.Success)
+        {
+            return BadRequest(outcome);
+        }
+        
+        return Ok(AcceptQuestResponse.Success($"Accepted '{questItem.Title}'. {outcome.Message}"));
+    }
+
+    [HttpPost]
+    [Route("player/abandon")]
+    public async Task<IActionResult> AcceptQuest([FromBody] AbandonQuestRequest request)
+    {
+        var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
+
+        await playerQuestRepository.DeleteAsync(request.PlayerId, request.QuestId);
+
+        return Ok();
+    }
+
+    [HttpGet]
+    [Route("player/{playerId:long}")]
+    public async Task<IActionResult> GetPlayerQuests(ulong playerId)
+    {
+        var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
+
+        var result = (await playerQuestRepository.GetAll(playerId)).ToList();
+        
+        return Ok(new PlayerQuestPanelViewModel(result));
     }
 
     [HttpPost]
@@ -54,7 +89,7 @@ public class QuestController(IServiceProvider provider) : Controller
     }
 
     [HttpPost]
-    [Route("list")]
+    [Route("giver")]
     public async Task<IActionResult> Generate([FromBody] GenerateQuestsRequest request)
     {
         var factionRepository = provider.GetRequiredService<IFactionRepository>();
@@ -95,6 +130,12 @@ public class QuestController(IServiceProvider provider) : Controller
         public Guid TerritoryId { get; set; }
         public int Seed { get; set; }
     }
+    
+    public class AbandonQuestRequest
+    {
+        public Guid QuestId { get; set; }
+        public ulong PlayerId { get; set; }
+    }
 
     public class AcceptQuestResponse(bool isSuccess, string message) : IOutcome
     {
@@ -110,6 +151,18 @@ public class QuestController(IServiceProvider provider) : Controller
         public ulong ConstructId { get; set; }
         public ulong ElementId { get; set; }
         public ulong PlayerId { get; set; }
+    }
+    
+    public class PlayerQuestPanelViewModel
+    {
+        public IEnumerable<QuestViewModel> Jobs { get; set; }
+
+        public PlayerQuestPanelViewModel(IEnumerable<PlayerQuestItem> questItems)
+        {
+            Jobs = questItems
+                .Select(pq => new QuestViewModel(pq))
+                .OrderBy(q => q.Title);
+        }
     }
 
     public class QuestPanelViewModel
@@ -145,6 +198,15 @@ public class QuestController(IServiceProvider provider) : Controller
             Tasks = item.TaskItems.Select(t => new QuestTaskViewModel(t));
             Rewards = item.Properties.RewardTextList;
         }
+
+        public QuestViewModel(PlayerQuestItem item)
+        {
+            Id = item.Id;
+            Title = item.Properties.Title;
+            Type = item.Type;
+            Tasks = item.TaskItems.Select(t => new QuestTaskViewModel(t));
+            Rewards = item.Properties.RewardTextList;
+        }
     }
 
     public class QuestTaskViewModel(QuestTaskItem questTaskItem)
@@ -153,6 +215,8 @@ public class QuestController(IServiceProvider provider) : Controller
 
         public string Position { get; set; } =
             $"::pos{{0,{questTaskItem.BaseConstruct ?? 0},{questTaskItem.Position.x}, {questTaskItem.Position.y}, {questTaskItem.Position.z}}}";
+
+        public string Status { get; set; } = questTaskItem.Status;
     }
 
     public class GenerateQuestsRequest

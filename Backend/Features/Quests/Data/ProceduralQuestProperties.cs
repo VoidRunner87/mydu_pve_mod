@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Mod.DynamicEncounters.Features.Quests.Data;
@@ -8,4 +9,5 @@ public class ProceduralQuestProperties
     public long QuantaReward { get; set; } = 0;
     public Dictionary<long, long> InfluenceReward { get; set; } = [];
     public Dictionary<string, long> ItemRewardMap { get; set; } = [];
+    public DateTime ExpiresAt { get; set; }
 }

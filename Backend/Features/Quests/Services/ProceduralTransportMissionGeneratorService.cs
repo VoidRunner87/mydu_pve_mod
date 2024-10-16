@@ -140,7 +140,8 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                     InfluenceReward =
                     {
                         { factionId, influenceReward }
-                    }
+                    },
+                    ExpiresAt = DateTime.Now + TimeSpan.FromHours(3)
                 },
                 new List<QuestTaskItem>
                 {
@@ -148,6 +149,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                         pickupGuid,
                         pickupTaskTitle,
                         QuestTaskItemType.Pickup,
+                        QuestTaskItemStatus.InProgress,
                         pickupConstructInfo.Info.rData.position,
                         new ScriptActionItem
                         {
@@ -167,6 +169,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                         dropGuid,
                         dropOffTaskTitle,
                         QuestTaskItemType.Deliver,
+                        QuestTaskItemStatus.InProgress,
                         dropConstructInfo.Info.rData.position,
                         new ScriptActionItem
                         {
