@@ -1,5 +1,7 @@
 ﻿# PVE Mod for MyDU
 
+[Showcase Video](https://www.youtube.com/watch?v=vlXTiFBxXbk)
+
 Before starting, know this:
 * There were several hacky adjustments I had to make for this to work.
   * UPDATE: Some of those were cleaned up
