@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BotLib.Protocols.Queuing;
+using Mod.DynamicEncounters.Common;
 using Newtonsoft.Json;
 using NQ;
 using NQutils.Exceptions;
@@ -123,10 +124,18 @@ public class StubRealQueuing : IQueuing
 
                 Console.WriteLine($"GRPC Info 1: {data.info.grpcInfo.address}");
 
-                
+
 #if !DEBUG
-                data.info.frontUri = "queueing:9630";
-                data.info.grpcInfo.address = "10.5.0.5:9210";
+                data.info.frontUri =
+                    EnvironmentVariableHelper.GetEnvironmentVarOrDefault(
+                        EnvironmentVariableNames.OverrideQueueingUrl,
+                        "queueing:9630"
+                    );
+                data.info.grpcInfo.address =
+                    EnvironmentVariableHelper.GetEnvironmentVarOrDefault(
+                        EnvironmentVariableNames.OverrideGrpcUrl,
+                        "10.5.0.5:9210"
+                    );
 #endif
 
                 return data;
@@ -134,12 +143,20 @@ public class StubRealQueuing : IQueuing
                 var eventStreamData = await WaitInQueue(await response.Content.ReadAsStreamAsync());
 
                 Console.WriteLine($"GRPC Info 2: {eventStreamData.info.grpcInfo.address}");
-                
+
 #if !DEBUG
-                eventStreamData.info.frontUri = "queueing:9630";
-                eventStreamData.info.grpcInfo.address = "10.5.0.5:9210";
-#endif      
-                
+                eventStreamData.info.frontUri =
+                    EnvironmentVariableHelper.GetEnvironmentVarOrDefault(
+                        EnvironmentVariableNames.OverrideQueueingUrl,
+                        "queueing:9630"
+                    );
+                eventStreamData.info.grpcInfo.address =
+                    EnvironmentVariableHelper.GetEnvironmentVarOrDefault(
+                        EnvironmentVariableNames.OverrideGrpcUrl,
+                        "10.5.0.5:9210"
+                    );
+#endif
+
                 return eventStreamData;
             default:
                 var interpolatedStringHandler = new StringBuilder(43, 1);
@@ -171,7 +188,7 @@ public class StubRealQueuing : IQueuing
                         Log.Error("Bad queuing data : " + str);
                         continue;
                     }
-                    
+
                     Console.WriteLine("Default");
 
                     queueingStreamedData1 = JsonConvert.DeserializeObject<QueueingStreamedData>(str[5..]);

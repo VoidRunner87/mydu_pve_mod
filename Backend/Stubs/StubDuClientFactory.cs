@@ -10,6 +10,7 @@ using BotLib.Protocols;
 using BotLib.Protocols.GrpcClient;
 using BotLib.Protocols.Queuing;
 using BotLib.Utils;
+using Mod.DynamicEncounters.Common;
 using NQ;
 using Serilog;
 
@@ -41,8 +42,16 @@ public class StubDuClientFactory : IDuClientFactory
         QueueingStreamedData queueingResponse = await Queuing.WaitInQueue(li);
         
 #if !DEBUG
-        queueingResponse.info.frontUri = "queueing:9630";
-        queueingResponse.info.grpcInfo.address = "10.5.0.5:9210";
+        queueingResponse.info.frontUri =
+            EnvironmentVariableHelper.GetEnvironmentVarOrDefault(
+                EnvironmentVariableNames.OverrideQueueingUrl,
+                "queueing:9630"
+            );
+        queueingResponse.info.grpcInfo.address =
+            EnvironmentVariableHelper.GetEnvironmentVarOrDefault(
+                EnvironmentVariableNames.OverrideGrpcUrl,
+                "10.5.0.5:9210"
+            );
 #endif
         
         Console.WriteLine($"Connection: {queueingResponse.info.grpcInfo.address}");

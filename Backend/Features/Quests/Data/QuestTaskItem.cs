@@ -1,4 +1,5 @@
 using System;
+using Mod.DynamicEncounters.Features.Quests.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using NQ;
 
@@ -22,24 +23,3 @@ public class QuestTaskItem(
     public ScriptActionItem OnCheckScript { get; } = onCheckScript;
     public IQuestTaskItemDefinition Definition { get; } = definition;
 }
-
-public interface IQuestTaskItemDefinition
-{
-    
-}
-
-public abstract class TransportItemTaskDefinition(TerritoryContainerItem container) : IQuestTaskItemDefinition
-{
-    public TerritoryContainerItem Container { get; set; } = container;
-}
-
-public class PickupItemTaskItemDefinition(TerritoryContainerItem container) : TransportItemTaskDefinition(container)
-{
-    
-}
-
-public class DropItemTaskDefinition(TerritoryContainerItem container) : TransportItemTaskDefinition(container)
-{
-    
-}
-

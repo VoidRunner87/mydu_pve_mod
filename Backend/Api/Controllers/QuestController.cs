@@ -11,6 +11,7 @@ using Mod.DynamicEncounters.Features.Faction.Interfaces;
 using Mod.DynamicEncounters.Features.Quests.Data;
 using Mod.DynamicEncounters.Features.Quests.Interfaces;
 using Mod.DynamicEncounters.Helpers;
+using MongoDB.Driver.Linq;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
@@ -111,7 +112,18 @@ public class QuestController(IServiceProvider provider) : Controller
             
             return StatusCode(500, AbandonQuestResponse.Failed("Failed to Abandon Mission"));
         }
+    }
+
+    [HttpPost]
+    [Route("interact")]
+    public async Task<IActionResult> QuestInteract([FromBody] QuestInteractRequest request)
+    {
+        var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
+        var playerQuestItems = await playerQuestRepository.GetAll(request.PlayerId);
+
         
+        
+        return Ok();
     }
 
     [HttpGet]
@@ -176,6 +188,12 @@ public class QuestController(IServiceProvider provider) : Controller
         );
     }
 
+    public class QuestInteractRequest
+    {
+        public ulong PlayerId { get; set; }
+        public ulong ConstructId { get; set; }
+    }
+    
     public class SetupTerritoryContainerRequest
     {
         public Guid TerritoryId { get; set; }
