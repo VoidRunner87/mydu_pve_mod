@@ -34,6 +34,29 @@ public class TerritoryContainerRepository(IServiceProvider provider) : ITerritor
         return result.Select(MapToModel);
     }
 
+    public async Task Add(Guid territoryId, ulong constructId, ulong elementId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            """
+            INSERT INTO public.mod_territory_quest_container (territory_id, construct_id, element_id)
+            VALUES (
+                    @territoryId,
+                    @constructId,
+                    @elementId
+            )
+            """,
+            new
+            {
+                territoryId,
+                constructId = (long)constructId,
+                elementId = (long)elementId
+            }
+        );
+    }
+
     private TerritoryContainerItem MapToModel(DbRow row)
     {
         return new TerritoryContainerItem

@@ -44,16 +44,18 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
         const string questType = QuestTypes.Transport;
 
         var factionTerritoryRepository = provider.GetRequiredService<IFactionTerritoryRepository>();
-        var factionTerritoryMap = (await factionTerritoryRepository.GetAllByFactionAsync(factionId))
+        
+        var territoryMap = (await factionTerritoryRepository.GetAll())
+            .DistinctBy(v => v.TerritoryId)
             .ToDictionary(
                 k => k.TerritoryId,
                 v => v
             );
 
         // remove param territory
-        factionTerritoryMap.Remove(territoryId);
+        territoryMap.Remove(territoryId);
 
-        if (factionTerritoryMap.Keys.Count == 0)
+        if (territoryMap.Keys.Count == 0)
         {
             return ProceduralQuestOutcome.Failed("No other faction territories available");
         }
@@ -68,7 +70,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
 
         var questPickupContainer = random.PickOneAtRandom(fromContainerList);
 
-        var dropContainerTerritory = random.PickOneAtRandom(factionTerritoryMap.Keys);
+        var dropContainerTerritory = random.PickOneAtRandom(territoryMap.Keys);
         var dropContainerList = (await territoryContainerRepository.GetAll(dropContainerTerritory)).ToList();
 
         if (dropContainerList.Count == 0)
@@ -84,7 +86,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
         );
         var dropGuid = GuidUtility.Create(
             territoryId,
-            $"{QuestTaskItemType.Deliver}-{factionId.Id}-{territoryId.Id}-{timeFactor}"
+            $"{QuestTaskItemType.Deliver}-{factionId.Id}-{dropContainerTerritory}-{timeFactor}"
         );
         var questGuid = GuidUtility.Create(
             territoryId,
@@ -115,11 +117,23 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
         var titles = new List<string>
         {
             $"Supply Run from {pickupConstructInfo.Info.rData.name} to {dropConstructInfo.Info.rData.name} [{distanceSu:N2}su]",
-            $"Transport of Goods from {pickupConstructInfo.Info.rData.name} to {dropConstructInfo.Info.rData.name} [{distanceSu:N2}su]"
+            $"Transport of Goods from {pickupConstructInfo.Info.rData.name} to {dropConstructInfo.Info.rData.name} [{distanceSu:N2}su]",
+            $"Delivery to {dropConstructInfo.Info.rData.name} [{distanceSu:N2}su]",
         };
 
+        var multiplier = 1;
+        if (dropConstructInfo.Info.kind == ConstructKind.STATIC)
+        {
+            multiplier++;
+        }
+
+        if (pickupConstructInfo.Info.kind == ConstructKind.STATIC)
+        {
+            multiplier++;
+        }
+        
         var title = random.PickOneAtRandom(titles);
-        var quantaReward = (long)(distanceSu * 10000d * 100d * 1.45);
+        var quantaReward = (long)(distanceSu * 10000d * 100d * 1.45 * multiplier);
         var influenceReward = 1;
 
         return ProceduralQuestOutcome.Created(

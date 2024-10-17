@@ -29,11 +29,11 @@ public class ProceduralQuestGeneratorService(IServiceProvider provider) : IProce
         var random = new Random(seed + (int)timeFactor);
         var result = new List<ProceduralQuestItem>();
 
-        var questSeed = random.Next();
-        var questType = random.PickOneAtRandom(QuestTypes.All());
-
         for (var i = 0; i < quantity; i++)
         {
+            var questSeed = random.Next();
+            var questType = random.PickOneAtRandom(QuestTypes.All());
+
             switch (questType)
             {
                 case QuestTypes.Transport:

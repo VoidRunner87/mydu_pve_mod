@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common.Interfaces;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Faction.Interfaces;
 using Mod.DynamicEncounters.Features.Quests.Data;
 using Mod.DynamicEncounters.Features.Quests.Interfaces;
@@ -25,6 +26,36 @@ public class QuestController(IServiceProvider provider) : Controller
     private readonly ILogger<QuestController> _logger
         = provider.CreateLogger<QuestController>();
 
+    [HttpPost]
+    [Route("setup-territory-container")]
+    public async Task<IActionResult> SetupTerritoryContainer([FromBody] SetupTerritoryContainerRequest request)
+    {
+        var repository = provider.GetRequiredService<ITerritoryContainerRepository>();
+
+        ulong elementId;
+
+        if (!request.ElementId.HasValue)
+        {
+            var constructElementService = provider.GetRequiredService<IConstructElementsService>();
+            var elements = (await constructElementService.GetContainerElements(request.ConstructId)).ToList();
+
+            if (elements.Count == 0)
+            {
+                return BadRequest("No Container on Construct");
+            }
+
+            elementId = elements.First().elementId;
+        }
+        else
+        {
+            elementId = request.ElementId.Value;
+        }
+        
+        await repository.Add(request.TerritoryId, request.ConstructId, elementId);
+
+        return Ok();
+    }
+    
     [HttpPost]
     [Route("player/accept")]
     public async Task<IActionResult> AcceptQuest([FromBody] AcceptQuestRequest request)
@@ -145,6 +176,13 @@ public class QuestController(IServiceProvider provider) : Controller
         );
     }
 
+    public class SetupTerritoryContainerRequest
+    {
+        public Guid TerritoryId { get; set; }
+        public ulong ConstructId { get; set; }
+        public ulong? ElementId { get; set; }
+    }
+    
     public class AcceptQuestRequest
     {
         public Guid QuestId { get; set; }
