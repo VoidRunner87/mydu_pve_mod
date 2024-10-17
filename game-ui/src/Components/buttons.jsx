@@ -12,7 +12,7 @@ export const IconButton = styled.button`
     cursor: pointer;
 `;
 
-export const Button = styled.button`
+export const PrimaryButton = styled.button`
     background-color: rgb(250, 212, 122);
     padding: 8px;
     font-weight: bold;
@@ -23,8 +23,19 @@ export const Button = styled.button`
     cursor: pointer;
 `;
 
-export const TargetButton = () => {
+export const SecondaryButton = styled.button`
+    background-color: rgb(27, 48, 56);
+    color: rgb(180, 221, 235);
+    padding: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: left;
+    border: none;
+    cursor: pointer;
+`;
+
+export const TargetButton = ({onClick}) => {
     return (
-        <IconButton><TargetIcon2 /></IconButton>
+        <IconButton onClick={onClick}><TargetIcon2 /></IconButton>
     );
 }

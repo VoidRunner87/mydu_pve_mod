@@ -116,9 +116,6 @@
     <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\bin\Debug\net8.0\Resources\Basic_Pirate.json" />
     <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\bin\Debug\net8.0\Resources\Simple_POI.json" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Orleans.Migrations\Orleans.Migrations.csproj" />
-  </ItemGroup>
 
   <!-- https://github.com/dotnet/efcore/issues/15047 -->
   <Target Name="AddAssemblyAliasToReactiveAsync" AfterTargets="ResolveAssemblyReferences">

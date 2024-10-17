@@ -12,13 +12,46 @@ modApi.cb = (data) => {
     CPPMod.sendModAction("Mod.DynamicEncounters", 1999999, [], JSON.stringify(data));
 };
 
+modApi.setWaypoint = (pos) => {
+    CPPMapsManagerPlanet.setCoordinateAsDestination(`${pos}`);
+};
+
+modApi.setContext = (data) => {
+    window.player_context = data;
+};
+
+modApi.refreshNpcQuestList = () => {
+    CPPMod.sendModAction("Mod.DynamicEncounters", 1000001, [], JSON.stringify(window.player_context));
+};
+
+modApi.acceptQuest = (questId) => {
+    let payload = window.player_context || {};
+    payload.questId = questId;
+    
+    CPPMod.sendModAction(
+        "Mod.DynamicEncounters",
+        1000003,
+        [],
+        JSON.stringify(payload)
+    );
+};
+
 modApi.setResourceContents = (name, contentType, contents) => {
+    
+    if (window.global_resources[name])
+    {
+        const existingBlobUrl = window.global_resources[name];
+        if (existingBlobUrl) {
+            URL.revokeObjectURL(existingBlobUrl);
+        }
+    }
+    
     const blob = new Blob([contents], {type: contentType});
     const blobUrl = URL.createObjectURL(blob);
     window.global_resources[name] = blobUrl;
-    
+
     modApi.cb(`Set Resource ${name} as ${contentType} to ${blobUrl}`);
-    
+
     return window.global_resources[name];
 };
 

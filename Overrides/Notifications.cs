@@ -23,6 +23,24 @@ public class Notifications
             )
         );
     }
+    
+    public static async Task SimpleNotificationToPlayer(IServiceProvider provider, NQ.PlayerId pid, string message)
+    {
+        var sanitizedMessage = message.Replace("\"", "\\\""); // Escape quotes if needed
+
+        await provider.GetRequiredService<IPub>().NotifyTopic(
+            Topics.PlayerNotifications(pid),
+            new NQutils.Messages.ModTriggerHudEventRequest(
+                new NQ.ModTriggerHudEvent
+                {
+                    eventName = "modinjectjs",
+                    eventPayload = $"CPPHud.addSimpleNotification(\"{sanitizedMessage}\");",
+                }
+            )
+        );
+
+        return;
+    }
 
     public static async Task NetworkNotification(IServiceProvider provider, NQ.PlayerId pid, string message, int delay)
     {

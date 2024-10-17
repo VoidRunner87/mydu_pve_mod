@@ -31,6 +31,7 @@ const QuestList = (props) => {
     const [factionName, setFactionName] = useState("Unknown");
     const [factionId, setFactionId] = useState(0);
     const [error, setError] = useState("");
+    const [acceptedQuestMap, setAcceptedQuestMap] = useState({});
 
     useEffect(() => {
 
@@ -40,6 +41,14 @@ const QuestList = (props) => {
 
         fetchData();
 
+        // const intervalId = setInterval(() => {
+        //     window.modApi.refreshNpcQuestList();
+        //     fetchData();
+        // }, 5000);
+        //
+        // return () => {
+        //     clearInterval(intervalId);
+        // };
     }, []);
 
     const fetchData = () => {
@@ -60,14 +69,26 @@ const QuestList = (props) => {
                     }
 
                     return res.json();
+                }, err => {
+                    window.modApi.cb(`Caught Error ${err}`);
                 })
                 .then(data => {
+
+                    if (!data)
+                    {
+                        window.modApi.cb(`Invalid Data`);
+                        return;
+                    }
+
                     setJobs(data.jobs);
                     setFactionName(data.faction);
                     setFactionId(data.factionId);
+                }, err => {
+                    window.modApi.cb(`Caught Error 2 ${err}`);
                 });
         } catch (e) {
             setError(`Thrown Error ${e}`);
+            window.modApi.cb(`Thrown Error ${e}`);
         }
     };
 
@@ -84,13 +105,21 @@ const QuestList = (props) => {
         }
     };
 
+    const handleAccepted = (index, questId) => {
+        acceptedQuestMap[questId] = true;
+        setAcceptedQuestMap(acceptedQuestMap);
+    };
+
     const questItems = jobs.map((item, index) =>
         <QuestItem key={index}
                    onSelect={() => handleSelect(item)}
+                   questId={item.id}
                    rewards={item.rewards}
                    title={item.title}
                    tasks={item.tasks}
                    type={item.type}
+                   onAccepted={(questId) => handleAccepted(index, questId)}
+                   accepted={acceptedQuestMap[item.id] || item.accepted}
                    expanded={expandedMap[item.id]} />
     );
 

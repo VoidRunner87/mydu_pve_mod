@@ -53,8 +53,8 @@ public class QuestController(IServiceProvider provider) : Controller
         {
             return BadRequest(outcome);
         }
-        
-        return Ok(AcceptQuestResponse.Success($"Accepted '{questItem.Title}'. {outcome.Message}"));
+
+        return Ok(AcceptQuestResponse.Accepted($"Accepted '{questItem.Title}'. {outcome.Message}"));
     }
 
     [HttpPost]
@@ -75,7 +75,7 @@ public class QuestController(IServiceProvider provider) : Controller
         var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
 
         var result = (await playerQuestRepository.GetAll(playerId)).ToList();
-        
+
         return Ok(new PlayerQuestPanelViewModel(result));
     }
 
@@ -93,6 +93,7 @@ public class QuestController(IServiceProvider provider) : Controller
     public async Task<IActionResult> Generate([FromBody] GenerateQuestsRequest request)
     {
         var factionRepository = provider.GetRequiredService<IFactionRepository>();
+        var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
         var factionMap = (await factionRepository.GetAllAsync())
             .ToDictionary(
                 k => k.Id,
@@ -104,6 +105,12 @@ public class QuestController(IServiceProvider provider) : Controller
             return BadRequest("Invalid Faction");
         }
 
+        var playerQuestsMap = (await playerQuestRepository.GetAll(request.PlayerId))
+            .ToDictionary(
+                k => k.OriginalQuestId,
+                v => true
+            );
+        
         var quests = await _proceduralQuestGeneratorService
             .Generate(
                 request.PlayerId,
@@ -117,7 +124,8 @@ public class QuestController(IServiceProvider provider) : Controller
             new QuestPanelViewModel(
                 faction.Id,
                 faction.Name,
-                quests
+                quests,
+                playerQuestsMap
             )
         );
     }
@@ -130,7 +138,7 @@ public class QuestController(IServiceProvider provider) : Controller
         public Guid TerritoryId { get; set; }
         public int Seed { get; set; }
     }
-    
+
     public class AbandonQuestRequest
     {
         public Guid QuestId { get; set; }
@@ -139,10 +147,10 @@ public class QuestController(IServiceProvider provider) : Controller
 
     public class AcceptQuestResponse(bool isSuccess, string message) : IOutcome
     {
-        public bool IsSuccess { get; } = isSuccess;
+        public bool Success { get; } = isSuccess;
         public string Message { get; } = message;
 
-        public static AcceptQuestResponse Success(string message) => new(true, message);
+        public static AcceptQuestResponse Accepted(string message) => new(true, message);
         public static AcceptQuestResponse Failed(string message) => new(false, message);
     }
 
@@ -152,7 +160,7 @@ public class QuestController(IServiceProvider provider) : Controller
         public ulong ElementId { get; set; }
         public ulong PlayerId { get; set; }
     }
-    
+
     public class PlayerQuestPanelViewModel
     {
         public IEnumerable<QuestViewModel> Jobs { get; set; }
@@ -171,12 +179,17 @@ public class QuestController(IServiceProvider provider) : Controller
         public string Faction { get; set; }
         public IEnumerable<QuestViewModel> Jobs { get; set; }
 
-        public QuestPanelViewModel(long factionId, string factionName, GenerateQuestListOutcome outcome)
+        public QuestPanelViewModel(
+            long factionId,
+            string factionName,
+            GenerateQuestListOutcome outcome,
+            Dictionary<Guid, bool> acceptedMap
+        )
         {
             FactionId = factionId;
             Faction = factionName;
             Jobs = outcome.QuestList
-                .Select(pq => new QuestViewModel(pq))
+                .Select(pq => new QuestViewModel(pq, acceptedMap.TryGetValue(pq.Id, out var accepted) && accepted))
                 .OrderBy(q => q.Title);
         }
     }
@@ -186,17 +199,19 @@ public class QuestController(IServiceProvider provider) : Controller
         public Guid Id { get; set; }
         public string Title { get; set; }
         public string Type { get; set; }
+        public bool Accepted { get; set; }
 
         public IEnumerable<QuestTaskViewModel> Tasks { get; set; }
         public IEnumerable<string> Rewards { get; set; }
 
-        public QuestViewModel(ProceduralQuestItem item)
+        public QuestViewModel(ProceduralQuestItem item, bool accepted)
         {
             Id = item.Id;
             Title = item.Title;
             Type = item.Type;
             Tasks = item.TaskItems.Select(t => new QuestTaskViewModel(t));
             Rewards = item.Properties.RewardTextList;
+            Accepted = accepted;
         }
 
         public QuestViewModel(PlayerQuestItem item)
@@ -206,6 +221,7 @@ public class QuestController(IServiceProvider provider) : Controller
             Type = item.Type;
             Tasks = item.TaskItems.Select(t => new QuestTaskViewModel(t));
             Rewards = item.Properties.RewardTextList;
+            Accepted = true;
         }
     }
 

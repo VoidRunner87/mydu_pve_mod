@@ -8,5 +8,7 @@ public class PlayerAcceptQuestOutcome : IOutcome
     public string Message { get; set; } = string.Empty;
     
     public static PlayerAcceptQuestOutcome Accepted() => new() {Success = true};
+    public static PlayerAcceptQuestOutcome AlreadyAccepted() => new() {Success = false, Message = "Quest already accepted"};
+    public static PlayerAcceptQuestOutcome MaxNumberOfActiveQuestsReached() => new() {Success = false, Message = "You reached the maximum number of quests you can accept."};
     public static PlayerAcceptQuestOutcome Failed(string message) => new() { Message = message };
 }

@@ -12,6 +12,25 @@ modApi.cb = (data) => {
     console.log("Mod.DynamicEncounters", 1999999, [], JSON.stringify(data));
 };
 
+modApi.setWaypoint = (pos) => {
+    console.log('setWaypoint', pos);
+};
+
+modApi.setContext = (data) => {
+    window.player_context = {
+        ...window.player_context || {},
+        ...data
+    };
+};
+
+modApi.refreshNpcQuestList = () => {
+    console.log('refreshNpcQuestList');
+};
+
+modApi.acceptQuest = (questId) => {
+    console.log('acceptQuest', window.player_context, questId);
+};
+
 modApi.setResourceContents = (name, contentType, contents) => {
     const blob = new Blob([contents], {type: contentType});
     const blobUrl = URL.createObjectURL(blob);

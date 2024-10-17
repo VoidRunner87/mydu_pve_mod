@@ -29,14 +29,15 @@ public class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepo
             await db.ExecuteAsync(
                 """
                 INSERT INTO public.mod_player_quest (
-                    id, player_id, faction_id, type, status, seed, json_properties, created_at, expires_at, on_success_script, on_failure_script
+                    id, original_quest_id, player_id, faction_id, type, status, seed, json_properties, created_at, expires_at, on_success_script, on_failure_script
                 ) VALUES (
-                    @id, @player_id, @faction_id, @type, @status, @seed, @json_properties::jsonb, NOW(), @expires_at, @on_success_script::jsonb, @on_failure_script::jsonb              
+                    @id, @original_quest_id, @player_id, @faction_id, @type, @status, @seed, @json_properties::jsonb, NOW(), @expires_at, @on_success_script::jsonb, @on_failure_script::jsonb              
                 )
                 """,
                 new
                 {
                     id = item.Id,
+                    original_quest_id = item.OriginalQuestId,
                     player_id = (long)item.PlayerId,
                     faction_id = item.FactionId.Id,
                     type = item.Type,
@@ -180,6 +181,7 @@ public class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepo
     {
         return new PlayerQuestItem(
             row.id,
+            row.original_quest_id,
             row.faction_id,
             (ulong)row.player_id,
             row.type,
@@ -197,6 +199,7 @@ public class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepo
     private class DbRow
     {
         public Guid id { get; set; }
+        public Guid original_quest_id { get; set; }
         public long player_id { get; set; }
         public long faction_id { get; set; }
         public string type { get; set; }

@@ -198,39 +198,41 @@ public class ModBase
         var migrationRunner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
         migrationRunner.MigrateUp();
 
-        var orleansMigrationRunner = GetOrleansMigrationRunner();
-        orleansMigrationRunner.MigrateUp();
+        // var orleansMigrationRunner = GetOrleansMigrationRunner();
+        // orleansMigrationRunner.MigrateUp();
         
         Console.WriteLine("Migrations Executed");
     }
 
     private static IMigrationRunner GetOrleansMigrationRunner()
     {
-        var serviceCollection = new ServiceCollection()
-            .AddFluentMigratorCore()
-            .ConfigureRunner(rb =>
-            {
-                var pg = Config.Instance.postgres;
-                
-                var postgres = new PostgresSettings
-                {
-                    database = "orleans",
-                    extra = pg.extra,
-                    host = pg.host,
-                    max_connection = pg.max_connection,
-                    password = pg.password,
-                    port = pg.port,
-                    user = pg.user
-                };
-
-                rb.AddPostgres().WithGlobalConnectionString(postgres.ConnectionString());
-                rb.ScanIn(typeof(Orleans.Migrations.AddIndexToOrleansToFixDuplicateSilos).Assembly).For.Migrations();
-            })
-            .BuildServiceProvider(false);
-
-        var migrationRunner = serviceCollection.GetRequiredService<IMigrationRunner>();
-
-        return migrationRunner;
+        throw new NotImplementedException();
+        
+        // var serviceCollection = new ServiceCollection()
+        //     .AddFluentMigratorCore()
+        //     .ConfigureRunner(rb =>
+        //     {
+        //         // var pg = Config.Instance.postgres;
+        //         //
+        //         // var postgres = new PostgresSettings
+        //         // {
+        //         //     database = "orleans",
+        //         //     extra = pg.extra,
+        //         //     host = pg.host,
+        //         //     max_connection = pg.max_connection,
+        //         //     password = pg.password,
+        //         //     port = pg.port,
+        //         //     user = pg.user
+        //         // };
+        //         //
+        //         // rb.AddPostgres().WithGlobalConnectionString(postgres.ConnectionString());
+        //         // rb.ScanIn(typeof(Orleans.Migrations.AddIndexToOrleansToFixDuplicateSilos).Assembly).For.Migrations();
+        //     })
+        //     .BuildServiceProvider(false);
+        //
+        // var migrationRunner = serviceCollection.GetRequiredService<IMigrationRunner>();
+        //
+        // return migrationRunner;
     }
 
     public static void DowngradeDatabase(IServiceScope scope, int version)

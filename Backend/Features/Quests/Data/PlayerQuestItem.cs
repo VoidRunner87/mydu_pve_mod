@@ -7,6 +7,7 @@ namespace Mod.DynamicEncounters.Features.Quests.Data;
 
 public class PlayerQuestItem(
     Guid id,
+    Guid originalQuestId,
     FactionId factionId,
     ulong playerId,
     string type,
@@ -21,6 +22,7 @@ public class PlayerQuestItem(
 )
 {
     public Guid Id { get; } = id;
+    public Guid OriginalQuestId { get; } = originalQuestId;
     public FactionId FactionId { get; } = factionId;
     public ulong PlayerId { get; } = playerId;
     public string Type { get; } = type;

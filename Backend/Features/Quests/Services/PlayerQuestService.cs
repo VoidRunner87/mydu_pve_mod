@@ -12,14 +12,29 @@ namespace Mod.DynamicEncounters.Features.Quests.Services;
 public class PlayerQuestService(IServiceProvider provider) : IPlayerQuestService
 {
     private readonly IPlayerQuestRepository _repository = provider.GetRequiredService<IPlayerQuestRepository>();
-    
-    public async Task<PlayerAcceptQuestOutcome> AcceptQuestAsync(PlayerId playerId,
-        ProceduralQuestItem proceduralQuestItem)
+
+    public async Task<PlayerAcceptQuestOutcome> AcceptQuestAsync(
+        PlayerId playerId,
+        ProceduralQuestItem proceduralQuestItem
+    )
     {
+        var playerQuestItems = (await _repository.GetAll(playerId)).ToList();
+
+        if (playerQuestItems.Any(x => x.OriginalQuestId == proceduralQuestItem.Id))
+        {
+            return PlayerAcceptQuestOutcome.AlreadyAccepted();
+        }
+
+        if (playerQuestItems.Count >= 10)
+        {
+            return PlayerAcceptQuestOutcome.MaxNumberOfActiveQuestsReached();
+        }
+
         var props = proceduralQuestItem.Properties;
-        
+
         var item = new PlayerQuestItem(
             Guid.NewGuid(),
+            proceduralQuestItem.Id,
             proceduralQuestItem.FactionId,
             playerId,
             proceduralQuestItem.Type,

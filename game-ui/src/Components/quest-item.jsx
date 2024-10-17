@@ -1,5 +1,5 @@
 import {ExpandIcon, SquareIcon} from "./icons";
-import {Button, IconButton, TargetButton} from "./buttons";
+import {PrimaryButton, IconButton, TargetButton, SecondaryButton} from "./buttons";
 import styled from "styled-components";
 
 const ExpandItem = styled.div`
@@ -52,7 +52,7 @@ const ItemText = styled.span`
 `;
 
 const TaskSubTitle = styled.h3`
-    margin: 16px 0 16px 0;
+    margin: 8px 0 8px 0;
     font-size: 1em;
     font-weight: normal;
 `;
@@ -62,13 +62,30 @@ const ActionContainer = styled.div`
     justify-content: start;
 `;
 
-const QuestItem = ({title, type, tasks, expanded, onSelect, rewards}) => {
+const Spacing = styled.div`
+    flex-grow: 1;
+`;
+
+const AcceptedPill = styled.div`
+    text-align: right;
+    font-size: .7em;
+    padding: .3em;
+    background-color: rgb(13, 24, 28);
+    border-radius: 2px;
+    color: rgb(180, 221, 235);
+`;
+
+const QuestItem = ({questId, title, type, tasks, expanded, onSelect, rewards, onAccepted, accepted}) => {
+
+    const setWaypoint = (pos) => {
+        window.modApi.setWaypoint(pos);
+    };
 
     const tasksRender = tasks
         .map((t, i) => <Task key={i}>
                 <ItemContainer>
                     <ItemIcon><SquareIcon/></ItemIcon>
-                    <ItemText>{t.title}</ItemText><TargetButton/>
+                    <ItemText>{t.title}</ItemText><TargetButton onClick={() => setWaypoint(t.position)}/>
                 </ItemContainer>
             </Task>
         );
@@ -82,19 +99,36 @@ const QuestItem = ({title, type, tasks, expanded, onSelect, rewards}) => {
             </Task>
         );
 
+    const acceptQuest = () => {
+        window.modApi.acceptQuest(questId);
+        onAccepted(questId);
+    }
+
+    let headerClassNames = [];
+    if (expanded)
+    {
+        headerClassNames.push('expanded');
+    }
+    if (accepted)
+    {
+        headerClassNames.push('accepted');
+    }
+
     return (
         <ExpandItem>
-            <Header onClick={onSelect} className={expanded ? "expanded" : ""}>
-                <ExpandIcon expanded={expanded}/> <HeaderText>{title}</HeaderText>
+            <Header onClick={onSelect} className={headerClassNames.join(" ")}>
+                <ExpandIcon expanded={expanded}/> <HeaderText>{title}</HeaderText> <Spacing /><AcceptedPill hidden={!accepted}>Accepted</AcceptedPill>
             </Header>
             <Contents hidden={!expanded}>
                 <TaskSubTitle>Objectives:</TaskSubTitle>
                 {tasksRender}
+                <br/>
                 <TaskSubTitle>Rewards:</TaskSubTitle>
                 {rewardsRender}
                 <br/>
                 <ActionContainer>
-                    <Button>Accept</Button>
+                    <PrimaryButton hidden={accepted} onClick={acceptQuest}>Accept</PrimaryButton>
+                    <SecondaryButton hidden={!accepted}>Accepted</SecondaryButton>
                 </ActionContainer>
             </Contents>
         </ExpandItem>
