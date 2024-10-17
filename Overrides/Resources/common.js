@@ -1,8 +1,3 @@
-// setInterval(() => {
-//     CPPHud.addFailureNotification("Test");
-//     CPPMod.sendModAction("Mod.Honjo.Server", 1000001, [], JSON.stringify({ hello: "world" }));
-// }, 1000);
-
 if (!window.global_resources) {
     window.global_resources = {};
 }
