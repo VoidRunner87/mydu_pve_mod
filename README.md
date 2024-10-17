@@ -1,6 +1,10 @@
 ﻿# PVE Mod for MyDU
 
+## Showcase Video
+
 [![image](https://github.com/user-attachments/assets/8d5a4b86-d3a2-4319-b715-9a5608dbb6bc)](https://www.youtube.com/watch?v=vlXTiFBxXbk)
+
+## Disclaimer
 
 Before starting, know this:
 * There were several hacky adjustments I had to make for this to work.
