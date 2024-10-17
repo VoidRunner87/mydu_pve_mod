@@ -60,7 +60,7 @@ modApi.getPlayerInfo = () => {
 }
 
 modApi.imageUrl = (path) => {
-    return `coui://${path}`;
+    return `coui://data/${path}`;
 }
 
 modApi.setResourceContents = (name, contentType, contents) => {
