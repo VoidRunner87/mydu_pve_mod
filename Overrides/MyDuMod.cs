@@ -61,12 +61,18 @@ public class MyDuMod : IMod
             name = GetName(),
             actions =
             [
+                new ModActionDefinition
+                {
+                    id = (ulong)ActionType.LoadPlayerBoardApp,
+                    context = ModActionContext.Global,
+                    label = "Actions\\Open player board"
+                }
             ]
         };
 
         var loadNpcApp = new ModActionDefinition
         {
-            id = (ulong)ActionType.LoadNpcApp,
+            id = (ulong)ActionType.LoadBoardApp,
             context = ModActionContext.Global,
             label = "Admin\\Load NPC APP"
         };
@@ -96,16 +102,17 @@ public class MyDuMod : IMod
 
         switch ((ActionType)action.actionId)
         {
-            case ActionType.LoadNpcApp:
+            case ActionType.LoadBoardApp:
                 await InjectJs(playerId, Resources.CommonJs);
                 await InjectJs(playerId, Resources.CreateRootDivJs);
+                await InjectJs(playerId, "window.modApi.setPage('npc');");
 
                 await TriggerActionInternal(
                     playerId,
                     new ModAction
                     {
                         playerId = action.playerId,
-                        actionId = (ulong)ActionType.RefreshNpcApp,
+                        actionId = (ulong)ActionType.RefreshNpcQuestList,
                         constructId = action.constructId,
                         elementId = action.elementId,
                         modName = action.modName,
@@ -116,7 +123,28 @@ public class MyDuMod : IMod
                 await InjectCss(playerId, Resources.NpcAppCss);
                 await InjectJs(playerId, Resources.NpcAppJs);
                 break;
-            case ActionType.RefreshNpcApp:
+            case ActionType.LoadPlayerBoardApp:
+                await InjectJs(playerId, Resources.CommonJs);
+                await InjectJs(playerId, Resources.CreateRootDivJs);
+                await InjectJs(playerId, "window.modApi.setPage('player');");
+
+                await TriggerActionInternal(
+                    playerId,
+                    new ModAction
+                    {
+                        playerId = action.playerId,
+                        actionId = (ulong)ActionType.RefreshPlayerQuestList,
+                        constructId = action.constructId,
+                        elementId = action.elementId,
+                        modName = action.modName,
+                        payload = action.payload
+                    }
+                );
+
+                await InjectCss(playerId, Resources.NpcAppCss);
+                await InjectJs(playerId, Resources.NpcAppJs);
+                break;
+            case ActionType.RefreshNpcQuestList:
                 var refreshedNpcQuests = JsonConvert.DeserializeObject<QueryNpcQuests>(action.payload);
 
                 var refreshedJsonData = await apiClient.GetNpcQuests(
@@ -136,7 +164,20 @@ public class MyDuMod : IMod
                 });
 
                 break;
-            case ActionType.CloseNpcApp:
+            case ActionType.RefreshPlayerQuestList:
+
+                var playerQuestJsonData = await apiClient.GetPlayerQuestsAsync(
+                    playerId
+                );
+
+                await UploadJson(playerId, "player-quests", playerQuestJsonData);
+                await SetContext(playerId, new
+                {
+                    playerId
+                });
+
+                break;
+            case ActionType.CloseBoard:
                 await InjectJs(playerId, "modApi.removeAppRoot()");
                 break;
             case ActionType.AcceptQuest:
@@ -157,7 +198,21 @@ public class MyDuMod : IMod
                 }
                 
                 await PlayMissionAcceptedSound(playerId);
-                await Notifications.SimpleNotificationToPlayer(_provider, playerId, "Mission Accepted");
+                await Notifications.SimpleNotificationToPlayer(_provider, playerId, "Mission accepted");
+                break;
+            case ActionType.AbandonQuest:
+                var abandonQuest = JsonConvert.DeserializeObject<AbandonQuest>(action.payload);
+
+                var abandonQuestOutcome = await apiClient.AbandonQuest(abandonQuest.QuestId, abandonQuest.PlayerId);
+                
+                if (!abandonQuestOutcome.Success)
+                {
+                    await Notifications.ErrorNotification(_provider, playerId, $"Failed: {abandonQuestOutcome.Message}");
+                    break;
+                }
+                
+                await Notifications.SimpleNotificationToPlayer(_provider, playerId, "Mission abandoned");
+                
                 break;
         }
     }

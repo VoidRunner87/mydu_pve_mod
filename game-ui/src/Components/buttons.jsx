@@ -23,6 +23,17 @@ export const PrimaryButton = styled.button`
     cursor: pointer;
 `;
 
+export const DestructiveButton = styled.button`
+    background-color: rgb(250, 80, 80);
+    padding: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: white;
+    text-align: left;
+    border: none;
+    cursor: pointer;
+`;
+
 export const SecondaryButton = styled.button`
     background-color: rgb(27, 48, 56);
     color: rgb(180, 221, 235);

@@ -1,6 +1,7 @@
 import {ExpandIcon, SquareIcon} from "./icons";
-import {PrimaryButton, IconButton, TargetButton, SecondaryButton} from "./buttons";
+import {PrimaryButton, IconButton, TargetButton, SecondaryButton, DestructiveButton} from "./buttons";
 import styled from "styled-components";
+import {useState} from "react";
 
 const ExpandItem = styled.div`
     background-color: rgb(27, 48, 56);
@@ -75,7 +76,9 @@ const AcceptedPill = styled.div`
     color: rgb(180, 221, 235);
 `;
 
-const QuestItem = ({questId, title, type, tasks, expanded, onSelect, rewards, onAccepted, accepted}) => {
+const QuestItem = ({questId, title, type, tasks, expanded, onSelect, rewards, onAccepted, onAbandon, accepted, canAccept, canAbandon}) => {
+
+    const [confirmAbandon, setConfirmAbandon] = useState(false);
 
     const setWaypoint = (pos) => {
         window.modApi.setWaypoint(pos);
@@ -104,6 +107,19 @@ const QuestItem = ({questId, title, type, tasks, expanded, onSelect, rewards, on
         onAccepted(questId);
     }
 
+    const abandonQuest = () => {
+        window.modApi.abandonQuest(questId);
+        onAbandon(questId);
+    }
+
+    const showConfirmAbandon = () => {
+        setConfirmAbandon(true);
+
+        setTimeout(() => {
+            setConfirmAbandon(false);
+        }, 3000);
+    }
+
     let headerClassNames = [];
     if (expanded)
     {
@@ -127,8 +143,10 @@ const QuestItem = ({questId, title, type, tasks, expanded, onSelect, rewards, on
                 {rewardsRender}
                 <br/>
                 <ActionContainer>
-                    <PrimaryButton hidden={accepted} onClick={acceptQuest}>Accept</PrimaryButton>
-                    <SecondaryButton hidden={!accepted}>Accepted</SecondaryButton>
+                    <PrimaryButton hidden={accepted || !canAccept} onClick={acceptQuest}>Accept</PrimaryButton>
+                    <SecondaryButton hidden={!accepted || !canAccept}>Accepted</SecondaryButton>
+                    <PrimaryButton hidden={confirmAbandon || !accepted || !canAbandon} onClick={showConfirmAbandon}>Abandon</PrimaryButton>
+                    {confirmAbandon ? <DestructiveButton onClick={abandonQuest}>Confirm abandon</DestructiveButton> : ""}
                 </ActionContainer>
             </Contents>
         </ExpandItem>

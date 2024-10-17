@@ -1,10 +1,9 @@
-// setInterval(() => {
-//     CPPHud.addFailureNotification("Test");
-//     CPPMod.sendModAction("Mod.Honjo.Server", 1000001, [], JSON.stringify({ hello: "world" }));
-// }, 1000);
-
 if (!window.global_resources) {
     window.global_resources = {};
+}
+
+if (!window.page) {
+    window.page = "npc";
 }
 
 let modApi = {};
@@ -15,6 +14,32 @@ modApi.cb = (data) => {
 modApi.setWaypoint = (pos) => {
     console.log('setWaypoint', pos);
 };
+
+modApi.setPage = (page) => {
+    window.page = page;
+};
+
+modApi.imageUrl = (path) => {
+    return path;
+}
+
+modApi.getPlayerInfo = () => {
+    return {
+        "_playerId": 10000,
+        "skinIcon": "stubs/chara_male-military.png",
+        "playerName": "VoidRunner7891",
+        "apheliaId": 2,
+        "onPlayerInfoUpdate": {
+            "_areEventVoided": false,
+            "_listeners": [
+                null,
+                null,
+                null,
+                null
+            ]
+        }
+    };
+}
 
 modApi.setContext = (data) => {
     window.player_context = {
@@ -27,8 +52,17 @@ modApi.refreshNpcQuestList = () => {
     console.log('refreshNpcQuestList');
 };
 
+modApi.refreshPlayerQuestList = () => {
+    console.log('refreshPlayerQuestList');
+};
+
+
 modApi.acceptQuest = (questId) => {
     console.log('acceptQuest', window.player_context, questId);
+};
+
+modApi.abandonQuest = (questId) => {
+    console.log('abandonQuest', window.player_context, questId);
 };
 
 modApi.setResourceContents = (name, contentType, contents) => {

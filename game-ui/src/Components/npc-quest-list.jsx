@@ -2,6 +2,8 @@ import {useEffect, useState} from "react";
 import {CloseButton, Container, Header, Panel, PanelBody, Title, Tab} from "./panel";
 import styled from "styled-components";
 import QuestItem from "./quest-item";
+import {IconButton} from "./buttons";
+import {RefreshIcon} from "./icons";
 
 const CategoryPanel = styled.div`
     background-color: rgb(13, 24, 28);
@@ -24,7 +26,7 @@ const ContentPanel = styled.div`
     flex-grow: 1;
 `;
 
-const QuestList = (props) => {
+const NpcQuestList = (props) => {
 
     const [jobs, setJobs] = useState([]);
     const [expandedMap, setExpandedMap] = useState({});
@@ -41,14 +43,6 @@ const QuestList = (props) => {
 
         fetchData();
 
-        // const intervalId = setInterval(() => {
-        //     window.modApi.refreshNpcQuestList();
-        //     fetchData();
-        // }, 5000);
-        //
-        // return () => {
-        //     clearInterval(intervalId);
-        // };
     }, []);
 
     const fetchData = () => {
@@ -106,8 +100,9 @@ const QuestList = (props) => {
     };
 
     const handleAccepted = (index, questId) => {
-        acceptedQuestMap[questId] = true;
-        setAcceptedQuestMap(acceptedQuestMap);
+        setAcceptedQuestMap(Object.assign({[questId]: true}, acceptedQuestMap));
+
+        handleRefresh();
     };
 
     const questItems = jobs.map((item, index) =>
@@ -118,16 +113,26 @@ const QuestList = (props) => {
                    title={item.title}
                    tasks={item.tasks}
                    type={item.type}
+                   canAccept={true}
                    onAccepted={(questId) => handleAccepted(index, questId)}
                    accepted={acceptedQuestMap[item.id] || item.accepted}
                    expanded={expandedMap[item.id]} />
     );
 
+    const handleRefresh = () => {
+        window.modApi.refreshNpcQuestList();
+
+        setTimeout(() => {
+            fetchData();
+        }, 1000);
+    };
+
     return (
         <Container>
             <Panel>
                 <Header>
-                    <Title>{factionName} Faction Board</Title>
+                    <Title>{factionName} Faction board</Title>
+                    <IconButton onClick={handleRefresh}><RefreshIcon /></IconButton>
                     <CloseButton onClick={handleClose}>&times;</CloseButton>
                 </Header>
                 <PanelBody>
@@ -151,4 +156,4 @@ const QuestList = (props) => {
     );
 }
 
-export default QuestList;
+export default NpcQuestList;

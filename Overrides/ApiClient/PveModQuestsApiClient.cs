@@ -72,4 +72,26 @@ public class PveModQuestsApiClient(IServiceProvider provider) : IPveModQuestsApi
         
         return JsonConvert.DeserializeObject<BasicOutcome>(await responseMessage.Content.ReadAsStringAsync());
     }
+
+    public async Task<BasicOutcome> AbandonQuest(Guid questId, ulong playerId)
+    {
+        var url = Path.Combine(PveModBaseUrl.GetBaseUrl(), "quest/player/abandon");
+        
+        using var client = _httpClientFactory.CreateClient();
+
+        var responseMessage = await client.PostAsync(
+            new Uri(url),
+            new StringContent(
+                JsonConvert.SerializeObject(new
+                {
+                    questId,
+                    playerId
+                }),
+                Encoding.UTF8,
+                "application/json"
+            )
+        );
+        
+        return JsonConvert.DeserializeObject<BasicOutcome>(await responseMessage.Content.ReadAsStringAsync());
+    }
 }

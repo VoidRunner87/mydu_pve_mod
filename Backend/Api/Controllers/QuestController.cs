@@ -4,10 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Faction.Interfaces;
 using Mod.DynamicEncounters.Features.Quests.Data;
 using Mod.DynamicEncounters.Features.Quests.Interfaces;
+using Mod.DynamicEncounters.Helpers;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
@@ -19,6 +21,9 @@ public class QuestController(IServiceProvider provider) : Controller
 
     private readonly IPlayerQuestService _playerQuestService
         = provider.GetRequiredService<IPlayerQuestService>();
+
+    private readonly ILogger<QuestController> _logger
+        = provider.CreateLogger<QuestController>();
 
     [HttpPost]
     [Route("player/accept")]
@@ -59,13 +64,23 @@ public class QuestController(IServiceProvider provider) : Controller
 
     [HttpPost]
     [Route("player/abandon")]
-    public async Task<IActionResult> AcceptQuest([FromBody] AbandonQuestRequest request)
+    public async Task<IActionResult> AbandonQuest([FromBody] AbandonQuestRequest request)
     {
-        var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
+        try
+        {
+            var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
 
-        await playerQuestRepository.DeleteAsync(request.PlayerId, request.QuestId);
+            await playerQuestRepository.DeleteAsync(request.PlayerId, request.QuestId);
 
-        return Ok();
+            return Ok(AbandonQuestResponse.Abandoned());
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to Abandon Player {Player} Quest {Id}", request.PlayerId, request.QuestId);
+            
+            return StatusCode(500, AbandonQuestResponse.Failed("Failed to Abandon Mission"));
+        }
+        
     }
 
     [HttpGet]
@@ -152,6 +167,15 @@ public class QuestController(IServiceProvider provider) : Controller
 
         public static AcceptQuestResponse Accepted(string message) => new(true, message);
         public static AcceptQuestResponse Failed(string message) => new(false, message);
+    }
+    
+    public class AbandonQuestResponse(bool isSuccess) : IOutcome
+    {
+        public bool Success { get; } = isSuccess;
+        public string Message { get; init; }
+
+        public static AbandonQuestResponse Abandoned() => new(true);
+        public static AbandonQuestResponse Failed(string message) => new(false){Message = message};
     }
 
     public class CompleteQuestTaskRequest
