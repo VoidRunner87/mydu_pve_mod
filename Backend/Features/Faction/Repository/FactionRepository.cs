@@ -29,6 +29,26 @@ public class FactionRepository(IServiceProvider provider) : IFactionRepository
         return result.Select(MapToModel);
     }
 
+    public async Task<FactionItem?> FindAsync(FactionId factionId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var result = (await db.QueryAsync<DbRow>(
+            """
+            SELECT * FROM public.mod_faction WHERE id = @id
+            """,
+            new { id = factionId.Id }
+        )).ToList();
+
+        if (result.Count == 0)
+        {
+            return null;
+        }
+
+        return MapToModel(result.First());
+    }
+
     private FactionItem MapToModel(DbRow row)
     {
         return new FactionItem

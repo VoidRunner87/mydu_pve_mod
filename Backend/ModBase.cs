@@ -24,7 +24,7 @@ using Newtonsoft.Json;
 using NQ.Router;
 using NQ.Visibility;
 using NQutils;
-using NQutils.Logging;
+using NQutils.Config;
 using NQutils.Sql;
 using Orleans;
 
@@ -111,19 +111,17 @@ public class ModBase
 
         services
             .AddFluentMigratorCore()
-            .ConfigureRunner(c =>
+            .ConfigureRunner(rb =>
             {
-                // TODO read from config
-                c.AddPostgres()
-                    .WithGlobalConnectionString(NQutils.Config.Config.Instance.postgres.ConnectionString());
-                c.ScanIn(Assembly.GetExecutingAssembly()).For.Migrations();
+                rb.AddPostgres().WithGlobalConnectionString(Config.Instance.postgres.ConnectionString());
+                rb.ScanIn(Assembly.GetExecutingAssembly()).For.Migrations();
             })
             .AddSingleton<ISql, Sql>()
             .AddSingleton<IYamlDeserializer, YamlDeserializer>()
             .AddInitializableSingleton<IGameplayBank, GameplayBank>()
             .AddSingleton<ILocalizationManager, LocalizationManager>()
             .AddTransient<IDataAccessor, DataAccessor>()
-            .AddLogging(logging => logging.Setup(logWebHostInfo: true))
+            .AddLogging(logging => logging.SetupPveModLog(logWebHostInfo: true))
             .AddOrleansClient("IntegrationTests")
             .AddHttpClient()
             .AddTransient<NQutils.Stats.IStats, NQutils.Stats.FakeIStats>()
@@ -199,7 +197,42 @@ public class ModBase
         Console.WriteLine("Executing DB Migrations");
         var migrationRunner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
         migrationRunner.MigrateUp();
+
+        // var orleansMigrationRunner = GetOrleansMigrationRunner();
+        // orleansMigrationRunner.MigrateUp();
+        
         Console.WriteLine("Migrations Executed");
+    }
+
+    private static IMigrationRunner GetOrleansMigrationRunner()
+    {
+        throw new NotImplementedException();
+        
+        // var serviceCollection = new ServiceCollection()
+        //     .AddFluentMigratorCore()
+        //     .ConfigureRunner(rb =>
+        //     {
+        //         // var pg = Config.Instance.postgres;
+        //         //
+        //         // var postgres = new PostgresSettings
+        //         // {
+        //         //     database = "orleans",
+        //         //     extra = pg.extra,
+        //         //     host = pg.host,
+        //         //     max_connection = pg.max_connection,
+        //         //     password = pg.password,
+        //         //     port = pg.port,
+        //         //     user = pg.user
+        //         // };
+        //         //
+        //         // rb.AddPostgres().WithGlobalConnectionString(postgres.ConnectionString());
+        //         // rb.ScanIn(typeof(Orleans.Migrations.AddIndexToOrleansToFixDuplicateSilos).Assembly).For.Migrations();
+        //     })
+        //     .BuildServiceProvider(false);
+        //
+        // var migrationRunner = serviceCollection.GetRequiredService<IMigrationRunner>();
+        //
+        // return migrationRunner;
     }
 
     public static void DowngradeDatabase(IServiceScope scope, int version)

@@ -3,11 +3,13 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Mod.DynamicEncounters.Api.Config;
 using Mod.DynamicEncounters.Features;
+using Newtonsoft.Json;
 using NQutils.Logging;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -48,20 +50,23 @@ public class Startup(IServiceCollection rootServices)
         
         services.AddControllers(options =>
         {
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-            var serializer = new SerializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-            
-            options.InputFormatters.Add(new YamlInputFormatter(deserializer));  
-            options.OutputFormatters.Add(new YamlOutputFormatter(serializer));  
-            options.FormatterMappings.SetMediaTypeMappingForFormat("yaml", MediaTypeHeaderValues.ApplicationYaml); 
+            // var deserializer = new DeserializerBuilder()
+            //     .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            //     .Build();
+            // var serializer = new SerializerBuilder()
+            //     .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            //     .Build();
+            //
+            // options.InputFormatters.Add(new YamlInputFormatter(deserializer));  
+            // options.OutputFormatters.Add(new YamlOutputFormatter(serializer));  
+            // options.FormatterMappings.SetMediaTypeMappingForFormat("yaml", MediaTypeHeaderValues.ApplicationYaml);
         }).AddJsonOptions(options =>
         {
             options.JsonSerializerOptions
                 .DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault | JsonIgnoreCondition.WhenWritingNull;
+        }).AddNewtonsoftJson(options =>
+        {
+            options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
         });
 
         services.AddLogging(logging => logging.Setup(logWebHostInfo: true));

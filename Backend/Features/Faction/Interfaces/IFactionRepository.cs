@@ -7,4 +7,5 @@ namespace Mod.DynamicEncounters.Features.Faction.Interfaces;
 public interface IFactionRepository
 {
     Task<IEnumerable<FactionItem>> GetAllAsync();
+    Task<FactionItem?> FindAsync(FactionId factionId);
 }

@@ -44,7 +44,7 @@ public class ConstructService(IServiceProvider provider) : IConstructService
         {
             _logger.LogError(e, "Failed to fetch construct information for {ConstructId}", constructId);
 
-            if (await Exists(constructId))
+            if (await ExistsAndNotDeleted(constructId))
             {
                 // indicates that the construct exists, but we failed to get info on it
                 return new ConstructInfoOutcome(true, null);
@@ -93,9 +93,9 @@ public class ConstructService(IServiceProvider provider) : IConstructService
         {
             return ConstructTransformOutcome.DoesNotExist();
         }
-        
+
         var item = result[0];
-        
+
         return new ConstructTransformOutcome(
             true,
             new Vec3
@@ -113,7 +113,7 @@ public class ConstructService(IServiceProvider provider) : IConstructService
             }
         );
     }
-    
+
     public struct ConstructTransformRow
     {
         public double position_x;
@@ -271,6 +271,19 @@ public class ConstructService(IServiceProvider provider) : IConstructService
 
         var count = await db.ExecuteScalarAsync<int>(
             "SELECT COUNT(0) FROM public.construct WHERE id = @constructId",
+            new { constructId = (long)constructId }
+        );
+
+        return count > 0;
+    }
+
+    public async Task<bool> ExistsAndNotDeleted(ulong constructId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var count = await db.ExecuteScalarAsync<int>(
+            "SELECT COUNT(0) FROM public.construct WHERE id = @constructId AND deleted_at IS NULL",
             new { constructId = (long)constructId }
         );
 

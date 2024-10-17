@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mod.DynamicEncounters.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mod.DynamicEncounters.Overrides", "..\Overrides\Mod.DynamicEncounters.Overrides.csproj", "{BEDBBAEA-4619-49D3-BAE6-E8BA833DC5DC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Migrations", "..\Orleans.Migrations\Orleans.Migrations.csproj", "{1752996A-4AED-42CB-B31A-8C2451DB0629}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{BEDBBAEA-4619-49D3-BAE6-E8BA833DC5DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BEDBBAEA-4619-49D3-BAE6-E8BA833DC5DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BEDBBAEA-4619-49D3-BAE6-E8BA833DC5DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1752996A-4AED-42CB-B31A-8C2451DB0629}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1752996A-4AED-42CB-B31A-8C2451DB0629}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1752996A-4AED-42CB-B31A-8C2451DB0629}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1752996A-4AED-42CB-B31A-8C2451DB0629}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

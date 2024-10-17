@@ -32,6 +32,20 @@ public class FactionTerritoryRepository(IServiceProvider provider) : IFactionTer
         return result.Select(MapToModel);
     }
 
+    public async Task<IEnumerable<FactionTerritoryItem>> GetAll()
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var result = (await db.QueryAsync<DbRow>(
+            """
+            SELECT * FROM public.mod_faction_territory
+            """
+        )).ToList();
+
+        return result.Select(MapToModel);
+    }
+
     private FactionTerritoryItem MapToModel(DbRow row)
     {
         return new FactionTerritoryItem
