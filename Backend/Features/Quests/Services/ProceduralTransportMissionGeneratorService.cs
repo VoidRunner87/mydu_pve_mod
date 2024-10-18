@@ -112,8 +112,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
         var missionTemplate = await transportMissionTemplateProvider.GetMissionTemplate(random.Next());
         missionTemplate = missionTemplate
             .SetPickupConstructName(pickupConstructInfo.Info.rData.name)
-            .SetDeliverConstructName(dropConstructInfo.Info.rData.name)
-            .SetItemQuestProperty(questGuid);
+            .SetDeliverConstructName(dropConstructInfo.Info.rData.name);
         
         var distanceSu = (pickupConstructInfo.Info.rData.position - dropConstructInfo.Info.rData.position).Size()
                          / DistanceHelpers.OneSuInMeters;

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Loot.Data;
 using Mod.DynamicEncounters.Features.Loot.Interfaces;
 using Mod.DynamicEncounters.Helpers;
+using Newtonsoft.Json;
 using NQ;
 using NQ.Interfaces;
 using NQutils.Def;
@@ -79,39 +80,27 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
 
     public async Task SpawnItems(SpawnItemsOnPlayerInventoryCommand command)
     {
-        foreach (var entry in command.Items)
+        var modManagerGrain = _orleans.GetModManagerGrain();
+        var itemOperation = new ItemOperation
         {
-            var itemName = entry.ElementTypeName.Name;
-            var itemDef = _bank.GetDefinition(itemName);
-
-            if (itemDef == null)
+            Items = command.Items.Select(x => new ItemOperation.ItemDefinition
             {
-                _logger.LogError("No item definition found for {Item}", itemName);
+                Name = x.ElementTypeName.Name,
+                Quantity = x.Quantity,
+            }),
+            Properties = command.Properties
+        };
 
-                continue;
-            }
-
-            try
+        await modManagerGrain.TriggerModAction(
+            command.PlayerId,
+            new ModAction
             {
-                await _dataAccessor.PlayerInventoryGiveAsync(
-                    command.PlayerId,
-                    new ItemAndQuantity
-                    {
-                        item = new ItemInfo
-                        {
-                            type = itemDef.Id
-                        },
-                        quantity = entry.Quantity
-                    }
-                );
+                actionId = 100, // TODO enum
+                playerId = command.PlayerId,
+                modName = "Mod.DynamicEncounters",
+                payload = JsonConvert.SerializeObject(itemOperation)
             }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Failed to add item to container");
-            }
-        }
-
-        _logger.LogInformation("Items Spawned on Player {PlayerId}", command.PlayerId);
+        );
     }
 
     public async Task SpawnFuel(SpawnFuelCommand command)
@@ -154,7 +143,7 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
                         new PropertyValue(volume)
                     )
                 );
-                
+
                 await _dataAccessor.ContainerGiveAsync(
                     (long)container.elementId,
                     new ItemAndQuantity

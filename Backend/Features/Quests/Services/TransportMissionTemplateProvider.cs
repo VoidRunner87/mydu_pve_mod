@@ -35,7 +35,7 @@ public class TransportMissionTemplateProvider : ITransportMissionTemplateProvide
             deliverMessage,
             [
                 new ElementQuantityRef(
-                    new ElementTypeName("MissionPackagePVE"),
+                    new ElementTypeName("FactionSealedContainer"),
                     1
                 )
             ]

@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Quests.Data;
 using Mod.DynamicEncounters.Features.Quests.Interfaces;
-using MongoDB.Driver.Linq;
 
 namespace Mod.DynamicEncounters.Features.Quests.Services;
 
@@ -35,17 +34,7 @@ public class QuestInteractionService(IServiceProvider provider) : IQuestInteract
                 {
                     var interactionOutcome = await taskItem.Definition.HandleInteractionAsync(context);
                     interactionOutcomeList.Add(interactionOutcome);
-
-                    if (interactionOutcome.Success)
-                    {
-                        await playerQuestRepository.CompleteTaskAsync(taskItem.Id);
-                    }
                 }
-            }
-
-            if (await playerQuestRepository.AreAllTasksCompleted(questItem.Id))
-            {
-                await playerQuestRepository.SetStatusAsync(questItem.Id, QuestStatus.Completed);
             }
         }
 

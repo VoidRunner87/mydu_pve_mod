@@ -38,14 +38,4 @@ public class TransportMissionTemplate(
             Items
         );
     }
-
-    public TransportMissionTemplate SetItemQuestProperty(QuestId questId)
-    {
-        return new TransportMissionTemplate(
-            Title,
-            PickupMessage,
-            DeliverMessage,
-            Items.Select(i => i.WithProperty("questId", new PropertyValue($"{questId.Id}")))
-        );
-    }
 }
