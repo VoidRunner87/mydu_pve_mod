@@ -1,6 +1,6 @@
 using Mod.DynamicEncounters.Common.Interfaces;
 
-namespace Mod.DynamicEncounters.Features.Quests.Interfaces;
+namespace Mod.DynamicEncounters.Features.Quests.Data;
 
 public class PlayerAbandonQuestOutcome : IOutcome
 {

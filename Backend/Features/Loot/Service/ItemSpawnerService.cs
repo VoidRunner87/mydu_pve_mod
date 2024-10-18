@@ -6,8 +6,6 @@ using Backend;
 using Backend.Business;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Mod.DynamicEncounters.Features.Common.Data;
-using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Loot.Data;
 using Mod.DynamicEncounters.Features.Loot.Interfaces;
 using Mod.DynamicEncounters.Helpers;
@@ -24,27 +22,26 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
     private readonly IGameplayBank _bank = provider.GetGameplayBank();
     private readonly IDataAccessor _dataAccessor = provider.GetRequiredService<IDataAccessor>();
     private readonly ILogger<ItemSpawnerService> _logger = provider.CreateLogger<ItemSpawnerService>();
-    private readonly IErrorService _errorService = provider.GetRequiredService<IErrorService>();
 
-    public async Task SpawnItems(SpawnItemCommand command)
+    public async Task SpawnItems(SpawnItemOnRandomContainersCommand onRandomContainersCommand)
     {
         var containers = new List<ElementId>();
 
-        await foreach (var container in GetAvailableContainers(command.ConstructId))
+        await foreach (var container in GetAvailableContainers(onRandomContainersCommand.ConstructId))
         {
             containers.Add(container);
         }
 
         if (containers.Count == 0)
         {
-            _logger.LogWarning("No containers found on Construct {Construct}", command.ConstructId);
+            _logger.LogWarning("No containers found on Construct {Construct}", onRandomContainersCommand.ConstructId);
 
             return;
         }
 
         var random = provider.GetRandomProvider().GetRandom();
 
-        foreach (var entry in command.ItemBag.GetEntries())
+        foreach (var entry in onRandomContainersCommand.ItemBag.GetEntries())
         {
             var targetContainer = random.PickOneAtRandom(containers);
 
@@ -53,18 +50,6 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
             if (itemDef == null)
             {
                 _logger.LogError("No item definition found for {Item}", entry.ItemName);
-
-                await _errorService.AddAsync(
-                    new ErrorItem(
-                        "loot",
-                        "failed_to_find_item_def",
-                        new
-                        {
-                            entry.ItemName,
-                            command.ConstructId
-                        }
-                    )
-                );
 
                 continue;
             }
@@ -86,23 +71,47 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
             catch (Exception e)
             {
                 _logger.LogError(e, "Failed to add item to container");
-
-                await _errorService.AddAsync(
-                    new ErrorItem(
-                        "loot",
-                        "failed_to_add_to_container",
-                        new
-                        {
-                            entry.ItemName,
-                            command.ConstructId,
-                            quantity = entry.Quantity.ToQuantity()
-                        }
-                    )
-                );
             }
         }
 
-        _logger.LogInformation("Items Spawned on Construct {Construct}", command.ConstructId);
+        _logger.LogInformation("Items Spawned on Construct {Construct}", onRandomContainersCommand.ConstructId);
+    }
+
+    public async Task SpawnItems(SpawnItemsOnPlayerInventoryCommand command)
+    {
+        foreach (var entry in command.Items)
+        {
+            var itemName = entry.ElementTypeName.Name;
+            var itemDef = _bank.GetDefinition(itemName);
+
+            if (itemDef == null)
+            {
+                _logger.LogError("No item definition found for {Item}", itemName);
+
+                continue;
+            }
+
+            try
+            {
+                await _dataAccessor.PlayerInventoryGiveAsync(
+                    command.PlayerId,
+                    new ItemAndQuantity
+                    {
+                        item = new ItemInfo
+                        {
+                            type = itemDef.Id
+                        },
+                        quantity = entry.Quantity
+                    }
+                );
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to add item to container");
+            }
+        }
+
+        _logger.LogInformation("Items Spawned on Player {PlayerId}", command.PlayerId);
     }
 
     public async Task SpawnFuel(SpawnFuelCommand command)
@@ -121,18 +130,6 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
         if (itemDef == null)
         {
             _logger.LogError("No item definition found for {Item}", command.FuelType);
-
-            await _errorService.AddAsync(
-                new ErrorItem(
-                    "loot",
-                    "failed_to_find_item_def",
-                    new
-                    {
-                        command.FuelType,
-                        command.ConstructId
-                    }
-                )
-            );
 
             return;
         }
@@ -173,19 +170,6 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
             catch (Exception e)
             {
                 _logger.LogError(e, "Failed to add item to container");
-
-                await _errorService.AddAsync(
-                    new ErrorItem(
-                        "loot",
-                        "failed_to_add_to_container",
-                        new
-                        {
-                            command.FuelType,
-                            command.ConstructId,
-                            quantity = volume
-                        }
-                    )
-                );
             }
         }
 

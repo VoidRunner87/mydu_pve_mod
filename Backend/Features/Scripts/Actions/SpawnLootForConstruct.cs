@@ -42,7 +42,7 @@ public class SpawnLootForConstruct(ScriptActionItem actionItem) : IScriptAction
 
         var itemSpawnerService = provider.GetRequiredService<IItemSpawnerService>();
         await itemSpawnerService.SpawnItems(
-            new SpawnItemCommand(context.ConstructId.Value, itemBagData)
+            new SpawnItemOnRandomContainersCommand(context.ConstructId.Value, itemBagData)
         );
         
         logger.LogInformation("Spawned Loot for Construct {Construct}", context.ConstructId);

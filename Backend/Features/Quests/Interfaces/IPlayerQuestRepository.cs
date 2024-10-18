@@ -10,6 +10,10 @@ public interface IPlayerQuestRepository
 {
     Task AddAsync(PlayerQuestItem item);
     Task UpdateAsync(PlayerQuestItem item);
-    Task<IEnumerable<PlayerQuestItem>> GetAll(PlayerId playerId);
+    Task<IEnumerable<PlayerQuestItem>> GetAllAsync(PlayerId playerId);
+    Task<IEnumerable<PlayerQuestItem>> GetAllByStatusAsync(PlayerId playerId, string status);
     Task DeleteAsync(PlayerId playerId, Guid id);
+    Task CompleteTaskAsync(QuestTaskId questTaskId);
+    Task SetStatusAsync(QuestId questId, string status);
+    Task<bool> AreAllTasksCompleted(QuestId questId);
 }
