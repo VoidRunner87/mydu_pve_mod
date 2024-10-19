@@ -63,7 +63,7 @@ public class LootGeneratorService(IServiceProvider provider) : ILootGeneratorSer
             var randomCost = random.NextInt64(itemRule.MinSpawnCost, itemRule.MaxSpawnCost);
 
             IQuantity quantity = isMineAbleItem
-                ? new OreQuantity(randomQuantity)
+                ? new LitreQuantity(randomQuantity)
                 : new DefaultQuantity(randomQuantity);
 
             var stillWithinBudget = itemBag.AddEntry(

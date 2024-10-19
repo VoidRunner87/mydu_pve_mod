@@ -53,6 +53,7 @@ public static class FeaturesRegistration
         services.AddSingleton<IErrorRepository, ErrorRepository>();
         services.AddSingleton<IErrorService, ErrorService>();
         services.AddSingleton<IErrorService, ErrorService>();
+        services.AddSingleton<IPlayerAlertService, PlayerAlertService>();
 
         services.RegisterSectorGeneration();
         services.RegisterSpawnerScripts();

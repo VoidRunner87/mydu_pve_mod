@@ -11,5 +11,6 @@ public enum ActionType
     LoadPlayerBoardApp = 1000004,
     RefreshPlayerQuestList = 1000005,
     AbandonQuest = 1000006,
+    GiveTakePlayerItems = 100,
     Callback = 1999999
 }

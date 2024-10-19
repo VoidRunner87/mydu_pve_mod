@@ -6,7 +6,7 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 namespace Mod.DynamicEncounters.Features.Quests.Data;
 
 public class PlayerQuestItem(
-    Guid id,
+    QuestId id,
     Guid originalQuestId,
     FactionId factionId,
     ulong playerId,

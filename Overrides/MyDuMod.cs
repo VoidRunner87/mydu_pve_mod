@@ -4,6 +4,7 @@ using Backend;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Overrides;
+using Mod.DynamicEncounters.Overrides.Actions;
 using Mod.DynamicEncounters.Overrides.Actions.Data;
 using Mod.DynamicEncounters.Overrides.ApiClient;
 using Mod.DynamicEncounters.Overrides.Common;
@@ -102,6 +103,10 @@ public class MyDuMod : IMod
 
         switch ((ActionType)action.actionId)
         {
+            case ActionType.GiveTakePlayerItems:
+                var giveItemsToPlayerAction = new GiveTakePlayerItemsAction(_provider);
+                await giveItemsToPlayerAction.HandleAction(playerId, action);
+                break;
             case ActionType.LoadBoardApp:
                 await InjectJs(playerId, Resources.CommonJs);
                 await InjectJs(playerId, Resources.CreateRootDivJs);

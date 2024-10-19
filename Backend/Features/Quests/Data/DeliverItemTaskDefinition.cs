@@ -7,20 +7,20 @@ using NQ;
 
 namespace Mod.DynamicEncounters.Features.Quests.Data;
 
-public class PickupItemTaskItemDefinition(
+public class DeliverItemTaskDefinition(
     TerritoryContainerItem container,
-    IEnumerable<ElementQuantityRef> pickupItems
-) : TransportItemTaskDefinition(container, pickupItems)
+    IEnumerable<ElementQuantityRef> deliveryItems
+) : TransportItemTaskDefinition(container, deliveryItems)
 {
     public override bool IsMatchedBy(QuestInteractionContext context)
     {
-        return context.ConstructId == Container.ConstructId;
+        return Container.ConstructId == context.ConstructId;
     }
 
     public override async Task<QuestInteractionOutcome> HandleInteractionAsync(QuestInteractionContext context)
     {
         var itemSpawner = context.Provider.GetRequiredService<IItemSpawnerService>();
-
+        
         const string pveModBaseUrl = "@{PVE_MOD}"; 
         var questTaskId = context.QuestTaskId;
         
@@ -38,6 +38,6 @@ public class PickupItemTaskItemDefinition(
             )
         );
 
-        return QuestInteractionOutcome.Successful("Request to pickup items sent to Orleans");
+        return QuestInteractionOutcome.Successful("Request to Deliver items sent to Orleans");
     }
 }

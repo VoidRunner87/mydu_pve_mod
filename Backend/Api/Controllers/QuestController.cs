@@ -11,33 +11,34 @@ using Mod.DynamicEncounters.Features.Faction.Interfaces;
 using Mod.DynamicEncounters.Features.Quests.Data;
 using Mod.DynamicEncounters.Features.Quests.Interfaces;
 using Mod.DynamicEncounters.Helpers;
-using MongoDB.Driver.Linq;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("quest")]
-public class QuestController(IServiceProvider provider) : Controller
+public class QuestController : Controller
 {
+    private readonly IServiceProvider _provider = ModBase.ServiceProvider;
+    
     private readonly IProceduralQuestGeneratorService _proceduralQuestGeneratorService
-        = provider.GetRequiredService<IProceduralQuestGeneratorService>();
+        = ModBase.ServiceProvider.GetRequiredService<IProceduralQuestGeneratorService>();
 
     private readonly IPlayerQuestService _playerQuestService
-        = provider.GetRequiredService<IPlayerQuestService>();
+        = ModBase.ServiceProvider.GetRequiredService<IPlayerQuestService>();
 
     private readonly ILogger<QuestController> _logger
-        = provider.CreateLogger<QuestController>();
+        = ModBase.ServiceProvider.CreateLogger<QuestController>();
 
     [HttpPost]
     [Route("setup-territory-container")]
     public async Task<IActionResult> SetupTerritoryContainer([FromBody] SetupTerritoryContainerRequest request)
     {
-        var repository = provider.GetRequiredService<ITerritoryContainerRepository>();
+        var repository = _provider.GetRequiredService<ITerritoryContainerRepository>();
 
         ulong elementId;
 
         if (!request.ElementId.HasValue)
         {
-            var constructElementService = provider.GetRequiredService<IConstructElementsService>();
+            var constructElementService = _provider.GetRequiredService<IConstructElementsService>();
             var elements = (await constructElementService.GetContainerElements(request.ConstructId)).ToList();
 
             if (elements.Count == 0)
@@ -100,7 +101,7 @@ public class QuestController(IServiceProvider provider) : Controller
     {
         try
         {
-            var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
+            var playerQuestRepository = _provider.GetRequiredService<IPlayerQuestRepository>();
 
             await playerQuestRepository.DeleteAsync(request.PlayerId, request.QuestId);
 
@@ -118,10 +119,35 @@ public class QuestController(IServiceProvider provider) : Controller
     [Route("interact")]
     public async Task<IActionResult> QuestInteract([FromBody] QuestInteractRequest request)
     {
-        var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
-        var playerQuestItems = await playerQuestRepository.GetAll(request.PlayerId);
-
+        var questInteractionService = _provider.GetRequiredService<IQuestInteractionService>();
+        var outcomeCollection = await questInteractionService.InteractAsync(
+            new QuestInteractCommand
+            {
+                PlayerId = request.PlayerId,
+                ConstructId = request.ConstructId,
+                ElementId = request.ElementId
+            }
+        );
         
+        return Ok(new QuestInteractResponse(outcomeCollection.Outcomes));
+    }
+
+    [HttpPost]
+    [Route("callback/{questId:guid}/task/{questTaskId:guid}/complete")]
+    public async Task<IActionResult> CompleteQuestTask(Guid questId, Guid questTaskId)
+    {
+        var questInteractionService = _provider.GetRequiredService<IQuestInteractionService>();
+        
+        _logger.LogInformation("Completed Quest {Quest} / Task {Task}", questId, questTaskId);
+        
+        return Ok(await questInteractionService.CompleteTaskAsync(new QuestTaskId(questId, questTaskId)));
+    }
+    
+    [HttpPost]
+    [Route("callback/{questId:guid}/task/{questTaskId:guid}/failed")]
+    public async Task<IActionResult> FailedCompleteQuestTask(Guid questId, Guid questTaskId)
+    {
+        await Task.Yield();
         
         return Ok();
     }
@@ -130,9 +156,9 @@ public class QuestController(IServiceProvider provider) : Controller
     [Route("player/{playerId:long}")]
     public async Task<IActionResult> GetPlayerQuests(ulong playerId)
     {
-        var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
+        var playerQuestRepository = _provider.GetRequiredService<IPlayerQuestRepository>();
 
-        var result = (await playerQuestRepository.GetAll(playerId)).ToList();
+        var result = (await playerQuestRepository.GetAllAsync(playerId)).ToList();
 
         return Ok(new PlayerQuestPanelViewModel(result));
     }
@@ -150,8 +176,8 @@ public class QuestController(IServiceProvider provider) : Controller
     [Route("giver")]
     public async Task<IActionResult> Generate([FromBody] GenerateQuestsRequest request)
     {
-        var factionRepository = provider.GetRequiredService<IFactionRepository>();
-        var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
+        var factionRepository = _provider.GetRequiredService<IFactionRepository>();
+        var playerQuestRepository = _provider.GetRequiredService<IPlayerQuestRepository>();
         var factionMap = (await factionRepository.GetAllAsync())
             .ToDictionary(
                 k => k.Id,
@@ -163,7 +189,7 @@ public class QuestController(IServiceProvider provider) : Controller
             return BadRequest("Invalid Faction");
         }
 
-        var playerQuestsMap = (await playerQuestRepository.GetAll(request.PlayerId))
+        var playerQuestsMap = (await playerQuestRepository.GetAllAsync(request.PlayerId))
             .ToDictionary(
                 k => k.OriginalQuestId,
                 v => true
@@ -182,6 +208,7 @@ public class QuestController(IServiceProvider provider) : Controller
             new QuestPanelViewModel(
                 faction.Id,
                 faction.Name,
+                request.TerritoryId,
                 quests,
                 playerQuestsMap
             )
@@ -192,6 +219,12 @@ public class QuestController(IServiceProvider provider) : Controller
     {
         public ulong PlayerId { get; set; }
         public ulong ConstructId { get; set; }
+        public ulong? ElementId { get; set; }
+    }
+
+    public class QuestInteractResponse(IEnumerable<QuestInteractionOutcome> outcomes)
+    {
+        public IEnumerable<QuestInteractionOutcome> Outcomes { get; } = outcomes;
     }
     
     public class SetupTerritoryContainerRequest
@@ -256,18 +289,20 @@ public class QuestController(IServiceProvider provider) : Controller
     public class QuestPanelViewModel
     {
         public long FactionId { get; set; }
+        public Guid Territory { get; set; }
         public string Faction { get; set; }
         public IEnumerable<QuestViewModel> Jobs { get; set; }
 
         public QuestPanelViewModel(
             long factionId,
             string factionName,
+            Guid territory,
             GenerateQuestListOutcome outcome,
-            Dictionary<Guid, bool> acceptedMap
-        )
+            Dictionary<Guid, bool> acceptedMap)
         {
             FactionId = factionId;
             Faction = factionName;
+            Territory = territory;
             Jobs = outcome.QuestList
                 .Select(pq => new QuestViewModel(pq, acceptedMap.TryGetValue(pq.Id, out var accepted) && accepted))
                 .OrderBy(q => q.Title);

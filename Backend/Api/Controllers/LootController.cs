@@ -71,7 +71,7 @@ public class LootController : Controller
 
         var itemSpawner = provider.GetRequiredService<IItemSpawnerService>();
 
-        await itemSpawner.SpawnItems(new SpawnItemCommand((ulong)constructId, itemBag));
+        await itemSpawner.SpawnItems(new SpawnItemOnRandomContainersCommand((ulong)constructId, itemBag));
 
         return Ok();
     }

@@ -14,5 +14,7 @@ public static class QuestsRegistration
         services.AddSingleton<IProceduralTransportMissionGeneratorService, ProceduralTransportMissionGeneratorService>();
         services.AddSingleton<IPlayerQuestService, PlayerQuestService>();
         services.AddSingleton<IPlayerQuestRepository, PlayerQuestRepository>();
+        services.AddSingleton<ITransportMissionTemplateProvider, TransportMissionTemplateProvider>();
+        services.AddSingleton<IQuestInteractionService, QuestInteractionService>();
     }
 }

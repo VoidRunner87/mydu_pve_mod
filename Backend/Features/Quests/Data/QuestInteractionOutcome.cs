@@ -8,4 +8,5 @@ public class QuestInteractionOutcome : IOutcome
     public string Message { get; set; }
 
     public static QuestInteractionOutcome Failed(string message) => new() { Success = false, Message = message };
+    public static QuestInteractionOutcome Successful(string message) => new() { Success = true, Message = message };
 }

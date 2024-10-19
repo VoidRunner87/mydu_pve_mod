@@ -8,6 +8,8 @@ using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Faction.Data;
 using Mod.DynamicEncounters.Features.Faction.Interfaces;
+using Mod.DynamicEncounters.Features.Loot.Data;
+using Mod.DynamicEncounters.Features.Loot.Interfaces;
 using Mod.DynamicEncounters.Features.Quests.Data;
 using Mod.DynamicEncounters.Features.Quests.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
@@ -82,11 +84,11 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
 
         var pickupGuid = GuidUtility.Create(
             territoryId,
-            $"{QuestTaskItemType.Pickup}-{factionId.Id}-{territoryId.Id}-{timeFactor}"
+            $"{playerId}-{QuestTaskItemType.Pickup}-{factionId.Id}-{territoryId.Id}-{timeFactor}"
         );
         var dropGuid = GuidUtility.Create(
             territoryId,
-            $"{QuestTaskItemType.Deliver}-{factionId.Id}-{dropContainerTerritory}-{timeFactor}"
+            $"{playerId}-{QuestTaskItemType.Deliver}-{factionId.Id}-{dropContainerTerritory}-{timeFactor}"
         );
         var questGuid = GuidUtility.Create(
             territoryId,
@@ -108,18 +110,14 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
             return ProceduralQuestOutcome.Failed($"Drop Construct '{dropContainer.ConstructId}' doesn't exist");
         }
 
-        var pickupTaskTitle = $"Pickup items at: {pickupConstructInfo.Info.rData.name}";
-        var dropOffTaskTitle = $"Deliver items to: {dropConstructInfo.Info.rData.name}";
-
+        var transportMissionTemplateProvider = provider.GetRequiredService<ITransportMissionTemplateProvider>();
+        var missionTemplate = await transportMissionTemplateProvider.GetMissionTemplate(random.Next());
+        missionTemplate = missionTemplate
+            .SetPickupConstructName(pickupConstructInfo.Info.rData.name)
+            .SetDeliverConstructName(dropConstructInfo.Info.rData.name);
+        
         var distanceSu = (pickupConstructInfo.Info.rData.position - dropConstructInfo.Info.rData.position).Size()
                          / DistanceHelpers.OneSuInMeters;
-
-        var titles = new List<string>
-        {
-            $"Supply Run from {pickupConstructInfo.Info.rData.name} to {dropConstructInfo.Info.rData.name} [{distanceSu:N2}su]",
-            $"Transport of Goods from {pickupConstructInfo.Info.rData.name} to {dropConstructInfo.Info.rData.name} [{distanceSu:N2}su]",
-            $"Delivery to {dropConstructInfo.Info.rData.name} [{distanceSu:N2}su]",
-        };
 
         var multiplier = 1;
         if (dropConstructInfo.Info.kind == ConstructKind.STATIC)
@@ -132,22 +130,24 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
             multiplier++;
         }
         
-        var title = random.PickOneAtRandom(titles);
         var quantaReward = (long)(distanceSu * 10000d * 100d * 1.45 * multiplier);
         var influenceReward = 1;
 
+        var kergonQuantity = new LitreQuantity(3000);
+        
         return ProceduralQuestOutcome.Created(
             new ProceduralQuestItem(
                 questGuid,
                 factionId,
                 questType,
                 questSeed,
-                title,
+                missionTemplate.Title,
                 new ProceduralQuestProperties
                 {
                     RewardTextList =
                     [
                         $"{quantaReward / 100:N2}h",
+                        $"Kergon X1: {kergonQuantity.GetRawQuantity()}L",
                         $"Influence with {faction.Name} +{influenceReward}"
                     ],
                     QuantaReward = quantaReward,
@@ -155,16 +155,24 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                     {
                         { factionId, influenceReward }
                     },
-                    ExpiresAt = DateTime.Now + TimeSpan.FromHours(3)
+                    ExpiresAt = DateTime.Now + TimeSpan.FromHours(3),
+                    ItemRewardMap =
+                    {
+                        {"Kergon1", kergonQuantity.ToQuantity()}
+                    }
                 },
                 new List<QuestTaskItem>
                 {
                     new(
-                        pickupGuid,
-                        pickupTaskTitle,
+                        new QuestTaskId(
+                            questGuid,
+                            pickupGuid
+                        ),
+                        missionTemplate.PickupMessage,
                         QuestTaskItemType.Pickup,
                         QuestTaskItemStatus.InProgress,
                         pickupConstructInfo.Info.rData.position,
+                        null,
                         new ScriptActionItem
                         {
                             Type = "assert-task-completion",
@@ -177,14 +185,21 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                                 { "questTaskId", pickupGuid }
                             }
                         },
-                        new PickupItemTaskItemDefinition(questPickupContainer)
+                        new PickupItemTaskItemDefinition(
+                            questPickupContainer,
+                            missionTemplate.Items
+                        )
                     ),
                     new(
-                        dropGuid,
-                        dropOffTaskTitle,
+                        new QuestTaskId(
+                            questGuid,
+                            dropGuid
+                        ),
+                        missionTemplate.DeliverMessage,
                         QuestTaskItemType.Deliver,
                         QuestTaskItemStatus.InProgress,
                         dropConstructInfo.Info.rData.position,
+                        null,
                         new ScriptActionItem
                         {
                             Type = "assert-task-completion",
@@ -197,7 +212,11 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                                 { "questTaskId", dropGuid }
                             }
                         },
-                        new DropItemTaskDefinition(dropContainer)
+                        new DeliverItemTaskDefinition(
+                            dropContainer,
+                            missionTemplate.Items
+                                .Select(x => new ElementQuantityRef(x.ElementTypeName, -x.Quantity))
+                        )
                     )
                 }
             )
