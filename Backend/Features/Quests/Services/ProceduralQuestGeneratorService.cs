@@ -25,7 +25,7 @@ public class ProceduralQuestGeneratorService(IServiceProvider provider) : IProce
         int seed,
         int quantity)
     {
-        var timeFactor = TimeUtility.GetTimeSnapped(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
+        var timeFactor = TimeUtility.GetTimeSnapped(DateTimeOffset.UtcNow, MissionProceduralGenerationConfig.TimeFactor);
         var random = new Random(seed + (int)timeFactor);
         var result = new List<ProceduralQuestItem>();
 
