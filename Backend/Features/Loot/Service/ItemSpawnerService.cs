@@ -78,7 +78,7 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
         _logger.LogInformation("Items Spawned on Construct {Construct}", onRandomContainersCommand.ConstructId);
     }
 
-    public async Task SpawnItems(SpawnItemsOnPlayerInventoryCommand command)
+    public async Task SpawnItemsWithCallback(GiveTakePlayerItemsWithCallbackCommand command)
     {
         var modManagerGrain = _orleans.GetModManagerGrain();
         var itemOperation = new ItemOperation
@@ -88,7 +88,9 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
                 Name = x.ElementTypeName.Name,
                 Quantity = x.Quantity,
             }),
-            Properties = command.Properties
+            Properties = command.Properties,
+            OnSuccessCallbackUrl = command.OnSuccessCallbackUrl,
+            OnFailCallbackUrl = command.OnFailCallbackUrl
         };
 
         await modManagerGrain.TriggerModAction(

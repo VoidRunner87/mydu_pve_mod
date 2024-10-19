@@ -42,4 +42,12 @@ public class QuestInteractionService(IServiceProvider provider) : IQuestInteract
             interactionOutcomeList
         );
     }
+
+    public async Task<QuestTaskCompletionOutcome> CompleteTaskAsync(QuestTaskId questTaskId)
+    {
+        var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
+        await playerQuestRepository.CompleteTaskAsync(questTaskId);
+        
+        return QuestTaskCompletionOutcome.Completed();
+    }
 }

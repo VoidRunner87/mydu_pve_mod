@@ -7,6 +7,8 @@ public class ItemOperation
 {
     public IEnumerable<ItemDefinition> Items { get; set; } = [];
     public Dictionary<string, PropertyValue> Properties { get; set; } = [];
+    public string OnSuccessCallbackUrl { get; set; } = "";
+    public string OnFailCallbackUrl { get; set; } = "";
 
     public class ItemDefinition
     {

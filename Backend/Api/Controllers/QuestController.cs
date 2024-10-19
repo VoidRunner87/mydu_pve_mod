@@ -132,6 +132,26 @@ public class QuestController : Controller
         return Ok(new QuestInteractResponse(outcomeCollection.Outcomes));
     }
 
+    [HttpPost]
+    [Route("callback/{questId:guid}/task/{questTaskId:guid}/complete")]
+    public async Task<IActionResult> CompleteQuestTask(Guid questId, Guid questTaskId)
+    {
+        var questInteractionService = _provider.GetRequiredService<IQuestInteractionService>();
+        
+        _logger.LogInformation("Completed Quest {Quest} / Task {Task}", questId, questTaskId);
+        
+        return Ok(await questInteractionService.CompleteTaskAsync(new QuestTaskId(questId, questTaskId)));
+    }
+    
+    [HttpPost]
+    [Route("callback/{questId:guid}/task/{questTaskId:guid}/failed")]
+    public async Task<IActionResult> FailedCompleteQuestTask(Guid questId, Guid questTaskId)
+    {
+        await Task.Yield();
+        
+        return Ok();
+    }
+
     [HttpGet]
     [Route("player/{playerId:long}")]
     public async Task<IActionResult> GetPlayerQuests(ulong playerId)

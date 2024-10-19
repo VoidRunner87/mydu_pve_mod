@@ -6,6 +6,6 @@ namespace Mod.DynamicEncounters.Features.Loot.Interfaces;
 public interface IItemSpawnerService
 {
     Task SpawnItems(SpawnItemOnRandomContainersCommand onRandomContainersCommand);
-    Task SpawnItems(SpawnItemsOnPlayerInventoryCommand command);
+    Task SpawnItemsWithCallback(GiveTakePlayerItemsWithCallbackCommand command);
     Task SpawnFuel(SpawnFuelCommand command);
 }
