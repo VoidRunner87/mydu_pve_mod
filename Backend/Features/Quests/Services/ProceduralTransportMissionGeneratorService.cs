@@ -166,7 +166,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                     new(
                         new QuestTaskId(
                             questGuid,
-                            pickupGuid
+                            Guid.NewGuid()
                         ),
                         missionTemplate.PickupMessage,
                         QuestTaskItemType.Pickup,
@@ -193,7 +193,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                     new(
                         new QuestTaskId(
                             questGuid,
-                            dropGuid
+                            Guid.NewGuid()
                         ),
                         missionTemplate.DeliverMessage,
                         QuestTaskItemType.Deliver,
