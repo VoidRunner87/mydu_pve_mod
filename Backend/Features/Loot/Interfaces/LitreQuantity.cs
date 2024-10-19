@@ -1,6 +1,6 @@
 ﻿namespace Mod.DynamicEncounters.Features.Loot.Interfaces;
 
-public class OreQuantity(long quantity) : IQuantity
+public class LitreQuantity(long quantity) : IQuantity
 {
     public long GetRawQuantity()
     {

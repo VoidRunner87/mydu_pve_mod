@@ -8,6 +8,8 @@ using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Faction.Data;
 using Mod.DynamicEncounters.Features.Faction.Interfaces;
+using Mod.DynamicEncounters.Features.Loot.Data;
+using Mod.DynamicEncounters.Features.Loot.Interfaces;
 using Mod.DynamicEncounters.Features.Quests.Data;
 using Mod.DynamicEncounters.Features.Quests.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
@@ -131,6 +133,8 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
         var quantaReward = (long)(distanceSu * 10000d * 100d * 1.45 * multiplier);
         var influenceReward = 1;
 
+        var kergonQuantity = new LitreQuantity(3000);
+        
         return ProceduralQuestOutcome.Created(
             new ProceduralQuestItem(
                 questGuid,
@@ -143,6 +147,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                     RewardTextList =
                     [
                         $"{quantaReward / 100:N2}h",
+                        $"Kergon X1: {kergonQuantity.GetRawQuantity()}L",
                         $"Influence with {faction.Name} +{influenceReward}"
                     ],
                     QuantaReward = quantaReward,
@@ -150,7 +155,11 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                     {
                         { factionId, influenceReward }
                     },
-                    ExpiresAt = DateTime.Now + TimeSpan.FromHours(3)
+                    ExpiresAt = DateTime.Now + TimeSpan.FromHours(3),
+                    ItemRewardMap =
+                    {
+                        {"Kergon1", kergonQuantity.ToQuantity()}
+                    }
                 },
                 new List<QuestTaskItem>
                 {
@@ -203,9 +212,10 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                                 { "questTaskId", dropGuid }
                             }
                         },
-                        new DropItemTaskDefinition(
+                        new DeliverItemTaskDefinition(
                             dropContainer,
                             missionTemplate.Items
+                                .Select(x => new ElementQuantityRef(x.ElementTypeName, -x.Quantity))
                         )
                     )
                 }

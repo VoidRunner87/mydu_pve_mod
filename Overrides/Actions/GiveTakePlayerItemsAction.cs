@@ -75,7 +75,7 @@ public class GiveTakePlayerItemsAction(IServiceProvider provider)
                 }
             );
 
-            await Notifications.SimpleNotificationToPlayer(provider, playerId, "Mission items picked up");
+            await Notifications.SimpleNotificationToPlayer(provider, playerId, "Inventory operation successful");
             await CallbackHandler.ExecuteCallback(provider, callback.OnSuccessCallbackUrl);
             
             await transaction.Commit();

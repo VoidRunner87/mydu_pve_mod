@@ -92,6 +92,49 @@ public class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepo
         throw new NotImplementedException();
     }
 
+    public async Task<PlayerQuestItem?> GetAsync(QuestId id)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var result = (await db.QueryAsync<DbRow>(
+            """
+            SELECT 
+                PQ.*,
+                QT.id task_id,
+                QT.base_construct_id task_base_construct_id,
+                QT.completed_at task_completed_at,
+                QT.json_properties task_json_properties,
+                QT.on_check_completed_script task_on_check_completed_script,
+                QT.position_x task_position_x,
+                QT.position_y task_position_y,
+                QT.position_z task_position_z,
+                QT.status task_status,
+                QT.text task_text,
+                QT.type task_type
+            FROM public.mod_player_quest PQ
+            INNER JOIN public.mod_player_quest_task QT ON (QT.quest_id = PQ.id)
+            WHERE PQ.deleted_at IS NULL AND PQ.id = @id
+            """,
+            new
+            {
+                id = id.Id
+            }
+        )).ToList();
+
+        if (result.Count == 0)
+        {
+            return null;
+        }
+        
+        var row = result[0];
+        
+        var item = MapToModel(row);
+        item.TaskItems.Add(MapToTaskItem(row));
+
+        return item;
+    }
+
     public async Task<IEnumerable<PlayerQuestItem>> GetAllAsync(PlayerId playerId)
     {
         using var db = _factory.Create();
@@ -195,13 +238,16 @@ public class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepo
 
         await db.ExecuteAsync(
             """
-            UPDATE public.mod_player_quest_task SET completed_at = NOW() 
+            UPDATE public.mod_player_quest_task SET 
+                completed_at = NOW(),
+                status = @status
             WHERE id = @questTaskId AND quest_id = @questId
             """,
             new
             {
                 questId = questTaskId.QuestId.Id,
-                questTaskId = questTaskId.Id
+                questTaskId = questTaskId.Id,
+                status = QuestTaskItemStatus.Completed
             }
         );
     }
@@ -269,7 +315,7 @@ public class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepo
         switch (taskType)
         {
             case QuestTaskItemType.Deliver:
-                return JsonConvert.DeserializeObject<DropItemTaskDefinition>(properties);
+                return JsonConvert.DeserializeObject<DeliverItemTaskDefinition>(properties);
             case QuestTaskItemType.Pickup:
                 return JsonConvert.DeserializeObject<PickupItemTaskItemDefinition>(properties);
             default:

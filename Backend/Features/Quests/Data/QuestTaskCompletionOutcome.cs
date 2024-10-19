@@ -8,5 +8,6 @@ public class QuestTaskCompletionOutcome : IOutcome
     public string Message { get; set; }
 
     public static QuestTaskCompletionOutcome Completed() => new() { Success = true };
+    public static QuestTaskCompletionOutcome NotFound() => new() { Success = false, Message = "Not Found" };
     public static QuestTaskCompletionOutcome Failed(string message) => new() { Success = true, Message = message };
 }
