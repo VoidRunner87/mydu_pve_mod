@@ -89,13 +89,15 @@ public class GiveTakePlayerItemsAction(IServiceProvider provider) : IModActionHa
                 switch (bex.error.code)
                 {
                     case ErrorCode.InventoryFull:
-                    case ErrorCode.InventoryNotEnough:
                     case ErrorCode.InventoryOperationError:
                     case ErrorCode.InventoryOverVolume:
                     case ErrorCode.InventoryNoSuchContainer:
                     case ErrorCode.InventoryInvalidItemType:
                     case ErrorCode.InventoryNotEmptySlot:
                         await Notifications.ErrorNotification(provider, playerId, "Failed. Check if your inventory is full");
+                        break;
+                    case ErrorCode.InventoryNotEnough:
+                        await Notifications.ErrorNotification(provider, playerId, "You do not have the necessary items");
                         break;
                 }    
             }

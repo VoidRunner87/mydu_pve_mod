@@ -157,11 +157,12 @@ public class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepo
                 QT.type task_type
             FROM public.mod_player_quest PQ
             INNER JOIN public.mod_player_quest_task QT ON (QT.quest_id = PQ.id)
-            WHERE PQ.deleted_at IS NULL AND PQ.player_id = @playerId
+            WHERE PQ.deleted_at IS NULL AND PQ.status != @status AND PQ.player_id = @playerId
             """,
             new
             {
-                playerId = (long)playerId.id
+                playerId = (long)playerId.id,
+                status = QuestStatus.Completed
             }
         )).ToList();
 
