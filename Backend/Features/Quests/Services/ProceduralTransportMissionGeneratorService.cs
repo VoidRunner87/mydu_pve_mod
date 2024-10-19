@@ -39,7 +39,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
             return ProceduralQuestOutcome.Failed($"Faction {factionId.Id} not found");
         }
 
-        var timeFactor = TimeUtility.GetTimeSnapped(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
+        var timeFactor = TimeUtility.GetTimeSnapped(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(50));
         var random = new Random(seed);
 
         var questSeed = random.Next();
@@ -129,8 +129,9 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
         {
             multiplier++;
         }
-        
-        var quantaReward = (long)(distanceSu * 10000d * 100d * 1.45 * multiplier);
+
+        const float quantaMultiplier = 1f;
+        var quantaReward = (long)(distanceSu * 10000d * 100d * quantaMultiplier * multiplier);
         var influenceReward = 1;
 
         var kergonQuantity = new LitreQuantity(3000);
