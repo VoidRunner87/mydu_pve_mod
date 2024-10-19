@@ -6,13 +6,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Mod.DynamicEncounters.Overrides.Common;
 
-public static class CallbackHandler
+public static class DynamicEncountersCallback
 {
     private const string PveModPlaceholder = "@{PVE_MOD}";
     
     public static async Task ExecuteCallback(IServiceProvider provider, string url)
     {
-        var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(CallbackHandler));
+        var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(DynamicEncountersCallback));
         
         url = url.Replace(PveModPlaceholder, Config.GetPveModBaseUrl());
         

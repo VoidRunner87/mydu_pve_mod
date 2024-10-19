@@ -12,5 +12,6 @@ public enum ActionType
     RefreshPlayerQuestList = 1000005,
     AbandonQuest = 1000006,
     GiveTakePlayerItems = 100,
+    Interact = 101,
     Callback = 1999999
 }

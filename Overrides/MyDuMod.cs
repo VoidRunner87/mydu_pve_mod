@@ -67,6 +67,12 @@ public class MyDuMod : IMod
                     id = (ulong)ActionType.LoadPlayerBoardApp,
                     context = ModActionContext.Global,
                     label = "Actions\\Open player board"
+                },
+                new ModActionDefinition
+                {
+                    id = (ulong)ActionType.Interact,
+                    context = ModActionContext.Element,
+                    label = "Interact"
                 }
             ]
         };
@@ -103,6 +109,10 @@ public class MyDuMod : IMod
 
         switch ((ActionType)action.actionId)
         {
+            case ActionType.Interact:
+                var interactAction = new InteractAction(_provider);
+                await interactAction.HandleAction(playerId, action);
+                break;
             case ActionType.GiveTakePlayerItems:
                 var giveItemsToPlayerAction = new GiveTakePlayerItemsAction(_provider);
                 await giveItemsToPlayerAction.HandleAction(playerId, action);

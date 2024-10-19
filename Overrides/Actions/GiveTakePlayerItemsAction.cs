@@ -17,7 +17,7 @@ using ErrorCode = NQ.ErrorCode;
 
 namespace Mod.DynamicEncounters.Overrides.Actions;
 
-public class GiveTakePlayerItemsAction(IServiceProvider provider)
+public class GiveTakePlayerItemsAction(IServiceProvider provider) : IModActionHandler
 {
     public async Task HandleAction(ulong playerId, ModAction action)
     {
@@ -76,7 +76,7 @@ public class GiveTakePlayerItemsAction(IServiceProvider provider)
             );
 
             await Notifications.SimpleNotificationToPlayer(provider, playerId, "Inventory operation successful");
-            await CallbackHandler.ExecuteCallback(provider, callback.OnSuccessCallbackUrl);
+            await DynamicEncountersCallback.ExecuteCallback(provider, callback.OnSuccessCallbackUrl);
             
             await transaction.Commit();
         }
@@ -106,7 +106,7 @@ public class GiveTakePlayerItemsAction(IServiceProvider provider)
             
             logger.LogError(e, "Failed to Give or Take Items for {Player}. Action: {Action}. Payload: {Payload}", playerId, action, action.payload);
 
-            await CallbackHandler.ExecuteCallback(provider, callback.OnFailCallbackUrl);
+            await DynamicEncountersCallback.ExecuteCallback(provider, callback.OnFailCallbackUrl);
         }
     }
 }
