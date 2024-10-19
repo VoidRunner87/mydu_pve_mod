@@ -28,6 +28,14 @@ public class GiveTakePlayerItemsAction(IServiceProvider provider) : IModActionHa
         var logger = provider.GetRequiredService<ILoggerFactory>()
             .CreateLogger<GiveTakePlayerItemsAction>();
 
+        var spsGrain = orleans.GetSPSGrain(playerId);
+        var isInVr = await spsGrain.CurrentSession() != 0L;
+
+        if (isInVr)
+        {
+            await Notifications.ErrorNotification(provider, playerId, "Cannot use this in VR");
+        }
+        
         var itemOperation = JsonConvert.DeserializeObject<ItemOperation>(action.payload);
         var callback = JsonConvert.DeserializeObject<CallbackData>(action.payload);
 

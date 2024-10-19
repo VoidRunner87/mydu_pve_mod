@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Overrides.Common;
 using Newtonsoft.Json;
 using NQ;
+using NQ.Interfaces;
+using Orleans;
 
 namespace Mod.DynamicEncounters.Overrides.Actions;
 
@@ -17,6 +19,15 @@ public class InteractAction(IServiceProvider provider) : IModActionHandler
     {
         var logger = provider.GetRequiredService<ILoggerFactory>()
             .CreateLogger<InteractAction>();
+
+        var orleans = provider.GetRequiredService<IClusterClient>();
+        var spsGrain = orleans.GetSPSGrain(playerId);
+        var isInVr = await spsGrain.CurrentSession() != 0L;
+
+        if (isInVr)
+        {
+            await Notifications.ErrorNotification(provider, playerId, "Cannot use this in VR");
+        }
 
         var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
         using var httpClient = httpClientFactory.CreateClient();
