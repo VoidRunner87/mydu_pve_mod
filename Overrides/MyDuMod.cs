@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NQ;
 using NQ.Grains.Core;
+using NQ.Interfaces;
 using NQutils;
 using Orleans;
 using Notifications = Mod.DynamicEncounters.Overrides.Notifications;
@@ -52,9 +53,26 @@ public class MyDuMod : IMod
         //     nameof(WeaponGrainOverrides.WeaponFireOnce)
         // );
 
+        hookCallManager.Register(
+            "PlayerGrain.InventoryReady",
+            HookMode.Replace,
+            this,
+            nameof(InventoryReady)
+        );
+
         return Task.CompletedTask;
     }
 
+    public async Task InventoryReady(IIncomingGrainCallContext context)
+    {
+        var grain = context.Grain.AsReference<IPlayerGrain>();
+        var playerId = (ulong)grain.GetPrimaryKeyLong();
+        
+        // TODO implement any initializing required
+
+        await context.Invoke();
+    }
+    
     public Task<ModInfo> GetModInfoFor(ulong playerId, bool admin)
     {
         var res = new ModInfo

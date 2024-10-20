@@ -59,6 +59,8 @@ public class CleanupLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle
                 counter++;
             }
 
+            await constructHandleRepository.CleanupConstructHandles();
+            
             logger.LogInformation("Cleanup Total = {Time}ms", sw.ElapsedMilliseconds);
 
             ReportHeartbeat();

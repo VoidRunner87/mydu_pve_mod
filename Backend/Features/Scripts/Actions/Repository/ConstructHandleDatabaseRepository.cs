@@ -326,6 +326,20 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         return await db.ExecuteScalarAsync<int>("SELECT COUNT(0) FROM public.mod_npc_construct_handle WHERE deleted_at IS NULL");
     }
 
+    public async Task CleanupConstructHandles()
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            """
+            DELETE FROM public.mod_npc_construct_handle
+            WHERE deleted_at IS NOT NULL AND
+            	deleted_at < NOW() - INTERVAL '12 HOURS'
+            """
+        );
+    }
+
     private ConstructHandleItem MapToModel(DbRow row)
     {
         PrefabItem? constructDefinition = null;

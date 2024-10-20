@@ -22,4 +22,5 @@ public interface IConstructHandleRepository : IRepository<ConstructHandleItem>
     
     Task TagAsDeletedConstructHandledThatAreDeletedConstructs();
     Task<int> GetActiveCount();
+    Task CleanupConstructHandles();
 }
