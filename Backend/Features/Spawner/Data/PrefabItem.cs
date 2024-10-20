@@ -25,6 +25,7 @@ public class PrefabItem
     public float TargetDistance { get; set; } = 20000;
     public long FactionId { get; set; }
     public double RealismFactor { get; set; } = 0.25d;
+    public int MaxWeaponCount { get; set; } = 4;
 
     public PrefabEvents Events { get; set; } = new();
 

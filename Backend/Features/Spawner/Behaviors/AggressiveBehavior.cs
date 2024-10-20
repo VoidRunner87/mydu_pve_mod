@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -237,6 +238,7 @@ public class AggressiveBehavior(ulong constructId, IPrefab prefab) : IConstructB
         _logger.LogDebug("Construct {Construct} Functional Weapon Count {Count}", constructId, functionalWeaponCount);
 
         context.QuantityModifier = functionalWeaponCount;
+        context.QuantityModifier = Math.Clamp(context.QuantityModifier, 0, prefab.DefinitionItem.MaxWeaponCount);
 
         var random = context.BehaviorContext.ServiceProvider.GetRequiredService<IRandomProvider>()
             .GetRandom();
