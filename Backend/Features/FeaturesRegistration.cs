@@ -54,6 +54,7 @@ public static class FeaturesRegistration
         services.AddSingleton<IErrorService, ErrorService>();
         services.AddSingleton<IErrorService, ErrorService>();
         services.AddSingleton<IPlayerAlertService, PlayerAlertService>();
+        services.AddSingleton<IBlueprintSanitizerService, BlueprintSanitizerService>();
 
         services.RegisterSectorGeneration();
         services.RegisterSpawnerScripts();

@@ -1,25 +1,16 @@
-using System;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
-using Backend;
-using Backend.AWS;
-using Backend.Database;
-using Backend.Fixture;
-using Backend.Fixture.Construct;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Features.Common.Data;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Helpers;
 using Newtonsoft.Json.Linq;
 using NQ;
-using NQ.Interfaces;
-using NQutils.Def;
-using NQutils.Sql;
-using Orleans;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
@@ -79,6 +70,52 @@ public partial class BlueprintController : Controller
         await using var readContentStream = file.OpenReadStream();
         using var sr = new StreamReader(readContentStream);
         var blueprintContents = await sr.ReadToEndAsync();
+        var blueprintJToken = JObject.Parse(blueprintContents);
+
+        if (blueprintJToken["fixtureheader"] == null)
+        {
+            return BadRequest("Not a correct blueprint type");
+        }
+        
+        await using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
+        
+        return Ok($"File {file.FileName} uploaded successfully");
+    }
+    
+    [SwaggerOperation("Uploads a blueprint (and sanitizes it) to a Folder")]
+    [Route("upload/sanitize/{folder}")]
+    [HttpPost]
+    public async Task<IActionResult> UploadSanitizeAsync(string folder, IFormFile? file)
+    {
+        if (file == null || file.Length == 0 || !file.FileName.EndsWith("json"))
+        {
+            return BadRequest("Invalid");
+        }
+
+        var dataFolderPath = NQutils.Config.Config.Instance.s3.override_base_path;
+
+        var filePath = Path.Combine(dataFolderPath, folder, file.FileName);
+
+        await using var readContentStream = file.OpenReadStream();
+        using var sr = new StreamReader(readContentStream);
+        var blueprintContents = await sr.ReadToEndAsync();
+
+        var blueprintSanitizerService = ModBase.ServiceProvider.GetRequiredService<IBlueprintSanitizerService>();
+        var bytes = Encoding.UTF8.GetBytes(blueprintContents);
+        var result = await blueprintSanitizerService.SanitizeAsync(
+            ModBase.ServiceProvider.GetGameplayBank(),
+            bytes,
+            CancellationToken.None
+        );
+
+        if (!result.Success)
+        {
+            return BadRequest($"Failed to sanitize blueprint {result.Message}");
+        }
+
+        blueprintContents = Encoding.UTF8.GetString(result.BlueprintBytes);
+        
         var blueprintJToken = JObject.Parse(blueprintContents);
 
         if (blueprintJToken["fixtureheader"] == null)

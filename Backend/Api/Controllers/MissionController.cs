@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Backend.Database;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
-using NQutils.Sql;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 

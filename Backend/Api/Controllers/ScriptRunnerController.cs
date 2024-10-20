@@ -5,9 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
-using Mod.DynamicEncounters.Helpers;
 using NQ;
-using NQ.Interfaces;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
