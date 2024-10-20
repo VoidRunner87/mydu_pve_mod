@@ -8,5 +8,6 @@ namespace Mod.DynamicEncounters.Features.Common.Interfaces
     public interface IBlueprintSanitizerService
     {
         Task<BlueprintSanitationResult> SanitizeAsync(IGameplayBank bank, byte[] blueprintBytes, CancellationToken cancellationToken);
+        Task<BlueprintSanitationResult> SanitizePlusAsync(IGameplayBank bank, byte[] blueprintBytes, CancellationToken cancellationToken);
     }
 }

@@ -53,7 +53,7 @@ public partial class BlueprintController : Controller
         return File(fileBytes, "application/octet-stream", file);
     }
 
-    [SwaggerOperation("Uploads a blueprint to a Folder")]
+    [SwaggerOperation("Uploads a plus blueprint to a Folder")]
     [Route("upload/{folder}")]
     [HttpPost]
     public async Task<IActionResult> UploadAsync(string folder, IFormFile? file)
@@ -83,7 +83,7 @@ public partial class BlueprintController : Controller
         return Ok($"File {file.FileName} uploaded successfully");
     }
     
-    [SwaggerOperation("Uploads a blueprint (and sanitizes it) to a Folder")]
+    [SwaggerOperation("Uploads a plus blueprint (and sanitizes it) to a Folder")]
     [Route("upload/sanitize/{folder}")]
     [HttpPost]
     public async Task<IActionResult> UploadSanitizeAsync(string folder, IFormFile? file)
@@ -103,7 +103,7 @@ public partial class BlueprintController : Controller
 
         var blueprintSanitizerService = ModBase.ServiceProvider.GetRequiredService<IBlueprintSanitizerService>();
         var bytes = Encoding.UTF8.GetBytes(blueprintContents);
-        var result = await blueprintSanitizerService.SanitizeAsync(
+        var result = await blueprintSanitizerService.SanitizePlusAsync(
             ModBase.ServiceProvider.GetGameplayBank(),
             bytes,
             CancellationToken.None
