@@ -48,5 +48,7 @@ public class PlayerQuestItem(
         public long QuantaReward { get; set; } = 0;
         public Dictionary<long, long> InfluenceReward { get; set; } = [];
         public Dictionary<string, long> ItemRewardMap { get; set; } = [];
+        public double DistanceSu { get; set; } = 0;
+        public double DistanceMeters { get; set; } = 0;
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Backend.Scenegraph;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common;
@@ -115,9 +116,13 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
         missionTemplate = missionTemplate
             .SetPickupConstructName(pickupConstructInfo.Info.rData.name)
             .SetDeliverConstructName(dropConstructInfo.Info.rData.name);
-        
-        var distanceSu = (pickupConstructInfo.Info.rData.position - dropConstructInfo.Info.rData.position).Size()
-                         / DistanceHelpers.OneSuInMeters;
+
+        var sceneGraph = provider.GetRequiredService<IScenegraph>();
+        var pickupPos = await sceneGraph.GetConstructCenterWorldPosition(questPickupContainer.ConstructId);
+        var deliveryPos = await sceneGraph.GetConstructCenterWorldPosition(dropContainer.ConstructId);
+
+        var distanceMeters = (pickupPos - deliveryPos).Size();
+        var distanceSu = distanceMeters / DistanceHelpers.OneSuInMeters;
 
         var multiplier = 1;
         if (dropConstructInfo.Info.kind == ConstructKind.STATIC)
@@ -160,7 +165,9 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                     ItemRewardMap =
                     {
                         {"Kergon1", kergonQuantity.ToQuantity()}
-                    }
+                    },
+                    DistanceMeters = distanceMeters,
+                    DistanceSu = distanceMeters
                 },
                 new List<QuestTaskItem>
                 {
@@ -172,7 +179,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                         missionTemplate.PickupMessage,
                         QuestTaskItemType.Pickup,
                         QuestTaskItemStatus.InProgress,
-                        pickupConstructInfo.Info.rData.position,
+                        pickupPos,
                         null,
                         new ScriptActionItem
                         {
@@ -199,7 +206,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                         missionTemplate.DeliverMessage,
                         QuestTaskItemType.Deliver,
                         QuestTaskItemStatus.InProgress,
-                        dropConstructInfo.Info.rData.position,
+                        deliveryPos,
                         null,
                         new ScriptActionItem
                         {

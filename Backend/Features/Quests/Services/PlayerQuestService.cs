@@ -48,7 +48,9 @@ public class PlayerQuestService(IServiceProvider provider) : IPlayerQuestService
                 RewardTextList = props.RewardTextList,
                 InfluenceReward = props.InfluenceReward,
                 QuantaReward = props.QuantaReward,
-                ItemRewardMap = props.ItemRewardMap
+                ItemRewardMap = props.ItemRewardMap,
+                DistanceSu = props.DistanceSu,
+                DistanceMeters = props.DistanceMeters
             },
             DateTime.UtcNow,
             DateTime.UtcNow + TimeSpan.FromHours(3),
