@@ -21,7 +21,7 @@ public class QuestInteractionService(IServiceProvider provider) : IQuestInteract
     {
         var playerQuestRepository = provider.GetRequiredService<IPlayerQuestRepository>();
         var playerQuestItems = (await playerQuestRepository
-            .GetAllByStatusAsync(command.PlayerId, QuestStatus.InProgress)).ToList();
+            .GetAllByStatusAsync(command.PlayerId, [QuestStatus.InProgress])).ToList();
 
         var interactionOutcomeList = new List<QuestInteractionOutcome>();
 
@@ -94,18 +94,20 @@ public class QuestInteractionService(IServiceProvider provider) : IQuestInteract
         {
             return;
         }
-        
+
         if (questItem.Properties.ItemRewardMap.Count > 0)
         {
-            await itemSpawner.SpawnItemsWithCallback(
+            await itemSpawner.GiveTakeItemsWithCallback(
                 new GiveTakePlayerItemsWithCallbackCommand(
                     playerId,
                     questItem.Properties.ItemRewardMap.Select(
                         x => new ElementQuantityRef(
+                            new ElementId(),
                             new ElementTypeName(x.Key),
                             x.Value
                         )
                     ),
+                    new EntityId { playerId = playerId },
                     new Dictionary<string, PropertyValue>(),
                     string.Empty,
                     string.Empty
@@ -131,7 +133,5 @@ public class QuestInteractionService(IServiceProvider provider) : IQuestInteract
 
         await provider.GetRequiredService<IPlayerAlertService>()
             .SendInfoAlert(playerId, "Mission completed");
-        
-        
     }
 }

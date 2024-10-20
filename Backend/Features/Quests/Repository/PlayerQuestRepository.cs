@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +14,7 @@ using NQ;
 
 namespace Mod.DynamicEncounters.Features.Quests.Repository;
 
-public class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepository
+public partial class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepository
 {
     private readonly IPostgresConnectionFactory _factory = provider.GetRequiredService<IPostgresConnectionFactory>();
 
@@ -135,13 +136,20 @@ public class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepo
         return item;
     }
 
-    public async Task<IEnumerable<PlayerQuestItem>> GetAllAsync(PlayerId playerId)
+    public async Task<IEnumerable<PlayerQuestItem>> GetAllByStatusAsync(PlayerId playerId, string[] statusList)
     {
         using var db = _factory.Create();
         db.Open();
 
+        statusList = statusList
+            .Select(s => SanitizeNonAlphaNumerics().Replace(s, ""))
+            .Select(s => $"'{s}'")
+            .ToArray();
+        
+        var statusListPredicate = string.Join(",", statusList); 
+
         var result = (await db.QueryAsync<DbRow>(
-            """
+            $"""
             SELECT 
                 PQ.*,
                 QT.id task_id,
@@ -157,54 +165,11 @@ public class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepo
                 QT.type task_type
             FROM public.mod_player_quest PQ
             INNER JOIN public.mod_player_quest_task QT ON (QT.quest_id = PQ.id)
-            WHERE PQ.deleted_at IS NULL AND PQ.status != @status AND PQ.player_id = @playerId
+            WHERE PQ.deleted_at IS NULL AND PQ.player_id = @playerId AND PQ.status IN ({statusListPredicate})
             """,
             new
             {
-                playerId = (long)playerId.id,
-                status = QuestStatus.Completed
-            }
-        )).ToList();
-
-        var map = new Dictionary<Guid, PlayerQuestItem>();
-
-        foreach (var row in result)
-        {
-            map.TryAdd(row.id, MapToModel(row));
-            map[row.id].TaskItems.Add(MapToTaskItem(row));
-        }
-
-        return map.Values;
-    }
-
-    public async Task<IEnumerable<PlayerQuestItem>> GetAllByStatusAsync(PlayerId playerId, string status)
-    {
-        using var db = _factory.Create();
-        db.Open();
-
-        var result = (await db.QueryAsync<DbRow>(
-            """
-            SELECT 
-                PQ.*,
-                QT.id task_id,
-                QT.base_construct_id task_base_construct_id,
-                QT.completed_at task_completed_at,
-                QT.json_properties task_json_properties,
-                QT.on_check_completed_script task_on_check_completed_script,
-                QT.position_x task_position_x,
-                QT.position_y task_position_y,
-                QT.position_z task_position_z,
-                QT.status task_status,
-                QT.text task_text,
-                QT.type task_type
-            FROM public.mod_player_quest PQ
-            INNER JOIN public.mod_player_quest_task QT ON (QT.quest_id = PQ.id)
-            WHERE PQ.deleted_at IS NULL AND PQ.player_id = @playerId AND PQ.status = @status
-            """,
-            new
-            {
-                playerId = (long)playerId.id, 
-                status
+                playerId = (long)playerId.id
             }
         )).ToList();
 
@@ -370,4 +335,7 @@ public class PlayerQuestRepository(IServiceProvider provider) : IPlayerQuestRepo
         public string task_text { get; set; }
         public string task_type { get; set; }
     }
+
+    [GeneratedRegex("[^a0-z9\\-]")]
+    private static partial Regex SanitizeNonAlphaNumerics();
 }

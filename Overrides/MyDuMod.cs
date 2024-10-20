@@ -97,7 +97,8 @@ public class MyDuMod : IMod
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to Trigger Mod Action");
+            _logger.LogError(e, "Failed to Trigger Mod Action {Id}", action.actionId);
+            throw;
         }
     }
 
@@ -204,6 +205,11 @@ public class MyDuMod : IMod
                     acceptQuest.FactionId,
                     acceptQuest.TerritoryId,
                     acceptQuest.Seed
+                );
+
+                _logger.LogInformation("Accept Quest Outcome {Outcome} {Success}", 
+                    acceptQuestOutcome?.Message,
+                    acceptQuestOutcome?.Success
                 );
 
                 if (!acceptQuestOutcome.Success)

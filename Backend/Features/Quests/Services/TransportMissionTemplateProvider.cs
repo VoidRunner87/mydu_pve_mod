@@ -5,6 +5,7 @@ using Mod.DynamicEncounters.Features.Loot.Data;
 using Mod.DynamicEncounters.Features.Quests.Data;
 using Mod.DynamicEncounters.Features.Quests.Interfaces;
 using Mod.DynamicEncounters.Helpers;
+using NQ;
 
 namespace Mod.DynamicEncounters.Features.Quests.Services;
 
@@ -35,6 +36,7 @@ public class TransportMissionTemplateProvider : ITransportMissionTemplateProvide
             deliverMessage,
             [
                 new ElementQuantityRef(
+                    new ElementId{elementId = (ulong)random.NextInt64(0, long.MaxValue)},
                     new ElementTypeName("FactionSealedContainer"),
                     1
                 )

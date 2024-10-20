@@ -18,7 +18,7 @@ public class PlayerQuestService(IServiceProvider provider) : IPlayerQuestService
         ProceduralQuestItem proceduralQuestItem
     )
     {
-        var playerQuestItems = (await _repository.GetAllAsync(playerId)).ToList();
+        var playerQuestItems = (await _repository.GetAllByStatusAsync(playerId, QuestStatus.Any())).ToList();
 
         if (playerQuestItems.Any(x => x.OriginalQuestId == proceduralQuestItem.Id))
         {

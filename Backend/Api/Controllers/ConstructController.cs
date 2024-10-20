@@ -191,4 +191,49 @@ public class ConstructController : Controller
 
         return Ok(report);
     }
+
+    [HttpGet]
+    [Route("{constructId:long}/player/{playerId:long}/mission-items")]
+    public async Task<IActionResult> GetConstructMissionItems(ulong constructId, ulong playerId)
+    {
+        var provider = ModBase.ServiceProvider;
+        var orleans = provider.GetOrleans();
+        var bank = provider.GetGameplayBank();
+
+        var constructElementsGrain = orleans.GetConstructElementsGrain(constructId);
+        var containers = await constructElementsGrain.GetElementsOfType<ContainerUnit>();
+
+        var missionItemElementTypeName = "FactionSealedContainer";
+        var missionItemDef = bank.GetDefinition(missionItemElementTypeName);
+
+        if (missionItemDef == null)
+        {
+            return BadRequest($"{missionItemElementTypeName} Not Found");
+        }
+
+        var missionItems = new List<object>();
+        
+        foreach (var elementId in containers)
+        {
+            var containerGrain = orleans.GetContainerGrain(elementId);
+            var storageInfo = await containerGrain.Get(playerId);
+
+            foreach (var slot in storageInfo.content)
+            {
+                var def = bank.GetDefinition(slot.content.type);
+
+                if (def == null)
+                {
+                    return BadRequest($"{slot.content.type} Not Found");
+                }
+                
+                if (missionItemDef.Id == def.Id)
+                {
+                    missionItems.Add(slot.content);
+                }
+            }
+        }
+
+        return Ok(missionItems);
+    }
 }

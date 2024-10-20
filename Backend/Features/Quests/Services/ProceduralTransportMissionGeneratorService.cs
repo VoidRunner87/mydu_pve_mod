@@ -216,7 +216,11 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                         new DeliverItemTaskDefinition(
                             dropContainer,
                             missionTemplate.Items
-                                .Select(x => new ElementQuantityRef(x.ElementTypeName, -x.Quantity))
+                                .Select(x => new ElementQuantityRef(
+                                    x.ElementId,
+                                    x.ElementTypeName, 
+                                    -x.Quantity
+                                ))
                         )
                     )
                 }

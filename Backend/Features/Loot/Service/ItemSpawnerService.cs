@@ -78,16 +78,18 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
         _logger.LogInformation("Items Spawned on Construct {Construct}", onRandomContainersCommand.ConstructId);
     }
 
-    public async Task SpawnItemsWithCallback(GiveTakePlayerItemsWithCallbackCommand command)
+    public async Task GiveTakeItemsWithCallback(GiveTakePlayerItemsWithCallbackCommand command)
     {
         var modManagerGrain = _orleans.GetModManagerGrain();
         var itemOperation = new ItemOperation
         {
             Items = command.Items.Select(x => new ItemOperation.ItemDefinition
             {
+                Id = x.ElementId ?? 0,
                 Name = x.ElementTypeName.Name,
                 Quantity = x.Quantity,
             }),
+            Owner = command.Owner,
             Properties = command.Properties,
             OnSuccessCallbackUrl = command.OnSuccessCallbackUrl,
             OnFailCallbackUrl = command.OnFailCallbackUrl

@@ -61,8 +61,10 @@ public class GiveTakePlayerItemsAction(IServiceProvider provider) : IModActionHa
                         quantity = item.Quantity,
                         item = new ItemInfo
                         {
+                            id = item.Id,
                             type = itemType,
-                            properties = itemOperation.Properties
+                            owner = itemOperation.Owner,
+                            properties = itemOperation.Properties,
                         }
                     }
                 );
@@ -76,10 +78,10 @@ public class GiveTakePlayerItemsAction(IServiceProvider provider) : IModActionHa
                 new OperationOptions
                 {
                     AllowPartial = false,
-                    Reason = StorageReserveReason.RESERVE_DEPLOY,
-                    User = new EntityId { playerId = playerId },
+                    Reason = StorageReserveReason.RESERVE_EXACT,
+                    User = itemOperation.Owner,
                     Requester = playerId,
-                    BypassLock = true
+                    BypassLock = false,
                 }
             );
 

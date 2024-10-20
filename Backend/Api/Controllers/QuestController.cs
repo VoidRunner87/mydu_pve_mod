@@ -158,7 +158,7 @@ public class QuestController : Controller
     {
         var playerQuestRepository = _provider.GetRequiredService<IPlayerQuestRepository>();
 
-        var result = (await playerQuestRepository.GetAllAsync(playerId)).ToList();
+        var result = (await playerQuestRepository.GetAllByStatusAsync(playerId, [QuestStatus.InProgress])).ToList();
 
         return Ok(new PlayerQuestPanelViewModel(result));
     }
@@ -189,7 +189,7 @@ public class QuestController : Controller
             return BadRequest("Invalid Faction");
         }
 
-        var playerQuestsMap = (await playerQuestRepository.GetAllAsync(request.PlayerId))
+        var playerQuestsMap = (await playerQuestRepository.GetAllByStatusAsync(request.PlayerId, QuestStatus.Any()))
             .ToDictionary(
                 k => k.OriginalQuestId,
                 v => true
