@@ -59,7 +59,7 @@ public class CleanupLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle
                 counter++;
             }
 
-            await constructHandleRepository.CleanupConstructHandles();
+            await constructHandleRepository.CleanupOldDeletedConstructHandles();
             
             logger.LogInformation("Cleanup Total = {Time}ms", sw.ElapsedMilliseconds);
 

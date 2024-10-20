@@ -326,7 +326,7 @@ public class ConstructHandleDatabaseRepository(IServiceProvider provider) : ICon
         return await db.ExecuteScalarAsync<int>("SELECT COUNT(0) FROM public.mod_npc_construct_handle WHERE deleted_at IS NULL");
     }
 
-    public async Task CleanupConstructHandles()
+    public async Task CleanupOldDeletedConstructHandles()
     {
         using var db = _factory.Create();
         db.Open();
