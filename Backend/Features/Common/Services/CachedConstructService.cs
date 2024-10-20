@@ -16,8 +16,8 @@ public class CachedConstructService(
     private readonly TemporaryMemoryCache<ulong, Velocities> _velocities = new(nameof(_velocities), constructInfoCacheSpan);
     private readonly TemporaryMemoryCache<ulong, bool> _beingControlled = new(nameof(_beingControlled), controlCheckCacheSpan);
     private readonly TemporaryMemoryCache<ulong, bool> _inSafeZone = new(nameof(_inSafeZone), controlCheckCacheSpan);
-    private readonly TemporaryMemoryCache<ulong, bool> _identifyNotification = new(nameof(_identifyNotification), constructInfoCacheSpan);
-    private readonly TemporaryMemoryCache<ulong, bool> _attackingNotification = new(nameof(_attackingNotification), constructInfoCacheSpan);
+    private readonly TemporaryMemoryCache<ulong, bool> _identifyNotification = new(nameof(_identifyNotification), TimeSpan.FromSeconds(5));
+    private readonly TemporaryMemoryCache<ulong, bool> _attackingNotification = new(nameof(_attackingNotification), TimeSpan.FromSeconds(5));
 
     public async Task<ConstructInfoOutcome> GetConstructInfoAsync(ulong constructId)
     {
@@ -122,18 +122,20 @@ public class CachedConstructService(
     public async Task SendIdentificationNotification(ulong constructId, TargetingConstructData targeting)
     {
         await _identifyNotification.TryGetOrSetValue(
-            constructId,
+            targeting.constructId,
             () => service.SendIdentificationNotification(constructId, targeting)
-                .ContinueWith(_ => true)
+                .ContinueWith(_ => true),
+            _ => false
         );
     }
 
     public async Task SendAttackingNotification(ulong constructId, TargetingConstructData targeting)
     {
         await _attackingNotification.TryGetOrSetValue(
-            constructId,
+            targeting.constructId,
             () => service.SendAttackingNotification(constructId, targeting)
-                .ContinueWith(_ => true)
+                .ContinueWith(_ => true),
+            _ => false
         );
     }
 }

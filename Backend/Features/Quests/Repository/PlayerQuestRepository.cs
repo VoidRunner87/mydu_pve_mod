@@ -254,6 +254,29 @@ public partial class PlayerQuestRepository(IServiceProvider provider) : IPlayerQ
         return count == 0;
     }
 
+    public async Task<dynamic> GetReport()
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        return await db.QueryAsync(
+            """
+            SELECT 
+            	PQ.id, 
+            	P.display_name, 
+            	COALESCE(PQT.completed_at, NOW()) - PQ.created_at delivery_time,
+            	PQ.status,
+            	PQ.created_at,
+            	PQT.completed_at
+            FROM public.mod_player_quest PQ
+            INNER JOIN public.mod_player_quest_task PQT ON PQT.quest_id = PQ.id
+            INNER JOIN public.player P ON P.id = PQ.player_id
+            WHERE PQT.type = 'deliver'
+            ORDER BY completed_at DESC, delivery_time ASC
+            """
+        );
+    }
+
     private QuestTaskItem MapToTaskItem(DbRow row)
     {
         return new QuestTaskItem(
