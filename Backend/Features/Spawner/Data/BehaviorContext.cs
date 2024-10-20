@@ -62,7 +62,7 @@ public class BehaviorContext(
 
     public bool IsActiveWreck { get; set; }
 
-    public double RealismFactor { get; set; } = 0.25d;
+    public double RealismFactor { get; set; } = prefab.DefinitionItem.RealismFactor;
 
     public Task NotifyEvent(string @event, BehaviorEventArgs eventArgs)
     {
