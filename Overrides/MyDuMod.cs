@@ -95,15 +95,6 @@ public class MyDuMod : IMod
             ]
         };
 
-        var loadNpcApp = new ModActionDefinition
-        {
-            id = (ulong)ActionType.LoadBoardApp,
-            context = ModActionContext.Global,
-            label = "Admin\\Load NPC APP"
-        };
-
-        res.actions.Add(loadNpcApp);
-
         return Task.FromResult(res);
     }
 
