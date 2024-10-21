@@ -113,6 +113,7 @@ const NpcQuestList = (props) => {
                    title={item.title}
                    tasks={item.tasks}
                    type={item.type}
+                   safe={item.safe}
                    canAccept={true}
                    onAccepted={(questId) => handleAccepted(index, questId)}
                    accepted={acceptedQuestMap[item.id] || item.accepted}

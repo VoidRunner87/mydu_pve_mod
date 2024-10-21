@@ -124,6 +124,7 @@ const PlayerQuestList = (props) => {
                    title={item.title}
                    tasks={item.tasks}
                    type={item.type}
+                   safe={item.safe}
                    accepted={true}
                    canAbandon={true}
                    onAbandon={() => handleAbandon(index, item.id)}

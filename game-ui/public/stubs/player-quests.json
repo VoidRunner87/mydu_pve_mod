@@ -1,6 +1,29 @@
 {
   "jobs": [
     {
+      "id": "f0705ebd-b962-40c3-aab8-e926d7e6475e",
+      "title": "Time-sensitive delivery to Pirate Hideout Omega",
+      "type": "timed-transport",
+      "tasks": [
+        {
+          "title": "Pickup items at: The Dome City",
+          "position": "::pos{0,0,29669400.7129, 100759738.0343, 24616992.3843}",
+          "status": "completed"
+        },
+        {
+          "title": "Deliver items to: Pirate Hideout Omega",
+          "position": "::pos{0,0,37737092.8441533, 3664629.5466028643, 24616956.154136393}",
+          "status": "in-progress"
+        }
+      ],
+      "safe": true,
+      "rewards": [
+        "1,063,654.00h",
+        "Influence with Pirates +1",
+        "00:30:00 Time Bonus: 15,063,654.00h"
+      ]
+    },
+    {
       "id": "f0705ebd-b962-40c3-aab8-e926d7e6474e",
       "title": "Transport of Goods from The Dome City to Pirate Hideout Omega",
       "type": "transport",
@@ -16,9 +39,11 @@
           "status": "in-progress"
         }
       ],
+      "safe": false,
       "rewards": [
         "7,063,654.00h",
-        "Influence with Pirates +1"
+        "Influence with Pirates +1",
+        "00:30:00 Time Bonus: 7,063,654.00h"
       ]
     }
   ]

@@ -1,4 +1,4 @@
-import {CheckIcon, ExpandIcon, SquareIcon} from "./icons";
+import {CheckIcon, ExpandIcon, FireIcon, ShieldIcon, SquareIcon, TimedIcon, TransportIcon} from "./icons";
 import {PrimaryButton, IconButton, TargetButton, SecondaryButton, DestructiveButton} from "./buttons";
 import styled from "styled-components";
 import {useState} from "react";
@@ -76,7 +76,21 @@ const AcceptedPill = styled.div`
     color: rgb(180, 221, 235);
 `;
 
-const QuestItem = ({questId, title, type, tasks, expanded, onSelect, rewards, onAccepted, onAbandon, accepted, canAccept, canAbandon}) => {
+const QuestItem = ({
+                       questId,
+                       title,
+                       type,
+                       safe,
+                       tasks,
+                       expanded,
+                       onSelect,
+                       rewards,
+                       onAccepted,
+                       onAbandon,
+                       accepted,
+                       canAccept,
+                       canAbandon
+                   }) => {
 
     const [confirmAbandon, setConfirmAbandon] = useState(false);
 
@@ -121,19 +135,43 @@ const QuestItem = ({questId, title, type, tasks, expanded, onSelect, rewards, on
     }
 
     let headerClassNames = [];
-    if (expanded)
-    {
+    if (expanded) {
         headerClassNames.push('expanded');
     }
-    if (accepted)
-    {
+    if (accepted) {
         headerClassNames.push('accepted');
     }
+
+    const QuestIcon = ({type, safe}) => {
+
+        let icons = [];
+
+        if (safe) {
+            icons.push(<ShieldIcon/>);
+        } else {
+            icons.push(<FireIcon/>);
+        }
+
+        switch (type) {
+            case "transport":
+                icons.push(<TransportIcon/>);
+                break;
+            case "timed-transport":
+                icons.push(<TimedIcon/>);
+                icons.push(<TransportIcon/>);
+                break;
+            default:
+                break;
+        }
+
+        return icons;
+    };
 
     return (
         <ExpandItem>
             <Header onClick={onSelect} className={headerClassNames.join(" ")}>
-                <ExpandIcon expanded={expanded}/> <HeaderText>{title}</HeaderText> <Spacing /><AcceptedPill hidden={!accepted}>Accepted</AcceptedPill>
+                <ExpandIcon expanded={expanded}/> <QuestIcon type={type} safe={safe}/> <HeaderText>{title}</HeaderText>
+                <Spacing/><AcceptedPill hidden={!accepted}>Accepted</AcceptedPill>
             </Header>
             <Contents hidden={!expanded}>
                 <TaskSubTitle>Objectives:</TaskSubTitle>
@@ -145,8 +183,10 @@ const QuestItem = ({questId, title, type, tasks, expanded, onSelect, rewards, on
                 <ActionContainer>
                     <PrimaryButton hidden={accepted || !canAccept} onClick={acceptQuest}>Accept</PrimaryButton>
                     <SecondaryButton hidden={!accepted || !canAccept}>Accepted</SecondaryButton>
-                    <PrimaryButton hidden={confirmAbandon || !accepted || !canAbandon} onClick={showConfirmAbandon}>Abandon</PrimaryButton>
-                    {confirmAbandon ? <DestructiveButton onClick={abandonQuest}>Confirm abandon</DestructiveButton> : ""}
+                    <PrimaryButton hidden={confirmAbandon || !accepted || !canAbandon}
+                                   onClick={showConfirmAbandon}>Abandon</PrimaryButton>
+                    {confirmAbandon ?
+                        <DestructiveButton onClick={abandonQuest}>Confirm abandon</DestructiveButton> : ""}
                 </ActionContainer>
             </Contents>
         </ExpandItem>
