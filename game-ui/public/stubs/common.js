@@ -3,7 +3,7 @@ if (!window.global_resources) {
 }
 
 if (!window.page) {
-    window.page = "npc";
+    window.page = "player";
 }
 
 let modApi = {};

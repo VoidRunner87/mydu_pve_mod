@@ -2,13 +2,13 @@
   "jobs": [
     {
       "id": "f0705ebd-b962-40c3-aab8-e926d7e6474e",
-      "title": "Transport of Goods from The Dome City to Pirate Hideout Omega [487.15su]",
+      "title": "Transport of Goods from The Dome City to Pirate Hideout Omega",
       "type": "transport",
       "tasks": [
         {
           "title": "Pickup items at: The Dome City",
           "position": "::pos{0,0,29669400.7129, 100759738.0343, 24616992.3843}",
-          "status": "in-progress"
+          "status": "completed"
         },
         {
           "title": "Deliver items to: Pirate Hideout Omega",

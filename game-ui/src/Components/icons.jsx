@@ -41,6 +41,14 @@ export const SquareCheckIcon = () => {
     </svg>
 }
 
+export const CheckIcon = ({checked}) => {
+    return (
+        checked ?
+            <SquareCheckIcon />
+            : <SquareIcon />
+    )
+}
+
 export const ExpandIcon = ({expanded}) => {
     return (
         expanded ? <AngleDownIcon /> : <AngleRightIcon />

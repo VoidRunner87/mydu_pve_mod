@@ -1,4 +1,4 @@
-import {ExpandIcon, SquareIcon} from "./icons";
+import {CheckIcon, ExpandIcon, SquareIcon} from "./icons";
 import {PrimaryButton, IconButton, TargetButton, SecondaryButton, DestructiveButton} from "./buttons";
 import styled from "styled-components";
 import {useState} from "react";
@@ -87,7 +87,7 @@ const QuestItem = ({questId, title, type, tasks, expanded, onSelect, rewards, on
     const tasksRender = tasks
         .map((t, i) => <Task key={i}>
                 <ItemContainer>
-                    <ItemIcon><SquareIcon/></ItemIcon>
+                    <ItemIcon><CheckIcon checked={t.status === 'completed'}/></ItemIcon>
                     <ItemText>{t.title}</ItemText><TargetButton onClick={() => setWaypoint(t.position)}/>
                 </ItemContainer>
             </Task>
