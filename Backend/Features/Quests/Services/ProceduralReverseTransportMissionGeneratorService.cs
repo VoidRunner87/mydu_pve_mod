@@ -19,8 +19,8 @@ using NQ;
 
 namespace Mod.DynamicEncounters.Features.Quests.Services;
 
-public class ProceduralTransportMissionGeneratorService(IServiceProvider provider)
-    : IProceduralTransportMissionGeneratorService
+public class ProceduralReverseTransportMissionGeneratorService(IServiceProvider provider)
+    : IProceduralReverseTransportMissionGeneratorService
 {
     private readonly ILogger<ProceduralQuestGeneratorService> _logger =
         provider.CreateLogger<ProceduralQuestGeneratorService>();
@@ -44,7 +44,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
         var random = new Random(seed);
 
         var questSeed = random.Next();
-        const string questType = QuestTypes.Transport;
+        const string questType = QuestTypes.ReverseTransport;
 
         var factionTerritoryRepository = provider.GetRequiredService<IFactionTerritoryRepository>();
         
@@ -64,68 +64,68 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
         }
 
         var territoryContainerRepository = provider.GetRequiredService<ITerritoryContainerRepository>();
-        var fromContainerList = (await territoryContainerRepository.GetAll(territoryId)).ToList();
+        var toContainerList = (await territoryContainerRepository.GetAll(territoryId)).ToList();
+
+        if (toContainerList.Count == 0)
+        {
+            return ProceduralQuestOutcome.Failed("No delivery containers available");
+        }
+
+        var deliveryContainer = random.PickOneAtRandom(toContainerList);
+
+        var fromContainerTerritory = random.PickOneAtRandom(territoryMap.Keys);
+        var fromContainerList = (await territoryContainerRepository.GetAll(fromContainerTerritory)).ToList();
 
         if (fromContainerList.Count == 0)
         {
             return ProceduralQuestOutcome.Failed("No pickup containers available");
         }
 
-        var questPickupContainer = random.PickOneAtRandom(fromContainerList);
+        var fromContainer = random.PickOneAtRandom(fromContainerList);
 
-        var dropContainerTerritory = random.PickOneAtRandom(territoryMap.Keys);
-        var dropContainerList = (await territoryContainerRepository.GetAll(dropContainerTerritory)).ToList();
-
-        if (dropContainerList.Count == 0)
-        {
-            return ProceduralQuestOutcome.Failed("No drop containers available");
-        }
-
-        var dropContainer = random.PickOneAtRandom(dropContainerList);
-
-        var pickupGuid = GuidUtility.Create(
+        var toGuid = GuidUtility.Create(
             territoryId,
-            $"{playerId}-{QuestTaskItemType.Pickup}-{factionId.Id}-{territoryId.Id}-{timeFactor}"
+            $"{playerId}-{QuestTaskItemType.Deliver}-{factionId.Id}-{territoryId.Id}-{timeFactor}"
         );
-        var dropGuid = GuidUtility.Create(
+        var fromGuid = GuidUtility.Create(
             territoryId,
-            $"{playerId}-{QuestTaskItemType.Deliver}-{factionId.Id}-{dropContainerTerritory}-{timeFactor}"
+            $"{playerId}-{QuestTaskItemType.Pickup}-{factionId.Id}-{fromContainerTerritory}-{timeFactor}"
         );
         var questGuid = GuidUtility.Create(
             territoryId,
-            $"{questType}-{factionId.Id}-{territoryId.Id}-{pickupGuid}-{dropGuid}-{timeFactor}"
+            $"{questType}-{factionId.Id}-{territoryId.Id}-{toGuid}-{fromGuid}-{timeFactor}"
         );
 
         var constructService = provider.GetRequiredService<IConstructService>();
-        var pickupConstructInfo = await constructService.GetConstructInfoAsync(questPickupContainer.ConstructId);
-        var dropConstructInfo = await constructService.GetConstructInfoAsync(dropContainer.ConstructId);
+        var deliverConstructInfo = await constructService.GetConstructInfoAsync(deliveryContainer.ConstructId);
+        var pickupConstructInfo = await constructService.GetConstructInfoAsync(fromContainer.ConstructId);
 
         if (!pickupConstructInfo.ConstructExists || pickupConstructInfo.Info == null)
         {
             return ProceduralQuestOutcome.Failed(
-                $"Pickup Construct '{questPickupContainer.ConstructId}' doesn't exist");
+                $"Pickup Construct '{deliveryContainer.ConstructId}' doesn't exist");
         }
 
-        if (!dropConstructInfo.ConstructExists || dropConstructInfo.Info == null)
+        if (!deliverConstructInfo.ConstructExists || deliverConstructInfo.Info == null)
         {
-            return ProceduralQuestOutcome.Failed($"Drop Construct '{dropContainer.ConstructId}' doesn't exist");
+            return ProceduralQuestOutcome.Failed($"Drop Construct '{fromContainer.ConstructId}' doesn't exist");
         }
 
         var transportMissionTemplateProvider = provider.GetRequiredService<ITransportMissionTemplateProvider>();
         var missionTemplate = await transportMissionTemplateProvider.GetMissionTemplate(random.Next());
         missionTemplate = missionTemplate
             .SetPickupConstructName(pickupConstructInfo.Info.rData.name)
-            .SetDeliverConstructName(dropConstructInfo.Info.rData.name);
+            .SetDeliverConstructName(deliverConstructInfo.Info.rData.name);
 
         var sceneGraph = provider.GetRequiredService<IScenegraph>();
-        var pickupPos = await sceneGraph.GetConstructCenterWorldPosition(questPickupContainer.ConstructId);
-        var deliveryPos = await sceneGraph.GetConstructCenterWorldPosition(dropContainer.ConstructId);
+        var deliveryPos = await sceneGraph.GetConstructCenterWorldPosition(deliveryContainer.ConstructId);
+        var pickupPos = await sceneGraph.GetConstructCenterWorldPosition(fromContainer.ConstructId);
 
         var distanceMeters = (pickupPos - deliveryPos).Size();
         var distanceSu = distanceMeters / DistanceHelpers.OneSuInMeters;
 
         var multiplier = 1;
-        if (dropConstructInfo.Info.kind == ConstructKind.STATIC)
+        if (deliverConstructInfo.Info.kind == ConstructKind.STATIC)
         {
             multiplier++;
         }
@@ -135,7 +135,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
             multiplier++;
         }
 
-        var quantaMultiplier = MissionProceduralGenerationConfig.TransportQuantaMultiplier;
+        var quantaMultiplier = MissionProceduralGenerationConfig.ReverseTransportMultiplier;
         var quantaReward = (long)(distanceSu * 10000d * 100d * quantaMultiplier * multiplier);
         var influenceReward = 1;
 
@@ -190,11 +190,11 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                             Properties =
                             {
                                 { "questId", questGuid },
-                                { "questTaskId", pickupGuid }
+                                { "questTaskId", toGuid }
                             }
                         },
                         new PickupItemTaskItemDefinition(
-                            questPickupContainer,
+                            fromContainer,
                             missionTemplate.Items
                         )
                     ),
@@ -217,11 +217,11 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
                             Properties =
                             {
                                 { "questId", questGuid },
-                                { "questTaskId", dropGuid }
+                                { "questTaskId", fromGuid }
                             }
                         },
                         new DeliverItemTaskDefinition(
-                            dropContainer,
+                            deliveryContainer,
                             missionTemplate.Items
                                 .Select(x => new ElementQuantityRef(
                                     x.ElementId,

@@ -7,10 +7,12 @@ public static class QuestTypes
     public const string Exploration = "exploration";
     public const string Combat = "combat";
     public const string Transport = "transport";
+    public const string ReverseTransport = "reverse-transport";
 
     public static IEnumerable<string> All()
         => new[]
         {
-            Transport
+            Transport,
+            ReverseTransport
         };
 }

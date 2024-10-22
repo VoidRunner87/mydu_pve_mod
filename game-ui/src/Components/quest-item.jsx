@@ -1,4 +1,13 @@
-import {CheckIcon, ExpandIcon, FireIcon, ShieldIcon, SquareIcon, TimedIcon, TransportIcon} from "./icons";
+import {
+    CheckIcon,
+    ExpandIcon,
+    FireIcon,
+    ReverseTransportIcon,
+    ShieldIcon,
+    SquareIcon,
+    TimedIcon,
+    TransportIcon
+} from "./icons";
 import {PrimaryButton, IconButton, TargetButton, SecondaryButton, DestructiveButton} from "./buttons";
 import styled from "styled-components";
 import {useState} from "react";
@@ -159,6 +168,9 @@ const QuestItem = ({
             case "timed-transport":
                 icons.push(<TimedIcon/>);
                 icons.push(<TransportIcon/>);
+                break;
+            case "reverse-transport":
+                icons.push(<ReverseTransportIcon/>);
                 break;
             default:
                 break;

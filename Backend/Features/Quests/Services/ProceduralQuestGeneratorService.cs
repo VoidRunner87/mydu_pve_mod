@@ -37,15 +37,28 @@ public class ProceduralQuestGeneratorService(IServiceProvider provider) : IProce
             switch (questType)
             {
                 case QuestTypes.Transport:
-                    var generator = provider.GetRequiredService<IProceduralTransportMissionGeneratorService>();
-                    var outcome = await generator.GenerateAsync(playerId, factionId, territoryId, questSeed);
-                    if (outcome.Success)
+                    var transportGen = provider.GetRequiredService<IProceduralTransportMissionGeneratorService>();
+                    var transportOutcome = await transportGen.GenerateAsync(playerId, factionId, territoryId, questSeed);
+                    if (transportOutcome.Success)
                     {
-                        result.Add(outcome.QuestItem);
+                        result.Add(transportOutcome.QuestItem);
                     }
                     else
                     {
-                        _logger.LogWarning("Failed to Generate Quest: {Message}", outcome.Message);
+                        _logger.LogWarning("Failed to Generate Quest: {Message}", transportOutcome.Message);
+                    }
+
+                    break;
+                case QuestTypes.ReverseTransport:
+                    var reverseTransportGen = provider.GetRequiredService<IProceduralReverseTransportMissionGeneratorService>();
+                    var reverseTransportOutcome = await reverseTransportGen.GenerateAsync(playerId, factionId, territoryId, questSeed);
+                    if (reverseTransportOutcome.Success)
+                    {
+                        result.Add(reverseTransportOutcome.QuestItem);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to Generate Quest: {Message}", reverseTransportOutcome.Message);
                     }
 
                     break;
@@ -58,3 +71,5 @@ public class ProceduralQuestGeneratorService(IServiceProvider provider) : IProce
         return GenerateQuestListOutcome.WithAvailableQuests(result);
     }
 }
+
+

@@ -315,6 +315,7 @@ public class QuestController : Controller
         public string Title { get; set; }
         public string Type { get; set; }
         public bool Accepted { get; set; }
+        public bool Safe { get; set; } = true; // TODO grab that from quest later
 
         public IEnumerable<QuestTaskViewModel> Tasks { get; set; }
         public IEnumerable<string> Rewards { get; set; }
