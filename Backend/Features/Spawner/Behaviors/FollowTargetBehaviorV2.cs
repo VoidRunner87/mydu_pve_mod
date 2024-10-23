@@ -22,7 +22,6 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
     private bool _active = true;
     private IConstructService _constructService;
     private ILogger<FollowTargetBehaviorV2> _logger;
-    private IConstructElementsService _constructElementsService;
 
     public bool IsActive() => _active;
 
@@ -34,7 +33,6 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         
         _logger = provider.CreateLogger<FollowTargetBehaviorV2>();
         _constructService = provider.GetRequiredService<IConstructService>();
-        _constructElementsService = provider.GetRequiredService<IConstructElementsService>();
 
         return Task.CompletedTask;
     }
@@ -72,8 +70,7 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
         // var velToTargetDot = velocityDirection.Dot(moveDirection);
         var velToTargetDot = velocityDirection.Dot(forward);
 
-        var enginePower = Math.Clamp(await _constructElementsService.GetAllSpaceEnginesPower(constructId), 0, 1);
-        _logger.LogDebug("Construct {Construct} Engine Power: {Power}", constructId, enginePower);
+        context.TryGetProperty(BehaviorContext.EnginePowerProperty, out double enginePower, 1);
         
         if (enginePower <= 0)
         {
@@ -203,7 +200,10 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
             try
             {
-                await ModBase.Bot.Reconnect();
+                await ModBase.Bot.Factory.Connect(
+                    ModBase.Bot.LoginInformations,
+                    allowExisting: true
+                );
             }
             catch (Exception e)
             {

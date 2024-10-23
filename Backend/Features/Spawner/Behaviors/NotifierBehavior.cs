@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -26,6 +28,7 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
     
     private bool _active = true;
     private IConstructService _constructService;
+    private IConstructElementsService _constructElementsService;
 
     public bool IsActive() => _active;
 
@@ -37,6 +40,7 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
         _orleans = provider.GetOrleans();
 
         _constructElementsGrain = _orleans.GetConstructElementsGrain(constructId);
+        _constructElementsService = provider.GetRequiredService<IConstructElementsService>();
 
         _coreUnitElementId = (await _constructElementsGrain.GetElementsOfType<CoreUnit>()).SingleOrDefault();
 
@@ -52,9 +56,26 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
 
     public async Task TickAsync(BehaviorContext context)
     {
+        using var scope = _logger.BeginScope(new Dictionary<string, object>
+        {
+            { "ConstructId", constructId }
+        });
+        
         // TODO consider a better place for this in the future
         context.ClearExpiredTimerProperties();
-        
+
+        try
+        {
+            var enginePower = Math.Clamp(await _constructElementsService.GetAllSpaceEnginesPower(constructId), 0, 1);
+            _logger.LogDebug("Construct {Construct} Engine Power: {Power}", constructId, enginePower);
+
+            context.SetProperty(BehaviorContext.EnginePowerProperty, enginePower);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Construct {Construct} Failed to fetch engine power", constructId);
+        }
+
         var coreUnit = await _constructElementsGrain.GetElement(_coreUnitElementId);
 
         if (coreUnit.IsCoreStressHigh())
