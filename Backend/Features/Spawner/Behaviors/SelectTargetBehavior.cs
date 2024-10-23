@@ -52,6 +52,11 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
     public async Task TickAsync(BehaviorContext context)
     {
+        using var constructScope = _logger.BeginScope(new Dictionary<string, object>
+        {
+            { "ConstructId", constructId }
+        });
+
         if (!context.IsAlive)
         {
             _active = false;
@@ -98,7 +103,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         {
             var spatialQuerySw = new StopWatch();
             spatialQuerySw.Start();
-            
+
             radarContacts = (await _npcRadarService.ScanForPlayerContacts(constructId, context.Position.Value,
                     DistanceHelpers.OneSuInMeters * 2.5)
                 )
@@ -107,7 +112,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
             // remove self
             radarContacts.Remove(constructId);
-            
+
             StatsRecorder.Record("NPC_Radar", sw.ElapsedMilliseconds);
         }
 
