@@ -154,7 +154,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
             var delta = Math.Abs(pos.Distance(npcPos));
 
-            _logger.LogInformation("Construct {Construct} Distance: {Distance}su. Time = {Time}ms",
+            _logger.LogInformation("Construct {Construct} Radar Sees {Target}; Distance: {Distance}su. Time = {Time}ms",
+                constructId,
                 construct.rData.constructId,
                 delta / DistanceHelpers.OneSuInMeters,
                 sw.ElapsedMilliseconds
