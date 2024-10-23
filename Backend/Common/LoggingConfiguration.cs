@@ -120,7 +120,7 @@ public static class LoggingConfiguration
             var retainedFileTimeLimit = new TimeSpan?();
             
             writeTo.File(str, (LogEventLevel)level,
-                "[{Timestamp:HH:mm:ss.fff} {Level:u3} {SourceContext}] {Message:lj}{NewLine}{Exception}",
+                "[{Timestamp:HH:mm:ss.fff} {Level:u3} {SourceContext}] {Message:lj} {Properties}{NewLine}{Exception}",
                 fileSizeLimitBytes: fileSizeLimitBytes, 
                 shared: true, 
                 flushToDiskInterval: flushToDiskInterval,
