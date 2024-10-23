@@ -3,7 +3,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using NQutils.Config;
-using NQutils.Logging;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -47,7 +46,7 @@ public static class LoggingConfiguration
         if (log.to_stdout_dev)
             loggerConfiguration.WriteTo.Console(
                 log.console_level,
-                "[{Timestamp:HH:mm:ss.fff} {Level:u3} {SourceContext}] {Message:lj}{NewLine}{Exception}"
+                "[{Timestamp:HH:mm:ss.fff} {Level:u3} {SourceContext}] {Message:lj}{Properties}{NewLine}{Exception}"
             );
 
         if (!log.dotnet_verbose)
@@ -125,7 +124,7 @@ public static class LoggingConfiguration
             
             writeTo.File(str, (LogEventLevel)level,
                 "[{Timestamp:HH:mm:ss.fff} {Level:u3} {SourceContext}] {Message:lj} {Properties}{NewLine}{Exception}",
-                fileSizeLimitBytes: fileSizeLimitBytes, 
+                fileSizeLimitBytes: fileSizeLimitBytes,
                 shared: true, 
                 flushToDiskInterval: flushToDiskInterval,
                 rollOnFileSizeLimit: true, 

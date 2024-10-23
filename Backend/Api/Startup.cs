@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Mod.DynamicEncounters.Api.Config;
+using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features;
 using Newtonsoft.Json;
 using NQutils.Logging;
@@ -69,7 +70,7 @@ public class Startup(IServiceCollection rootServices)
             options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
         });
 
-        services.AddLogging(logging => logging.Setup(logWebHostInfo: true));
+        services.AddLogging(logging => logging.SetupPveModLog(logWebHostInfo: true));
         services.TryAdd(rootServices);
 
         services.AddSwaggerGen(c => c.EnableAnnotations());

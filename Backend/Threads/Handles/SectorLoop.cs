@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -32,7 +33,7 @@ public class SectorLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle(
             }
 
             ReportHeartbeat();
-            
+
             Thread.Sleep(TimeSpan.FromSeconds(10));
         }
         catch (Exception e)
@@ -48,6 +49,11 @@ public class SectorLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle(
 
         var logger = ModBase.ServiceProvider.CreateLogger<SectorLoop>();
 
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            { "Thread", Environment.CurrentManagedThreadId }
+        });
+
         var factionRepository = ModBase.ServiceProvider.GetRequiredService<IFactionRepository>();
         var sectorPoolManager = ModBase.ServiceProvider.GetRequiredService<ISectorPoolManager>();
 
@@ -61,7 +67,7 @@ public class SectorLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle(
         await sectorPoolManager.LoadUnloadedSectors();
         await sectorPoolManager.ActivateEnteredSectors();
 
-        logger.LogInformation("{Thread} Sector Loop Action took {Time}ms", Environment.CurrentManagedThreadId, sw.ElapsedMilliseconds);
+        logger.LogInformation("Sector Loop Action took {Time}ms", sw.ElapsedMilliseconds);
     }
 
     private async Task PrepareFactionSector(FactionItem faction)
