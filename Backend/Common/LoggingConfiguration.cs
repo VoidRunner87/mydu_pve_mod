@@ -90,10 +90,6 @@ public static class LoggingConfiguration
         {
             var str = Path.ChangeExtension(Path.Combine(path1, logFileName), "json");
             var writeTo = loggerConfiguration.WriteTo;
-            var formatter = new RenderNQFormat
-            {
-                SeparateWithComma = false
-            };
 
             var level = (int)log.level;
             var fileSizeLimitBytes = new long?(log.dotnet_roll_size_limit);
@@ -101,9 +97,17 @@ public static class LoggingConfiguration
             var flushToDiskInterval = new TimeSpan?();
             var retainedFileCountLimit = nullable;
             var retainedFileTimeLimit = new TimeSpan?();
-            writeTo.File(formatter, str, (LogEventLevel)level, fileSizeLimitBytes, shared: true,
-                flushToDiskInterval: flushToDiskInterval, rollOnFileSizeLimit: true,
-                retainedFileCountLimit: retainedFileCountLimit, retainedFileTimeLimit: retainedFileTimeLimit);
+            
+            writeTo.File(str, (LogEventLevel)level,
+                "[{Timestamp:HH:mm:ss.fff} {Level:u3} {SourceContext}] {Message:lj} {Properties}{NewLine}{Exception}",
+                fileSizeLimitBytes: fileSizeLimitBytes, 
+                shared: true, 
+                flushToDiskInterval: flushToDiskInterval,
+                rollOnFileSizeLimit: true, 
+                retainedFileCountLimit: retainedFileCountLimit,
+                retainedFileTimeLimit: retainedFileTimeLimit
+            );
+            
             Console.WriteLine("will log to '" + str + "'");
         }
 
