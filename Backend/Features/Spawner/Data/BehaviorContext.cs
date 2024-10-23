@@ -37,6 +37,7 @@ public class BehaviorContext(
     public const string AutoTargetMovePositionEnabledProperty = "AutoTargetMovePositionEnabled";
     public const string AutoSelectAttackTargetConstructProperty = "AutoSelectAttackTargetConstruct";
     public const string EnginePowerProperty = "EnginePower";
+    public const string IdleSinceProperty = "IdleSince";
 
     public DateTime StartedAt { get; } = DateTime.UtcNow;
     public Vec3 Velocity { get; set; }

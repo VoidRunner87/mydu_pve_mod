@@ -52,11 +52,6 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
     public async Task TickAsync(BehaviorContext context)
     {
-        using var constructScope = _logger.BeginScope(new Dictionary<string, object>
-        {
-            { "ConstructId", constructId }
-        });
-
         if (!context.IsAlive)
         {
             _active = false;
@@ -134,8 +129,17 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             .Where(r => r.mutableData.ownerId.IsPlayer() || r.mutableData.ownerId.IsOrg())
             .ToList();
 
-        _logger.LogInformation("Construct {Construct} Found {Count} PLAYER constructs around {List}. Time = {Time}ms",
-            constructId,
+        if (playerConstructs.Count > 0)
+        {
+            context.SetProperty(BehaviorContext.IdleSinceProperty, DateTime.UtcNow);
+        }
+        else
+        {
+            context.TryGetProperty(BehaviorContext.IdleSinceProperty, out var idleSince, DateTime.UtcNow);
+            _logger.LogInformation("Idle since: {Date} | {Span}", idleSince, DateTime.UtcNow - idleSince);
+        }
+        
+        _logger.LogInformation("Found {Count} PLAYER constructs around {List}. Time = {Time}ms",
             playerConstructs.Count,
             string.Join(", ", playerConstructs.Select(x => x.rData.constructId)),
             sw.ElapsedMilliseconds
