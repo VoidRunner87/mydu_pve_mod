@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Common.Services;
+using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
 using NQ;
 
@@ -24,7 +25,20 @@ public class SectorInstanceController(IServiceProvider provider) : Controller
     [Route("activate")]
     public async Task<IActionResult> ActivateSector([FromBody] SectorRequest request)
     {
-        var sectorInstance = await _repository.FindBySector(request.Sector);
+        SectorInstance sectorInstance;
+
+        if (request.Sector.HasValue)
+        {
+            sectorInstance = await _repository.FindBySector(request.Sector.Value);
+        }
+        else if (request.Id.HasValue)
+        {
+            sectorInstance = await _repository.FindById(request.Id.Value);
+        }
+        else
+        {
+            return BadRequest();
+        }
 
         if (sectorInstance == null)
         {
@@ -33,7 +47,7 @@ public class SectorInstanceController(IServiceProvider provider) : Controller
         
         var sectorPoolManager = provider.GetRequiredService<ISectorPoolManager>();
 
-        await sectorPoolManager.ActivateSector(sectorInstance);
+        await sectorPoolManager.ForceActivateSector(sectorInstance.Id);
 
         return Ok(sectorInstance);
     }
@@ -42,8 +56,21 @@ public class SectorInstanceController(IServiceProvider provider) : Controller
     [Route("expire")]
     public async Task<IActionResult> ExpireSector([FromBody] SectorRequest request)
     {
-        var sectorInstance = await _repository.FindBySector(request.Sector);
+        SectorInstance sectorInstance;
 
+        if (request.Sector.HasValue)
+        {
+            sectorInstance = await _repository.FindBySector(request.Sector.Value);
+        }
+        else if (request.Id.HasValue)
+        {
+            sectorInstance = await _repository.FindById(request.Id.Value);
+        }
+        else
+        {
+            return BadRequest();
+        }
+        
         if (sectorInstance == null)
         {
             return NotFound();
@@ -51,7 +78,7 @@ public class SectorInstanceController(IServiceProvider provider) : Controller
         
         var sectorPoolManager = provider.GetRequiredService<ISectorPoolManager>();
 
-        await sectorPoolManager.SetExpirationFromNow(request.Sector, TimeSpan.Zero);
+        await sectorPoolManager.SetExpirationFromNow(sectorInstance.Sector, TimeSpan.Zero);
 
         return Ok();
     }
@@ -83,6 +110,7 @@ public class SectorInstanceController(IServiceProvider provider) : Controller
     
     public class SectorRequest
     {
-        public Vec3 Sector { get; set; }
+        public Vec3? Sector { get; set; }
+        public Guid? Id { get; set; }
     }
 }

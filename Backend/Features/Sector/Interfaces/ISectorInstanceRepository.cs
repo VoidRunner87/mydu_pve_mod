@@ -9,6 +9,7 @@ namespace Mod.DynamicEncounters.Features.Sector.Interfaces;
 
 public interface ISectorInstanceRepository : IRepository<SectorInstance>
 {
+    Task<SectorInstance?> FindById(Guid id);
     Task<SectorInstance?> FindBySector(Vec3 sector);
     Task<IEnumerable<SectorInstance>> FindExpiredAsync();
     Task DeleteExpiredAsync();

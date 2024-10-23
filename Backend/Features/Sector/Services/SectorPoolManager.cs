@@ -356,6 +356,18 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         );
     }
 
+    public async Task<SectorActivationOutcome> ForceActivateSector(Guid sectorId)
+    {
+        var sectorInstance = await _sectorInstanceRepository.FindById(sectorId);
+
+        if (sectorInstance == null)
+        {
+            return SectorActivationOutcome.Failed($"Sector {sectorId} not found");
+        }
+
+        return await ActivateSector(sectorInstance);
+    }
+
     public async Task ActivateEnteredSectors()
     {
         var sectorsToActivate = (await _sectorInstanceRepository
@@ -375,20 +387,17 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         }
     }
 
-    public async Task ActivateSector(SectorInstance sectorInstance)
+    private async Task<SectorActivationOutcome> ActivateSector(SectorInstance sectorInstance)
     {
         var spatialHashRepository = serviceProvider.GetRequiredService<IConstructSpatialHashRepository>();
         var orleans = serviceProvider.GetOrleans();
-        var scriptService = serviceProvider.GetRequiredService<IScriptService>();
-        var eventService = serviceProvider.GetRequiredService<IEventService>();
-        var random = serviceProvider.GetRandomProvider().GetRandom();
 
         var constructs = (await spatialHashRepository.FindPlayerLiveConstructsOnSector(sectorInstance.Sector))
             .ToList();
 
         if (constructs.Count == 0)
         {
-            return;
+            return SectorActivationOutcome.Failed("No Player Constructs");
         }
 
         HashSet<ulong> playerIds = [];
@@ -417,6 +426,19 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
             sectorInstance.OnSectorEnterScript
         );
 
+        return await ActivateSectorInternal(sectorInstance, playerIds, constructs.ToHashSet());
+    }
+
+    private async Task<SectorActivationOutcome> ActivateSectorInternal(
+        SectorInstance sectorInstance,
+        HashSet<ulong> playerIds,
+        HashSet<ulong> constructIds
+    )
+    {
+        var scriptService = serviceProvider.GetRequiredService<IScriptService>();
+        var eventService = serviceProvider.GetRequiredService<IEventService>();
+        var random = serviceProvider.GetRandomProvider().GetRandom();
+
         try
         {
             await scriptService.ExecuteScriptAsync(
@@ -443,6 +465,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                 sectorInstance.OnSectorEnterScript,
                 sectorInstance.Sector
             );
+            
+            return SectorActivationOutcome.Failed(e.Message);
         }
 
         try
@@ -458,7 +482,7 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     playerIds,
                     playerId,
                     sectorInstance.Sector,
-                    random.PickOneAtRandom(constructs),
+                    random.PickOneAtRandom(constructIds),
                     playerIds.Count
                 )
             );
@@ -467,6 +491,8 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
         {
             _logger.LogError(e, "Failed to publish {Event}", nameof(SectorActivatedEvent));
         }
+        
+        return SectorActivationOutcome.Activated();
     }
 
     public async Task UpdateExpirationNames()

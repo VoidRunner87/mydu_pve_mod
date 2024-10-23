@@ -135,6 +135,29 @@ public class SectorInstanceRepository(IServiceProvider provider) : ISectorInstan
         throw new NotImplementedException();
     }
 
+    public async Task<SectorInstance?> FindById(Guid id)
+    {
+        using var db = _connectionFactory.Create();
+        db.Open();
+
+        var result = (await db.QueryAsync<DbRow>(
+            """
+            SELECT * FROM public.mod_sector_instance WHERE is = @id
+            """,
+            new
+            {
+                id
+            }
+        )).ToList();
+
+        if (!result.Any())
+        {
+            return null;
+        }
+
+        return MapToModel(result[0]);
+    }
+
     public async Task<SectorInstance?> FindBySector(Vec3 sector)
     {
         using var db = _connectionFactory.Create();
