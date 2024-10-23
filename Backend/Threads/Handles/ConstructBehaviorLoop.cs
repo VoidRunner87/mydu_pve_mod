@@ -67,6 +67,12 @@ public class ConstructBehaviorLoop : HighTickModLoop
             
             foreach (var kvp in ConstructHandles)
             {
+                using var constructScope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    {nameof(kvp.Value.ConstructId), kvp.Value.ConstructId},
+                    {"ConstructHandleId", kvp.Value.Id},
+                });
+                
                 var task = Task.Run(() => RunIsolatedAsync(() => TickConstructHandle(deltaTime, kvp.Value)));
                 taskList.Add(task);
             }
