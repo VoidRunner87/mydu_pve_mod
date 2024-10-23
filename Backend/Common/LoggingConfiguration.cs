@@ -42,6 +42,7 @@ public static class LoggingConfiguration
 
         var loggerConfiguration =
             new LoggerConfiguration().MinimumLevel.Is(log.console_level < log.level ? log.console_level : log.level);
+        loggerConfiguration.Enrich.With<ClassNameEnricher>();
 
         if (log.to_stdout_dev)
             loggerConfiguration.WriteTo.Console(
