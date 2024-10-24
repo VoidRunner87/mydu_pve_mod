@@ -400,12 +400,14 @@ public class WeaponGrainOverrides(IServiceProvider provider)
             {
                 logger.LogInformation("Shield NOT Absorbed Hit");
 
+                var constructInfoGrain = orleans.GetConstructInfoGrain(weaponFire.constructId);
+                var constructInfo = await constructInfoGrain.Get();
                 var deathInfoPvp = new PlayerDeathInfoPvPData
                 {
                     weaponId = weaponFire.weaponId,
                     weaponTypeId = weaponInfo.elementType,
                     constructId = constructId,
-                    constructName = "TODO",
+                    constructName = constructInfo.rData.name,
                     playerId = playerId,
                     playerName = playerName,
                     ownerId = constructOwner
