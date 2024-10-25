@@ -63,6 +63,8 @@ public class ClientModsController : Controller
         await using var streamWriter = new StreamWriter(manifestFileStream);
         await streamWriter.WriteAsync(JsonConvert.SerializeObject(manifest, Formatting.Indented));
 
+        System.IO.File.Delete(Path.Combine(clientModsPath, $"{manifestName}.zip"));
+        
         return Ok();
     }
 
