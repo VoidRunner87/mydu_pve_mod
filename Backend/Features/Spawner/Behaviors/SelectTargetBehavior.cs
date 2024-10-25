@@ -126,28 +126,35 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                     try
                     {
                         var notInSafeZone = !await _constructService.IsInSafeZone(constructInfo.rData.constructId);
+
                         // XL and above
                         if (notInSafeZone && constructInfo.rData.geometry.size > 256)
                         {
-                            var constructDamageElementsGrain = _orleans.GetConstructDamageElementsGrain(constructInfo.rData.constructId);
-                            await constructDamageElementsGrain.TriggerCoreUnitStressDestruction(
-                                new PlayerDeathInfoPvPData
-                                {
-                                    constructId = constructInfo.rData.constructId,
-                                    constructName = "XL Core In COMBAT is NOT ALLOWED",
-                                    ownerId = new EntityId {playerId = ModBase.Bot.PlayerId},
-                                    playerId = ModBase.Bot.PlayerId,
-                                    playerName = ModBase.Bot.Name,
-                                    weaponId = 0,
-                                    weaponTypeId = 1901919706
-                                }
-                            );
-                            
-                            _logger.LogError("Exploit Detected. {ConstructId} | {EntityP}, {EntityO}", 
-                                constructInfo.rData.constructId, 
-                                constructInfo.mutableData.ownerId.playerId, 
-                                constructInfo.mutableData.ownerId.organizationId
-                            );
+                            var notWarping =
+                                await _constructService.NoCache().IsWarping(constructInfo.rData.constructId);
+                            if (notWarping)
+                            {
+                                var constructDamageElementsGrain =
+                                    _orleans.GetConstructDamageElementsGrain(constructInfo.rData.constructId);
+                                await constructDamageElementsGrain.TriggerCoreUnitStressDestruction(
+                                    new PlayerDeathInfoPvPData
+                                    {
+                                        constructId = constructInfo.rData.constructId,
+                                        constructName = "XL Core In COMBAT is NOT ALLOWED",
+                                        ownerId = new EntityId { playerId = ModBase.Bot.PlayerId },
+                                        playerId = ModBase.Bot.PlayerId,
+                                        playerName = ModBase.Bot.Name,
+                                        weaponId = 0,
+                                        weaponTypeId = 1901919706
+                                    }
+                                );
+
+                                _logger.LogError("Exploit Detected. {ConstructId} | {EntityP}, {EntityO}",
+                                    constructInfo.rData.constructId,
+                                    constructInfo.mutableData.ownerId.playerId,
+                                    constructInfo.mutableData.ownerId.organizationId
+                                );
+                            }
                         }
                     }
                     catch (Exception e)
@@ -175,7 +182,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             context.TryGetProperty(BehaviorContext.IdleSinceProperty, out var idleSince, DateTime.UtcNow);
             _logger.LogInformation("Idle since: {Date} | {Span}", idleSince, DateTime.UtcNow - idleSince);
         }
-        
+
         _logger.LogInformation("Found {Count} PLAYER constructs around {List}. Time = {Time}ms",
             playerConstructs.Count,
             string.Join(", ", playerConstructs.Select(x => x.rData.constructId)),
