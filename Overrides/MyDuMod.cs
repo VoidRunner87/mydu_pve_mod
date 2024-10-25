@@ -8,7 +8,7 @@ using Mod.DynamicEncounters.Overrides.Actions;
 using Mod.DynamicEncounters.Overrides.Actions.Data;
 using Mod.DynamicEncounters.Overrides.ApiClient;
 using Mod.DynamicEncounters.Overrides.Common;
-using Mod.DynamicEncounters.Overrides.WeaponGrain;
+using Mod.DynamicEncounters.Overrides.Overrides.WeaponGrain;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NQ;

@@ -20,7 +20,7 @@ using Orleans;
 using Services;
 using ErrorCode = NQ.ErrorCode;
 
-namespace Mod.DynamicEncounters.Overrides.WeaponGrain;
+namespace Mod.DynamicEncounters.Overrides.Overrides.WeaponGrain;
 
 public class WeaponGrainOverrides(IServiceProvider provider)
 {
