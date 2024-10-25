@@ -12,6 +12,7 @@ using Mod.DynamicEncounters.Features.Faction;
 using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Loot;
 using Mod.DynamicEncounters.Features.NQ;
+using Mod.DynamicEncounters.Features.Party;
 using Mod.DynamicEncounters.Features.Quests;
 using Mod.DynamicEncounters.Features.Scripts.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Services;
@@ -65,5 +66,6 @@ public static class FeaturesRegistration
         services.RegisterFaction();
         services.RegisterExtendedProperties();
         services.RegisterQuests();
+        services.RegisterPlayerParty();
     }
 }

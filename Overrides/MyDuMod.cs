@@ -30,6 +30,8 @@ public class MyDuMod : IMod
     private IPub _pub;
     private WeaponGrainOverrides _weaponGrainOverrides;
 
+    private readonly PlayerRateLimiter _playerRateLimiter = new(2);
+
     public string GetName()
     {
         return "Mod.DynamicEncounters";
@@ -113,7 +115,20 @@ public class MyDuMod : IMod
 
     private async Task TriggerActionInternal(ulong playerId, ModAction action)
     {
-        _logger.LogInformation("Received Trigger Action: {Id} | {Content}", action.actionId, action.payload);
+        _playerRateLimiter.TrackRequest(playerId);
+        if (_playerRateLimiter.ExceededRateLimit(playerId))
+        {
+            _logger.LogWarning("Player {Player} Rate Limited", playerId);
+            return;
+        }
+        
+        _logger.LogInformation(
+            "Received Trigger Action from Player({PlayerId} != {ActionPlayerId}): {ActionId} | {Content}",
+            playerId,
+            action.playerId,
+            action.actionId,
+            action.payload
+        );
 
         var apiClient = new PveModQuestsApiClient(_provider);
 
@@ -216,7 +231,7 @@ public class MyDuMod : IMod
                     acceptQuest.Seed
                 );
 
-                _logger.LogInformation("Accept Quest Outcome {Outcome} {Success}", 
+                _logger.LogInformation("Accept Quest Outcome {Outcome} {Success}",
                     acceptQuestOutcome?.Message,
                     acceptQuestOutcome?.Success
                 );
@@ -226,7 +241,7 @@ public class MyDuMod : IMod
                     await Notifications.ErrorNotification(_provider, playerId, $"Failed: {acceptQuestOutcome.Message}");
                     break;
                 }
-                
+
                 await PlayMissionAcceptedSound(playerId);
                 await Notifications.SimpleNotificationToPlayer(_provider, playerId, "Mission accepted");
                 break;
@@ -234,15 +249,16 @@ public class MyDuMod : IMod
                 var abandonQuest = JsonConvert.DeserializeObject<AbandonQuest>(action.payload);
 
                 var abandonQuestOutcome = await apiClient.AbandonQuest(abandonQuest.QuestId, abandonQuest.PlayerId);
-                
+
                 if (!abandonQuestOutcome.Success)
                 {
-                    await Notifications.ErrorNotification(_provider, playerId, $"Failed: {abandonQuestOutcome.Message}");
+                    await Notifications.ErrorNotification(_provider, playerId,
+                        $"Failed: {abandonQuestOutcome.Message}");
                     break;
                 }
-                
+
                 await Notifications.SimpleNotificationToPlayer(_provider, playerId, "Mission abandoned");
-                
+
                 break;
         }
     }
@@ -267,11 +283,11 @@ public class MyDuMod : IMod
             )
         );
     }
-    
+
     private Task SetContext(ulong playerId, object data)
     {
         var jsonString = JsonConvert.SerializeObject(data);
-        
+
         return InjectJs(
             playerId,
             $"""
