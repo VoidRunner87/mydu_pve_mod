@@ -117,7 +117,44 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
             try
             {
                 var constructInfoOutcome = await _constructService.GetConstructInfoAsync(id);
-                result.Add(constructInfoOutcome.Info);
+
+                if (constructInfoOutcome.Info != null)
+                {
+                    var constructInfo = constructInfoOutcome.Info;
+                    result.Add(constructInfo);
+
+                    try
+                    {
+                        var notInSafeZone = !await _constructService.IsInSafeZone(constructInfo.rData.constructId);
+                        // XL and above
+                        if (notInSafeZone && constructInfo.rData.geometry.size > 256)
+                        {
+                            var constructDamageElementsGrain = _orleans.GetConstructDamageElementsGrain(constructInfo.rData.constructId);
+                            await constructDamageElementsGrain.TriggerCoreUnitStressDestruction(
+                                new PlayerDeathInfoPvPData
+                                {
+                                    constructId = constructInfo.rData.constructId,
+                                    constructName = "XL Core In COMBAT is NOT ALLOWED",
+                                    ownerId = new EntityId {playerId = ModBase.Bot.PlayerId},
+                                    playerId = ModBase.Bot.PlayerId,
+                                    playerName = ModBase.Bot.Name,
+                                    weaponId = 0,
+                                    weaponTypeId = 1901919706
+                                }
+                            );
+                            
+                            _logger.LogError("Exploit Detected. {ConstructId} | {EntityP}, {EntityO}", 
+                                constructInfo.rData.constructId, 
+                                constructInfo.mutableData.ownerId.playerId, 
+                                constructInfo.mutableData.ownerId.organizationId
+                            );
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "Failed to Deal with Exploit");
+                    }
+                }
             }
             catch (Exception)
             {
