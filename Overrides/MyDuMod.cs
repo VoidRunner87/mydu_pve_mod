@@ -6,7 +6,9 @@ using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Overrides;
 using Mod.DynamicEncounters.Overrides.Actions;
 using Mod.DynamicEncounters.Overrides.Actions.Data;
+using Mod.DynamicEncounters.Overrides.Actions.Party;
 using Mod.DynamicEncounters.Overrides.ApiClient;
+using Mod.DynamicEncounters.Overrides.ApiClient.Services;
 using Mod.DynamicEncounters.Overrides.Common;
 using Mod.DynamicEncounters.Overrides.Overrides.WeaponGrain;
 using Newtonsoft.Json;
@@ -134,6 +136,10 @@ public class MyDuMod : IMod
 
         switch ((ActionType)action.actionId)
         {
+            case ActionType.FetchPlayerParty:
+                var fetchPlayerParty = new FetchPartyDataAction(_provider);
+                await fetchPlayerParty.HandleAction(playerId, action);
+                break;
             case ActionType.Interact:
                 var interactAction = new InteractAction(_provider);
                 await interactAction.HandleAction(playerId, action);

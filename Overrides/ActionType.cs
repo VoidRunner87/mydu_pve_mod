@@ -13,5 +13,6 @@ public enum ActionType
     AbandonQuest = 1000006,
     GiveTakePlayerItems = 100,
     Interact = 101,
+    FetchPlayerParty = 102,
     Callback = 1999999
 }

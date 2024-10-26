@@ -1,6 +1,6 @@
 using System;
 
-namespace Mod.DynamicEncounters.Overrides.ApiClient;
+namespace Mod.DynamicEncounters.Overrides.ApiClient.Services;
 
 public static class PveModBaseUrl
 {

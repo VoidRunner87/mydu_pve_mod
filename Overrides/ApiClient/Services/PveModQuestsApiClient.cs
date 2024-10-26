@@ -4,10 +4,12 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Overrides.ApiClient.Data;
+using Mod.DynamicEncounters.Overrides.ApiClient.Interfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Mod.DynamicEncounters.Overrides.ApiClient;
+namespace Mod.DynamicEncounters.Overrides.ApiClient.Services;
 
 public class PveModQuestsApiClient(IServiceProvider provider) : IPveModQuestsApiClient
 {

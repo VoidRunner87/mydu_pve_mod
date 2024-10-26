@@ -1,4 +1,4 @@
-﻿namespace Mod.DynamicEncounters.Overrides.ApiClient;
+﻿namespace Mod.DynamicEncounters.Overrides.ApiClient.Data;
 
 public class BasicOutcome
 {

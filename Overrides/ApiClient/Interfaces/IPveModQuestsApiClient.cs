@@ -1,8 +1,9 @@
 using System;
 using System.Threading.Tasks;
+using Mod.DynamicEncounters.Overrides.ApiClient.Data;
 using Newtonsoft.Json.Linq;
 
-namespace Mod.DynamicEncounters.Overrides.ApiClient;
+namespace Mod.DynamicEncounters.Overrides.ApiClient.Interfaces;
 
 public interface IPveModQuestsApiClient
 {
@@ -11,4 +12,3 @@ public interface IPveModQuestsApiClient
     Task<BasicOutcome> AcceptQuest(Guid questId, ulong playerId, long factionId, Guid territoryId, int seed);
     Task<BasicOutcome> AbandonQuest(Guid questId, ulong playerId);
 }
-
