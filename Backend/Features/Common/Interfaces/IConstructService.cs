@@ -25,5 +25,4 @@ public interface IConstructService
     Task<bool> IsInSafeZone(ulong constructId);
     Task SendIdentificationNotification(ulong constructId, TargetingConstructData targeting);
     Task SendAttackingNotification(ulong constructId, TargetingConstructData targeting);
-    Task<bool> IsWarping(ulong constructId);
 }
