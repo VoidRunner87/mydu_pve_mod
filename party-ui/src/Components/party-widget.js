@@ -1,9 +1,6 @@
 import styled from "styled-components";
 import {useEffect, useState} from "react";
-import {CaptainRankIcon, ChevronUpIcon, DotIcon} from "./icons";
-
-//21333A
-//304953
+import {ChevronUpIcon, DotIcon} from "./icons";
 
 const Widget = styled.div`
     font-family: Play, Arial, Helvetica, sans-serif;
