@@ -1,0 +1,49 @@
+{
+  "GroupId": "0fb4f759-a11e-46ea-ada1-e6c44a99cbd6",
+  "Leader": {
+    "IsLeader": true,
+    "IsConnected": true,
+    "PlayerName": "VoidRunner7891",
+    "Construct": {
+      "ConstructId": 1002580,
+      "ConstructName": "Rogue 1R",
+      "Size": 64,
+      "ShieldRatio": 0.8,
+      "CoreStressRatio": 1.0
+    },
+    "Role": "railgun",
+    "Theme": "default"
+  },
+  "Members": [
+    {
+      "IsLeader": false,
+      "IsConnected": true,
+      "PlayerName": "TobiwanKenobi",
+      "Construct": {
+        "ConstructId": 1002678,
+        "ConstructName": "Scissorswift C",
+        "Size": 32,
+        "ShieldRatio": 0.15,
+        "CoreStressRatio": 0.05
+      },
+      "Role": "cannon",
+      "Theme": "default"
+    },
+    {
+      "IsLeader": false,
+      "IsConnected": false,
+      "PlayerName": "DeadRank",
+      "Construct": {
+        "ConstructId": 1002234,
+        "ConstructName": "Oblivion",
+        "Size": 256,
+        "ShieldRatio": 1.0,
+        "CoreStressRatio": 1.0
+      },
+      "Role": "laser",
+      "Theme": "default"
+    }
+  ],
+  "Invited": [],
+  "PendingAccept": []
+}
