@@ -67,7 +67,7 @@ public class NotifierBehavior(ulong constructId, IPrefab prefab) : IConstructBeh
         try
         {
             var enginePower = Math.Clamp(await _constructElementsService.GetAllSpaceEnginesPower(constructId), 0, 1);
-            _logger.LogDebug("Construct {Construct} Engine Power: {Power}", constructId, enginePower);
+            _logger.LogInformation("Construct {Construct} Engine Power: {Power}", constructId, enginePower);
 
             context.SetProperty(BehaviorContext.EnginePowerProperty, enginePower);
         }
