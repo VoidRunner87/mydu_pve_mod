@@ -11,6 +11,7 @@ using Mod.DynamicEncounters.Overrides.ApiClient.Interfaces;
 using Mod.DynamicEncounters.Overrides.ApiClient.Services;
 using Mod.DynamicEncounters.Overrides.Common.Interfaces;
 using Mod.DynamicEncounters.Overrides.Common.Services;
+using Newtonsoft.Json;
 using NQ;
 
 namespace Mod.DynamicEncounters.Overrides.Actions.Party;
@@ -39,7 +40,8 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
 
         var pendingInvite = list.Where(x => x.IsPendingAcceptInvite);
         var pendingRequest = list.Where(x => x.IsPendingAcceptRequest);
-        var members = list.Where(x => !x.IsPendingAcceptRequest && !x.IsPendingAcceptInvite);
+        var members = list
+            .Where(x => !x.IsPendingAcceptRequest && !x.IsPendingAcceptInvite && !x.IsLeader);
 
         var pendingInviteMappedTask = Task.WhenAll(pendingInvite.Select(MapToModel));
         var pendingRequestMappedTask = Task.WhenAll(pendingRequest.Select(MapToModel));
@@ -56,6 +58,7 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
             Members = await membersMappedTask
         };
         
+        _logger.LogInformation("Party Data: {Json}", JsonConvert.SerializeObject(partyData));
         _logger.LogInformation("FetchPartyDataAction Took: {Time}ms", sw.ElapsedMilliseconds);
     }
 
@@ -63,6 +66,8 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
     {
         var entry = new PartyData.PartyMemberEntry
         {
+            PlayerName = item.PlayerName,
+            IsConnected = item.IsConnected,
             IsLeader = item.IsLeader,
             Role = item.Properties.Role,
             Theme = item.Properties.Theme,
@@ -88,6 +93,7 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
             ConstructId = constructItem.Id,
             Size = constructItem.Size,
             ConstructName = constructItem.Name,
+            ShieldRatio = constructItem.ShieldRatio
         };
 
         switch (constructItem.Kind)
@@ -95,7 +101,7 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
             case ConstructKind.SPACE:
             case ConstructKind.DYNAMIC:
                 entry.Construct.Size = constructItem.Size;
-                entry.Construct.CoreStressRatio = await _constructService
+                entry.Construct.CoreStressRatio = 1 - await _constructService
                     .GetCoreStressRatioCached(playerPosition.ConstructId);
                 break;
         }

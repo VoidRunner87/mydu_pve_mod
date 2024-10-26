@@ -331,7 +331,10 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
 
         var results = (await db.QueryAsync<DbRow>(
             """
-            SELECT * FROM public.mod_player_party WHERE group_id = (
+            SELECT PP.*, P.display_name player_name, P.connected player_connected 
+            FROM public.mod_player_party PP
+            INNER JOIN public.player P ON P.id = PP.player_id
+            WHERE group_id = (
                 SELECT group_id FROM public.mod_player_party WHERE player_id = @player_id
             )
             """,
@@ -350,6 +353,8 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
         {
             Id = row.id,
             PlayerId = (ulong)row.player_id,
+            PlayerName = row.player_name,
+            IsConnected = row.player_connected,
             GroupId = row.group_id,
             CreatedAt = row.created_at,
             IsLeader = row.is_leader,
@@ -362,6 +367,8 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
     private struct DbRow
     {
         public Guid id { get; set; }
+        public string player_name { get; set; }
+        public bool player_connected { get; set; }
         public Guid group_id { get; set; }
         public long player_id { get; set; }
         public bool is_leader { get; set; }

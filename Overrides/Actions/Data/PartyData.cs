@@ -15,6 +15,7 @@ public class PartyData
     public class PartyMemberEntry
     {
         public bool IsLeader { get; set; }
+        public bool IsConnected { get; set; }
         public string PlayerName { get; set; } = "";
         public ConstructData? Construct { get; set; }
         public string Role { get; set; }
