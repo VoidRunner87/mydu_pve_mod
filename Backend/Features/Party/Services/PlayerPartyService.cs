@@ -12,46 +12,46 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
 {
     private readonly IPlayerPartyRepository _repository = provider.GetRequiredService<IPlayerPartyRepository>();
 
-    public async Task<PartyOperationOutcome> CreateParty(PlayerId leaderPlayerId)
+    public async Task<PartyOperationOutcome> CreateParty(PlayerId instigatorPlayerId)
     {
-        if (await _repository.IsInAParty(leaderPlayerId))
+        if (await _repository.IsInAParty(instigatorPlayerId))
         {
             return PartyOperationOutcome.AlreadyInAParty();
         }
 
-        var groupId = await _repository.CreateParty(leaderPlayerId);
+        var groupId = await _repository.CreateParty(instigatorPlayerId);
 
         return PartyOperationOutcome.Successful(groupId, "Party created");
     }
 
-    public async Task<PartyOperationOutcome> RequestJoinParty(PlayerId leaderPlayerId, PlayerId memberPlayerId)
+    public async Task<PartyOperationOutcome> RequestJoinParty(PlayerId instigatorPlayerId, PlayerId targetPlayerId)
     {
-        if (!await _repository.IsInAParty(leaderPlayerId))
-        {
-            return PartyOperationOutcome.PlayerNotInAParty();
-        }
-        
-        if (await _repository.IsInAParty(memberPlayerId))
+        if (await _repository.IsInAParty(instigatorPlayerId))
         {
             return PartyOperationOutcome.AlreadyInAParty();
         }
+        
+        if (!await _repository.IsInAParty(targetPlayerId))
+        {
+            return PartyOperationOutcome.PlayerNotInAParty();
+        }
 
-        var groupId = await _repository.FindPartyGroupId(leaderPlayerId);
-        await _repository.AddPendingPartyRequest(groupId, memberPlayerId);
+        var groupId = await _repository.FindPartyGroupId(targetPlayerId);
+        await _repository.AddPendingPartyRequest(groupId, instigatorPlayerId);
 
         return PartyOperationOutcome.Successful(groupId, "Request sent");
     }
 
-    public async Task<PartyOperationOutcome> DisbandParty(PlayerId leaderPlayerId)
+    public async Task<PartyOperationOutcome> DisbandParty(PlayerId instigatorPlayerId)
     {
-        if (!await _repository.IsInAParty(leaderPlayerId))
+        if (!await _repository.IsInAParty(instigatorPlayerId))
         {
             return PartyOperationOutcome.PlayerNotInAParty();
         }
 
-        var groupId = await _repository.FindPartyGroupId(leaderPlayerId);
+        var groupId = await _repository.FindPartyGroupId(instigatorPlayerId);
 
-        if (!await _repository.IsPartyLeader(groupId, leaderPlayerId))
+        if (!await _repository.IsPartyLeader(groupId, instigatorPlayerId))
         {
             return PartyOperationOutcome.MustBePartyLeaderToDisband();
         }
@@ -75,9 +75,9 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         return PartyOperationOutcome.Successful(groupId, "Left the party");
     }
 
-    public async Task<PartyOperationOutcome> PromoteToPartyLeader(PlayerId leaderPlayerId, PlayerId newLeaderPlayerId)
+    public async Task<PartyOperationOutcome> PromoteToPartyLeader(PlayerId instigatorPlayerId, PlayerId newLeaderPlayerId)
     {
-        if (!await _repository.IsInAParty(leaderPlayerId))
+        if (!await _repository.IsInAParty(instigatorPlayerId))
         {
             return PartyOperationOutcome.PlayerNotInAParty();
         }
@@ -86,8 +86,13 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         {
             return PartyOperationOutcome.PlayerNotInAParty();
         }
+
+        if (!await _repository.IsAcceptedMember(newLeaderPlayerId))
+        {
+            return PartyOperationOutcome.NotAnAcceptedMember();
+        }
         
-        var leaderGroupId = await _repository.FindPartyGroupId(leaderPlayerId);
+        var leaderGroupId = await _repository.FindPartyGroupId(instigatorPlayerId);
         var memberGroupId = await _repository.FindPartyGroupId(newLeaderPlayerId);
 
         if (!leaderGroupId.Equals(memberGroupId))
@@ -95,7 +100,7 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
             return PartyOperationOutcome.PlayerOnDifferentParties();
         }
 
-        if (!await _repository.IsPartyLeader(leaderGroupId, leaderPlayerId))
+        if (!await _repository.IsPartyLeader(leaderGroupId, instigatorPlayerId))
         {
             return PartyOperationOutcome.MustBePartyLeaderPromoteAnotherPlayer();
         }
@@ -105,26 +110,121 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         return PartyOperationOutcome.Successful(leaderGroupId, "Promoted to leader");
     }
 
-    public async Task<PartyOperationOutcome> InviteToParty(PlayerId leaderPlayerId, PlayerId invitedPlayerId)
+    public async Task<PartyOperationOutcome> InviteToParty(PlayerId instigatorPlayerId, PlayerId invitedPlayerId)
     {
         if (await _repository.IsInAParty(invitedPlayerId))
         {
             return PartyOperationOutcome.AlreadyInAParty();
         }
         
-        if (!await _repository.IsInAParty(leaderPlayerId))
+        if (!await _repository.IsInAParty(instigatorPlayerId))
         {
-            var outcome = await CreateParty(leaderPlayerId);
+            var outcome = await CreateParty(instigatorPlayerId);
             if (!outcome.Success)
             {
                 return outcome;
             }
         }
 
-        var groupId = await _repository.FindPartyGroupId(leaderPlayerId);
+        var groupId = await _repository.FindPartyGroupId(instigatorPlayerId);
         await _repository.AddPendingPartyInvite(groupId, invitedPlayerId);
 
         return PartyOperationOutcome.Successful(groupId, "Invite sent");
+    }
+
+    public async Task<PartyOperationOutcome> AcceptPartyInvite(PlayerId invitedPlayerId)
+    {
+        if (!await _repository.IsInAParty(invitedPlayerId))
+        {
+            return PartyOperationOutcome.PlayerNotInAParty();
+        }
+
+        var groupId = await _repository.FindPartyGroupId(invitedPlayerId);
+        
+        if (await _repository.IsAcceptedMember(invitedPlayerId))
+        {
+            return PartyOperationOutcome.AlreadyAccepted(groupId);
+        }
+        
+        await _repository.AcceptPendingInvite(invitedPlayerId);
+        
+        return PartyOperationOutcome.Successful(groupId, "Accepted");
+    }
+
+    public async Task<PartyOperationOutcome> AcceptPartyRequest(PlayerId instigatorPlayerId, PlayerId invitedPlayerId)
+    {
+        if (!await _repository.IsInAParty(invitedPlayerId))
+        {
+            return PartyOperationOutcome.PlayerNotInAParty();
+        }
+
+        var groupId = await _repository.FindPartyGroupId(instigatorPlayerId);
+        
+        if (!await _repository.IsPartyLeader(groupId, instigatorPlayerId))
+        {
+            return PartyOperationOutcome.MustBePartyLeader();
+        }
+
+        if (await _repository.IsAcceptedMember(invitedPlayerId))
+        {
+            return PartyOperationOutcome.AlreadyAccepted(groupId);
+        }
+        
+        await _repository.AcceptPartyRequest(invitedPlayerId);
+        
+        return PartyOperationOutcome.Successful(groupId, "Accepted");
+    }
+
+    public async Task<PartyOperationOutcome> KickPartyMember(PlayerId instigatorPlayerId, PlayerId playerToKick)
+    {
+        if (!await _repository.IsInAParty(instigatorPlayerId))
+        {
+            return PartyOperationOutcome.PlayerNotInAParty();
+        }
+        
+        var leaderGroupId = await _repository.FindPartyGroupId(instigatorPlayerId);
+        
+        if (!await _repository.IsPartyLeader(leaderGroupId, instigatorPlayerId))
+        {
+            return PartyOperationOutcome.MustBePartyLeader();
+        }
+        
+        if (!await _repository.IsInAParty(playerToKick))
+        {
+            return PartyOperationOutcome.PlayerNotInAParty();
+        }
+        
+        var memberGroupId = await _repository.FindPartyGroupId(playerToKick);
+
+        if (!leaderGroupId.Equals(memberGroupId))
+        {
+            return PartyOperationOutcome.PlayerOnDifferentParties();
+        }
+
+        await _repository.RemoveNonLeaderPlayerFromParty(leaderGroupId, playerToKick);
+        
+        return PartyOperationOutcome.Successful(leaderGroupId, "Player removed");
+    }
+
+    public async Task<PartyOperationOutcome> SetPlayerPartyRole(PlayerId instigatorPlayerId, string role)
+    {
+        if (!await _repository.IsInAParty(instigatorPlayerId))
+        {
+            return PartyOperationOutcome.PlayerNotInAParty();
+        }
+
+        // basic sanitation
+        role = role.ToLower().Trim();
+        if (!PlayerPartyRoles.All.Contains(role))
+        {
+            return PartyOperationOutcome.InvalidRole();
+        }
+        
+        var groupId = await _repository.FindPartyGroupId(instigatorPlayerId);
+
+        await _repository.SetPlayerPartyRole(instigatorPlayerId, role);
+        
+        return PartyOperationOutcome.Successful(groupId, $"Role '{role}' set");
     }
 
     public Task<IEnumerable<PlayerPartyItem>> GetPartyByPlayerId(PlayerId playerId)

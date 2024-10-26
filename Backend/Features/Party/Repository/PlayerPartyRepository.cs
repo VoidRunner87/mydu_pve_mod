@@ -29,6 +29,22 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
         ) > 0;
     }
 
+    public async Task<bool> IsAcceptedMember(PlayerId playerId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        return await db.ExecuteScalarAsync<int>(
+            """
+            SELECT COUNT(0) FROM public.mod_player_party 
+            WHERE player_id = @id AND
+                  is_pending_accept_request IS FALSE AND
+                  is_pending_accept_invite IS FALSE
+            """,
+            new { id = (long)playerId.id }
+        ) > 0;
+    }
+
     public async Task<PlayerPartyGroupId> CreateParty(PlayerId leaderPlayerId)
     {
         using var db = _factory.Create();
@@ -80,7 +96,7 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
             """,
             new
             {
-                group_id = groupId,
+                group_id = groupId.Id,
                 player_id = (long)playerId.id,
                 json_properties = JsonConvert.SerializeObject(
                     new PlayerPartyItem.PartyProperties()
@@ -88,7 +104,7 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
             }
         );
     }
-    
+
     public async Task AddPendingPartyInvite(PlayerPartyGroupId groupId, PlayerId playerId)
     {
         using var db = _factory.Create();
@@ -108,11 +124,62 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
             """,
             new
             {
-                group_id = groupId,
+                group_id = groupId.Id,
                 player_id = (long)playerId.id,
                 json_properties = JsonConvert.SerializeObject(
                     new PlayerPartyItem.PartyProperties()
                 )
+            }
+        );
+    }
+
+    public async Task AcceptPendingInvite(PlayerId playerId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            """
+            UPDATE public.mod_player_party SET is_pending_accept_invite = FALSE WHERE player_id = @player_id
+            """,
+            new
+            {
+                player_id = (long)playerId.id,
+            }
+        );
+    }
+
+    public async Task AcceptPartyRequest(PlayerId playerId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            """
+            UPDATE public.mod_player_party SET is_pending_accept_request = FALSE WHERE player_id = @player_id
+            """,
+            new
+            {
+                player_id = (long)playerId.id,
+            }
+        );
+    }
+
+    public async Task SetPlayerPartyRole(PlayerId playerId, string role)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        await db.ExecuteAsync(
+            """
+            UPDATE public.mod_player_party 
+            SET json_properties = jsonb_set(json_properties, '{role}', @role::jsonb)
+            WHERE player_id = @player_id
+            """,
+            new
+            {
+                player_id = (long)playerId.id,
+                role = $"\"{role}\""
             }
         );
     }
@@ -178,7 +245,11 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
 
         await db.ExecuteAsync(
             "DELETE FROM public.mod_player_party WHERE group_id = @id AND player_id = @player_id",
-            new { id = groupId.Id, playerId = (long)playerId.id },
+            new
+            {
+                id = groupId.Id,
+                player_id = (long)playerId.id
+            },
             transaction
         );
 
@@ -198,7 +269,11 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
         {
             var nextLeader = await db.ExecuteScalarAsync<long?>(
                 """
-                SELECT player_id FROM public.mod_player_party WHERE group_id = @id ORDER BY created_at LIMIT 1
+                SELECT player_id FROM public.mod_player_party 
+                WHERE group_id = @id AND 
+                      is_pending_accept_invite IS FALSE AND  
+                      is_pending_accept_request IS FALSE
+                ORDER BY created_at LIMIT 1
                 """,
                 new { id = groupId.Id }
             );
@@ -207,12 +282,22 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
             {
                 await db.ExecuteAsync(
                     """
-                    UPDATE public.mod_player_party SET is_leader = true WHERE player_id = @player_id
+                    UPDATE public.mod_player_party 
+                    SET is_leader = true 
+                    WHERE player_id = @player_id
                     """,
                     new
                     {
                         player_id = nextLeader
                     },
+                    transaction
+                );
+            }
+            else
+            {
+                await db.ExecuteAsync(
+                    "DELETE FROM public.mod_player_party WHERE group_id = @group_id",
+                    new { group_id = groupId.Id },
                     transaction
                 );
             }
@@ -273,7 +358,7 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
             Properties = JsonConvert.DeserializeObject<PlayerPartyItem.PartyProperties>(row.json_properties)
         };
     }
-    
+
     private struct DbRow
     {
         public Guid id { get; set; }
