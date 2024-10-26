@@ -72,6 +72,8 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
         context.TryGetProperty(BehaviorContext.EnginePowerProperty, out double enginePower, 1);
         
+        _logger.LogInformation("Construct {Construct} Engine Power = {P}", constructId, enginePower);
+        
         if (enginePower <= 0)
         {
             var cUpdate = new ConstructUpdate
