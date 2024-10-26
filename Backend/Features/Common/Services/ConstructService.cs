@@ -333,9 +333,4 @@ public class ConstructService(IServiceProvider provider) : IConstructService
                 0UL
             );
     }
-
-    public Task<bool> IsWarping(ulong constructId)
-    {
-        return _orleans.GetConstructGrain(constructId).IsWarping();
-    }
 }

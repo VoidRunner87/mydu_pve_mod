@@ -18,7 +18,6 @@ public class CachedConstructService(
     private readonly TemporaryMemoryCache<ulong, bool> _inSafeZone = new(nameof(_inSafeZone), controlCheckCacheSpan);
     private readonly TemporaryMemoryCache<ulong, bool> _identifyNotification = new(nameof(_identifyNotification), TimeSpan.FromSeconds(5));
     private readonly TemporaryMemoryCache<ulong, bool> _attackingNotification = new(nameof(_attackingNotification), TimeSpan.FromSeconds(5));
-    private readonly TemporaryMemoryCache<ulong, bool> _isWarping = new(nameof(_isWarping), TimeSpan.FromSeconds(5));
 
     public async Task<ConstructInfoOutcome> GetConstructInfoAsync(ulong constructId)
     {
@@ -135,16 +134,6 @@ public class CachedConstructService(
         await _attackingNotification.TryGetOrSetValue(
             targeting.constructId,
             () => service.SendAttackingNotification(constructId, targeting)
-                .ContinueWith(_ => true),
-            _ => false
-        );
-    }
-
-    public async Task<bool> IsWarping(ulong constructId)
-    {
-        return await _isWarping.TryGetOrSetValue(
-            constructId,
-            () => service.IsWarping(constructId)
                 .ContinueWith(_ => true),
             _ => false
         );
