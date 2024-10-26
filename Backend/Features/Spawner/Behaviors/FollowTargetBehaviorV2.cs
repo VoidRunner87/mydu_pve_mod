@@ -202,10 +202,11 @@ public class FollowTargetBehaviorV2(ulong constructId, IPrefab prefab) : IConstr
 
             try
             {
-                await ModBase.Bot.Factory.Connect(
-                    ModBase.Bot.LoginInformations,
-                    allowExisting: true
-                );
+                await ModBase.Bot.Reconnect();
+                // await ModBase.Bot.Factory.Connect(
+                //     ModBase.Bot.LoginInformations,
+                //     allowExisting: true
+                // );
             }
             catch (Exception e)
             {
