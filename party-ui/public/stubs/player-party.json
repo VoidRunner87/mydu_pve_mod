@@ -44,6 +44,20 @@
       "Theme": "default"
     }
   ],
-  "Invited": [],
-  "PendingAccept": []
+  "Invited": [
+    {
+      "IsLeader": false,
+      "IsConnected": true,
+      "PlayerName": "Madlocke",
+      "Theme": "default"
+    }
+  ],
+  "PendingAccept": [
+    {
+      "IsLeader": false,
+      "IsConnected": true,
+      "PlayerName": "IndyAnaJones",
+      "Theme": "default"
+    }
+  ]
 }

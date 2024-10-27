@@ -76,7 +76,6 @@ public class ConstructBehaviorLoop : HighTickModLoop
 
         StatsRecorder.Record(_category, sw.ElapsedMilliseconds);
         ReportHeartbeat();
-        // _logger.LogInformation("Behavior Loop Count({Count}) Took: {Time}ms", taskList.Count, sw.ElapsedMilliseconds);
     }
 
     private async Task RunIsolatedAsync(Func<Task> taskFn)

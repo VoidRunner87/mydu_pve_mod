@@ -651,6 +651,17 @@ public class WeaponGrainOverrides(IServiceProvider provider)
         var num3 = Math.Min(1.0,
             Math.Sqrt(weaponFire.crossSection / (num2 * num2 * Math.PI)) * (1.0 - factor) + factor);
 
+        // var logger = provider.GetRequiredService<ILoggerFactory>()
+        //     .CreateLogger<WeaponGrainOverrides>();
+        //
+        // logger.LogInformation("weaponFire.crossSection = {V}", weaponFire.crossSection);
+        // logger.LogInformation("num3 = {V}", num3);
+        // logger.LogInformation("num2 = {V}", num2);
+        // logger.LogInformation("factor = {V}", factor);
+        // logger.LogInformation("falloffValue = {V}", falloffValue);
+        // logger.LogInformation("optimalValue = {V}", optimalValue);
+        // logger.LogInformation("valueOrDefault3 = {V}", valueOrDefault3);
+        
         var hitRatio = accuracy * num3 * angleFactor * distanceFactor * factor;
 
         return hitRatio;

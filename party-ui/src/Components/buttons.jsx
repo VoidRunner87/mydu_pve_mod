@@ -34,15 +34,33 @@ export const DestructiveButton = styled.button`
     cursor: pointer;
 `;
 
-export const SecondaryButton = styled.button`
-    background-color: rgb(27, 48, 56);
+export const WidgetFlexButton = styled.button`
+    background-color: transparent;
     color: rgb(180, 221, 235);
     padding: 8px;
     font-weight: bold;
     text-transform: uppercase;
     text-align: left;
-    border: none;
+    border: 1px solid #B6DFED;
+    border-radius: 2px;
     cursor: pointer;
+    display: flex;
+    flex-grow: 1;
+    justify-content: center;
+    
+    &:hover {
+        opacity: 0.9;
+    }
+    
+    &.danger {
+        border-color: rgb(250, 80, 80);
+        color: rgb(250, 80, 80);
+    }
+    
+    &.positive {
+        border-color: rgb(80, 250, 80);
+        color: rgb(80, 250, 80);
+    }
 `;
 
 export const TargetButton = ({onClick}) => {

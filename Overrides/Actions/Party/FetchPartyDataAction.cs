@@ -43,16 +43,16 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
         var members = list
             .Where(x => !x.IsPendingAcceptRequest && !x.IsPendingAcceptInvite && !x.IsLeader);
 
-        var pendingInviteMappedTask = Task.WhenAll(pendingInvite.Select(MapToModel));
-        var pendingRequestMappedTask = Task.WhenAll(pendingRequest.Select(MapToModel));
-        var membersMappedTask = Task.WhenAll(members.Select(MapToModel));
+        var pendingInviteMappedTask = Task.WhenAll(pendingInvite.Select(MapToModelPending));
+        var pendingRequestMappedTask = Task.WhenAll(pendingRequest.Select(MapToModelPending));
+        var membersMappedTask = Task.WhenAll(members.Select(MapToModelMember));
 
         await Task.WhenAll([pendingInviteMappedTask, pendingRequestMappedTask, membersMappedTask]);
 
         var partyData = new PartyData
         {
             GroupId = list.First().GroupId,
-            Leader = await MapToModel(leader),
+            Leader = await MapToModelMember(leader),
             Invited = await pendingInviteMappedTask,
             PendingAccept = await pendingRequestMappedTask,
             Members = await membersMappedTask
@@ -62,7 +62,7 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
         _logger.LogInformation("FetchPartyDataAction Took: {Time}ms", sw.ElapsedMilliseconds);
     }
 
-    private async Task<PartyData.PartyMemberEntry> MapToModel(PlayerPartyItem item)
+    private async Task<PartyData.PartyMemberEntry> MapToModelMember(PlayerPartyItem item)
     {
         var entry = new PartyData.PartyMemberEntry
         {
@@ -105,6 +105,23 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
                     .GetCoreStressRatioCached(playerPosition.ConstructId);
                 break;
         }
+
+        return entry;
+    }
+    
+    private async Task<PartyData.PartyMemberEntry> MapToModelPending(PlayerPartyItem item)
+    {
+        await Task.Yield();
+        
+        var entry = new PartyData.PartyMemberEntry
+        {
+            PlayerName = item.PlayerName,
+            IsConnected = item.IsConnected,
+            IsLeader = item.IsLeader,
+            Role = item.Properties.Role,
+            Theme = item.Properties.Theme,
+            Construct = null
+        };
 
         return entry;
     }
