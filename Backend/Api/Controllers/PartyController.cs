@@ -42,7 +42,16 @@ public class PartyController : Controller
     [HttpPost]
     public async Task<IActionResult> AcceptInvite([FromBody] PartyRequest request)
     {
-        var result = await _service.AcceptPartyInvite(request.PlayerId);
+        var result = await _service.AcceptPartyInvite(request.InstigatorPlayerId);
+
+        return Ok(result);
+    }
+    
+    [Route("invite/cancel")]
+    [HttpPost]
+    public async Task<IActionResult> CancelInvite([FromBody] PartyRequest request)
+    {
+        var result = await _service.CancelPartyInvite(request.InstigatorPlayerId, request.PlayerId);
 
         return Ok(result);
     }
@@ -60,7 +69,7 @@ public class PartyController : Controller
     [HttpPost]
     public async Task<IActionResult> LeaveParty([FromBody] PartyRequest request)
     {
-        var result = await _service.LeaveParty(request.PlayerId);
+        var result = await _service.LeaveParty(request.InstigatorPlayerId);
 
         return Ok(result);
     }

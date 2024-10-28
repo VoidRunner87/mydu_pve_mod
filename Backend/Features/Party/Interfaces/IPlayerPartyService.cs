@@ -14,6 +14,7 @@ public interface IPlayerPartyService
     Task<PartyOperationOutcome> PromoteToPartyLeader(PlayerId instigatorPlayerId, PlayerId newLeaderPlayerId);
     Task<PartyOperationOutcome> InviteToParty(PlayerId instigatorPlayerId, PlayerId invitedPlayerId);
     Task<PartyOperationOutcome> AcceptPartyInvite(PlayerId invitedPlayerId);
+    Task<PartyOperationOutcome> CancelPartyInvite(PlayerId instigatorPlayerId, PlayerId invitedPlayerId);
     Task<PartyOperationOutcome> AcceptPartyRequest(PlayerId instigatorPlayerId, PlayerId invitedPlayerId);
     Task<PartyOperationOutcome> KickPartyMember(PlayerId instigatorPlayerId, PlayerId invitedPlayerId);
     Task<PartyOperationOutcome> SetPlayerPartyRole(PlayerId instigatorPlayerId, string role);

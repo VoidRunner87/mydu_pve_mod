@@ -41,22 +41,22 @@ export const WidgetFlexButton = styled.button`
     font-weight: bold;
     text-transform: uppercase;
     text-align: left;
-    border: 1px solid #B6DFED;
+    border: 1px solid rgb(182, 223, 237);
     border-radius: 2px;
     cursor: pointer;
     display: flex;
     flex-grow: 1;
     justify-content: center;
-    
+
     &:hover {
         opacity: 0.9;
     }
-    
+
     &.danger {
         border-color: rgb(250, 80, 80);
         color: rgb(250, 80, 80);
     }
-    
+
     &.positive {
         border-color: rgb(80, 250, 80);
         color: rgb(80, 250, 80);

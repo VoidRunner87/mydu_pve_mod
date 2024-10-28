@@ -2,17 +2,17 @@ import styled from "styled-components";
 
 export const Widget = styled.div`
     font-family: Play, Arial, Helvetica, sans-serif;
-    border-top: 4px solid #B6DFED;
-    border-bottom: 1px solid #B6DFED;
+    border-top: 4px solid rgb(182, 223, 237);
+    border-bottom: 1px solid rgb(182, 223, 237);
     color: white;
     min-width: 350px;
     max-width: 400px;
-    background-color: rgba(13, 24, 28, 0.4);
+    background-color: rgba(13, 24, 28, 0.5);
     position: absolute;
 `;
 
 export const WidgetHeader = styled.div`
-    background: linear-gradient(to right, #21333A, #304953 50%, #21333A);
+    background: linear-gradient(to right, rgb(33, 51, 58), rgb(48, 73, 83) 50%, rgb(33, 51, 58));
     text-align: center;
     text-transform: uppercase;
     padding: 8px;
@@ -20,7 +20,7 @@ export const WidgetHeader = styled.div`
 `;
 
 export const WidgetContainer = styled.div`
-    color: #ADD4E1;
+    color: rgb(173, 212, 225);
     text-transform: uppercase;
     font-size: 0.75em;
     padding-bottom: 1px;

@@ -26,15 +26,19 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
 
     public async Task HandleAction(ulong playerId, ModAction action)
     {
+        var injection = ModServiceProvider.Get<IMyDuInjectionService>();
+
         var sw = new Stopwatch();
         sw.Start();
-        
+
         var list = (await _partyApiClient.GetPartyByPlayerId(playerId, CancellationToken.None)).ToList();
 
         var leader = list.FirstOrDefault(x => x.IsLeader);
 
         if (leader == null)
         {
+            _logger.LogInformation("Party Data: {Json}", JsonConvert.SerializeObject(new PartyData()));
+            await injection.UploadJson(playerId, "player-party", new PartyData());
             return;
         }
 
@@ -59,13 +63,16 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
         };
         
         _logger.LogInformation("Party Data: {Json}", JsonConvert.SerializeObject(partyData));
-        _logger.LogInformation("FetchPartyDataAction Took: {Time}ms", sw.ElapsedMilliseconds);
+        // _logger.LogInformation("FetchPartyDataAction Took: {Time}ms", sw.ElapsedMilliseconds);
+
+        await injection.UploadJson(playerId, "player-party", partyData);
     }
 
     private async Task<PartyData.PartyMemberEntry> MapToModelMember(PlayerPartyItem item)
     {
         var entry = new PartyData.PartyMemberEntry
         {
+            PlayerId = item.PlayerId,
             PlayerName = item.PlayerName,
             IsConnected = item.IsConnected,
             IsLeader = item.IsLeader,
@@ -75,6 +82,7 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
             {
                 ConstructId = 0,
                 Size = 0,
+                ConstructKind = ConstructKind.UNIVERSE,
                 ConstructName = "",
                 ShieldRatio = 0,
                 CoreStressRatio = 0
@@ -91,6 +99,7 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
         entry.Construct = new PartyData.PartyMemberEntry.ConstructData
         {
             ConstructId = constructItem.Id,
+            ConstructKind = constructItem.Kind,
             Size = constructItem.Size,
             ConstructName = constructItem.Name,
             ShieldRatio = constructItem.ShieldRatio
@@ -98,6 +107,9 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
 
         switch (constructItem.Kind)
         {
+            case ConstructKind.STATIC:
+                entry.Construct.Size = constructItem.Size;
+                break;
             case ConstructKind.SPACE:
             case ConstructKind.DYNAMIC:
                 entry.Construct.Size = constructItem.Size;
@@ -115,6 +127,7 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
         
         var entry = new PartyData.PartyMemberEntry
         {
+            PlayerId = item.PlayerId,
             PlayerName = item.PlayerName,
             IsConnected = item.IsConnected,
             IsLeader = item.IsLeader,

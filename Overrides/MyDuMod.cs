@@ -1,22 +1,22 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
-using Backend;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Overrides;
 using Mod.DynamicEncounters.Overrides.Actions;
 using Mod.DynamicEncounters.Overrides.Actions.Data;
 using Mod.DynamicEncounters.Overrides.Actions.Party;
-using Mod.DynamicEncounters.Overrides.ApiClient;
+using Mod.DynamicEncounters.Overrides.ApiClient.Data;
 using Mod.DynamicEncounters.Overrides.ApiClient.Services;
 using Mod.DynamicEncounters.Overrides.Common;
+using Mod.DynamicEncounters.Overrides.Common.Interfaces;
+using Mod.DynamicEncounters.Overrides.Common.Services;
 using Mod.DynamicEncounters.Overrides.Overrides.WeaponGrain;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NQ;
 using NQ.Grains.Core;
 using NQ.Interfaces;
-using NQutils;
 using Orleans;
 using Notifications = Mod.DynamicEncounters.Overrides.Notifications;
 
@@ -24,15 +24,10 @@ using Notifications = Mod.DynamicEncounters.Overrides.Notifications;
 public class MyDuMod : IMod
 {
     private IServiceProvider _provider;
-    private IClusterClient _orleans;
     private ILogger _logger;
-
-    private Random _rnd = new();
-    private IGameplayBank _bank;
-    private IPub _pub;
     private WeaponGrainOverrides _weaponGrainOverrides;
-
-    private readonly PlayerRateLimiter _playerRateLimiter = new(2);
+    private readonly PlayerRateLimiter _playerRateLimiter = new(8);
+    private IMyDuInjectionService _injection;
 
     public string GetName()
     {
@@ -42,11 +37,10 @@ public class MyDuMod : IMod
     public Task Initialize(IServiceProvider provider)
     {
         _provider = provider;
-        _orleans = provider.GetRequiredService<IClusterClient>();
-        _logger = provider.GetRequiredService<ILogger<MyDuMod>>();
-        _bank = provider.GetRequiredService<IGameplayBank>();
-        _pub = provider.GetRequiredService<IPub>();
+        ModServiceProvider.Initialize(_provider);
 
+        _logger = provider.GetRequiredService<ILogger<MyDuMod>>();
+        _injection = new MyDuInjectionService();
         _weaponGrainOverrides = new WeaponGrainOverrides(_provider);
 
         var hookCallManager = provider.GetRequiredService<IHookCallManager>();
@@ -95,6 +89,18 @@ public class MyDuMod : IMod
                     id = (ulong)ActionType.Interact,
                     context = ModActionContext.Element,
                     label = "Interact"
+                },
+                new ModActionDefinition
+                {
+                    id = (ulong)ActionType.LoadPlayerParty,
+                    context = ModActionContext.Global,
+                    label = "Group\\Open Group Widget"
+                },
+                new ModActionDefinition
+                {
+                    id = (ulong)ActionType.InviteToParty,
+                    context = ModActionContext.Avatar,
+                    label = "Group\\Invite to Group"
                 }
             ]
         };
@@ -132,10 +138,61 @@ public class MyDuMod : IMod
             action.payload
         );
 
-        var apiClient = new PveModQuestsApiClient(_provider);
+        var questApi = new PveModQuestsApiClient(_provider);
+        var partyApi = new PveModPartyApiClient(_provider);
 
         switch ((ActionType)action.actionId)
         {
+            case ActionType.CreateParty:
+                await partyApi.CreateParty(playerId, CancellationToken.None)
+                    .ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
+                break;
+            case ActionType.SetPlayerLocation:
+                // TODO
+                break;
+            case ActionType.LeaveParty:
+                await partyApi.LeaveParty(playerId, CancellationToken.None)
+                    .ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
+                break;
+            case ActionType.DisbandParty:
+                await partyApi.DisbandParty(playerId, CancellationToken.None)
+                    .ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
+                break;
+            case ActionType.CancelPartyInvite:
+                await partyApi.CancelInvite(playerId, action.PayloadAs<PartyRequest>().PlayerId, CancellationToken.None)
+                    .ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
+                break;
+            case ActionType.AcceptPartyRequest:
+                await partyApi.AcceptRequest(
+                    playerId, 
+                    action.PayloadAs<PartyRequest>().PlayerId,
+                    CancellationToken.None
+                ).ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
+                break;
+            case ActionType.RejectPartyRequest:
+                await partyApi.RejectRequest(
+                    playerId,
+                    action.PayloadAs<PartyRequest>().PlayerId,
+                    CancellationToken.None
+                ).ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
+                break;
+            case ActionType.SetPartyRole:
+                var setPartyRoleRequest = action.PayloadAs<PartyRequest>();
+                await partyApi.SetPartyRole(
+                    playerId,
+                    setPartyRoleRequest.Role,
+                    CancellationToken.None
+                ).ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
+                break;
+            case ActionType.LoadPlayerParty:
+                await _injection.InjectJs(playerId, Resources.CommonJs);
+                
+                var fetchPlayerPartyForLoad = new FetchPartyDataAction(_provider);
+                await fetchPlayerPartyForLoad.HandleAction(playerId, action);
+                
+                var renderPlayerParty = new RenderPartyAppAction();
+                await renderPlayerParty.HandleAction(playerId, action);
+                break;
             case ActionType.FetchPlayerParty:
                 var fetchPlayerParty = new FetchPartyDataAction(_provider);
                 await fetchPlayerParty.HandleAction(playerId, action);
@@ -149,9 +206,9 @@ public class MyDuMod : IMod
                 await giveItemsToPlayerAction.HandleAction(playerId, action);
                 break;
             case ActionType.LoadBoardApp:
-                await InjectJs(playerId, Resources.CommonJs);
-                await InjectJs(playerId, Resources.CreateRootDivJs);
-                await InjectJs(playerId, "window.modApi.setPage('npc');");
+                await _injection.InjectJs(playerId, Resources.CommonJs);
+                await _injection.InjectJs(playerId, Resources.CreateRootDivJs);
+                await _injection.InjectJs(playerId, "window.modApi.setPage('npc');");
 
                 await TriggerActionInternal(
                     playerId,
@@ -166,13 +223,13 @@ public class MyDuMod : IMod
                     }
                 );
 
-                await InjectCss(playerId, Resources.NpcAppCss);
-                await InjectJs(playerId, Resources.NpcAppJs);
+                await _injection.InjectCss(playerId, Resources.NpcAppCss);
+                await _injection.InjectJs(playerId, Resources.NpcAppJs);
                 break;
             case ActionType.LoadPlayerBoardApp:
-                await InjectJs(playerId, Resources.CommonJs);
-                await InjectJs(playerId, Resources.CreateRootDivJs);
-                await InjectJs(playerId, "window.modApi.setPage('player');");
+                await _injection.InjectJs(playerId, Resources.CommonJs);
+                await _injection.InjectJs(playerId, Resources.CreateRootDivJs);
+                await _injection.InjectJs(playerId, "window.modApi.setPage('player');");
 
                 await TriggerActionInternal(
                     playerId,
@@ -187,21 +244,21 @@ public class MyDuMod : IMod
                     }
                 );
 
-                await InjectCss(playerId, Resources.NpcAppCss);
-                await InjectJs(playerId, Resources.NpcAppJs);
+                await _injection.InjectCss(playerId, Resources.NpcAppCss);
+                await _injection.InjectJs(playerId, Resources.NpcAppJs);
                 break;
             case ActionType.RefreshNpcQuestList:
                 var refreshedNpcQuests = JsonConvert.DeserializeObject<QueryNpcQuests>(action.payload);
 
-                var refreshedJsonData = await apiClient.GetNpcQuests(
+                var refreshedJsonData = await questApi.GetNpcQuests(
                     playerId,
                     refreshedNpcQuests.FactionId,
                     refreshedNpcQuests.TerritoryId,
                     refreshedNpcQuests.Seed
                 );
 
-                await UploadJson(playerId, "faction-quests", refreshedJsonData);
-                await SetContext(playerId, new
+                await _injection.UploadJson(playerId, "faction-quests", refreshedJsonData);
+                await _injection.SetContext(playerId, new
                 {
                     playerId,
                     factionId = refreshedNpcQuests.FactionId,
@@ -212,24 +269,24 @@ public class MyDuMod : IMod
                 break;
             case ActionType.RefreshPlayerQuestList:
 
-                var playerQuestJsonData = await apiClient.GetPlayerQuestsAsync(
+                var playerQuestJsonData = await questApi.GetPlayerQuestsAsync(
                     playerId
                 );
 
-                await UploadJson(playerId, "player-quests", playerQuestJsonData);
-                await SetContext(playerId, new
+                await _injection.UploadJson(playerId, "player-quests", playerQuestJsonData);
+                await _injection.SetContext(playerId, new
                 {
                     playerId
                 });
 
                 break;
             case ActionType.CloseBoard:
-                await InjectJs(playerId, "modApi.removeAppRoot()");
+                await _injection.InjectJs(playerId, "modApi.removeAppRoot()");
                 break;
             case ActionType.AcceptQuest:
                 var acceptQuest = JsonConvert.DeserializeObject<AcceptQuest>(action.payload);
 
-                var acceptQuestOutcome = await apiClient.AcceptQuest(
+                var acceptQuestOutcome = await questApi.AcceptQuest(
                     acceptQuest.QuestId,
                     acceptQuest.PlayerId,
                     acceptQuest.FactionId,
@@ -254,7 +311,7 @@ public class MyDuMod : IMod
             case ActionType.AbandonQuest:
                 var abandonQuest = JsonConvert.DeserializeObject<AbandonQuest>(action.payload);
 
-                var abandonQuestOutcome = await apiClient.AbandonQuest(abandonQuest.QuestId, abandonQuest.PlayerId);
+                var abandonQuestOutcome = await questApi.AbandonQuest(abandonQuest.QuestId, abandonQuest.PlayerId);
 
                 if (!abandonQuestOutcome.Success)
                 {
@@ -271,74 +328,6 @@ public class MyDuMod : IMod
 
     private async Task PlayMissionAcceptedSound(ulong playerId)
     {
-        await InjectJs(playerId, "soundManager.playSoundEvent(3079547240);");
-    }
-
-    private async Task InjectJs(ulong playerId, string code)
-    {
-        _logger.LogInformation("Inject JS {Length}", code.Length);
-
-        await _pub.NotifyTopic(
-            Topics.PlayerNotifications(playerId),
-            new NQutils.Messages.ModTriggerHudEventRequest(
-                new ModTriggerHudEvent
-                {
-                    eventName = "modinjectjs",
-                    eventPayload = code
-                }
-            )
-        );
-    }
-
-    private Task SetContext(ulong playerId, object data)
-    {
-        var jsonString = JsonConvert.SerializeObject(data);
-
-        return InjectJs(
-            playerId,
-            $"""
-             modApi.setContext({jsonString});
-             """
-        );
-    }
-
-    private Task UploadJson(ulong playerId, string key, JToken data)
-    {
-        return InjectJs(
-            playerId,
-            $"""
-             modApi.setResourceContents(`{key}`, `application/json`, `{data}`);
-             """
-        );
-    }
-
-    private Task UploadJson(ulong playerId, string key, object data)
-    {
-        var jsonString = JsonConvert.SerializeObject(data);
-
-        return InjectJs(
-            playerId,
-            $"""
-             modApi.setResourceContents(`{key}`, `application/json`, `{jsonString}`);
-             """
-        );
-    }
-
-    private async Task InjectCss(ulong playerId, string code)
-    {
-        _logger.LogInformation("Inject CSS {Length}", code.Length);
-
-        await _pub.NotifyTopic(
-            Topics.PlayerNotifications(playerId),
-            new NQutils.Messages.ModTriggerHudEventRequest(
-                new ModTriggerHudEvent
-                {
-                    eventName = "modinjectjs",
-                    eventPayload = $"""
-                                    modApi.addInlineCss(`{code}`);
-                                    """
-                }
-            )
-        );
+        await _injection.InjectJs(playerId, "soundManager.playSoundEvent(3079547240);");
     }
 }

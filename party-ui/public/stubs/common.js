@@ -56,6 +56,9 @@ modApi.refreshPlayerQuestList = () => {
     console.log('refreshPlayerQuestList');
 };
 
+modApi.refreshPlayerPartyData = () => {
+    console.log('refreshPlayerPartyData');
+};
 
 modApi.acceptQuest = (questId) => {
     console.log('acceptQuest', window.player_context, questId);
@@ -63,6 +66,10 @@ modApi.acceptQuest = (questId) => {
 
 modApi.abandonQuest = (questId) => {
     console.log('abandonQuest', window.player_context, questId);
+};
+
+modApi.createGroup = () => {
+    console.log('createGroup');
 };
 
 modApi.setResourceContents = (name, contentType, contents) => {
@@ -88,30 +95,58 @@ modApi.appendIframe = (id, url) => {
     document.body.appendChild(iframe);
 
     return iframe;
-}
+};
+
+modApi.setPlayerLocation = (playerId) => {
+    console.log('setPlayerLocation', playerId);
+};
+
+modApi.leaveGroup = () => {
+    console.log('leaveGroup');
+};
+
+modApi.disbandGroup = () => {
+    console.log('disbandGroup');
+};
+
+modApi.cancelInvite = (playerId) => {
+    console.log('cancelInvite', playerId);
+};
+
+modApi.acceptRequest = (playerId) => {
+    console.log('acceptRequest', playerId);
+};
+
+modApi.rejectRequest = (playerId) => {
+    console.log('rejectRequest', playerId);
+};
+
+modApi.setRole = (role) => {
+    console.log('setRole', role);
+};
 
 modApi.addInlineCss = (cssContent) => {
     let style = document.createElement("style");
     style.type = "text/css";
     style.innerHTML = cssContent;
     document.head.appendChild(style);
-}
+};
 
 modApi.addJsUrl = (src) => {
     let script = document.createElement("script");
     script.src = src;
     document.body.appendChild(script);
-}
+};
 
 modApi.addJs = (type, text) => {
     let script = document.createElement("script");
     script.type = type;
     script.textContent = text;
     document.body.appendChild(script);
-}
+};
 
 modApi.removeAppRoot = () => {
     document.getElementById("root").remove();
-}
+};
 
 window.modApi = modApi;

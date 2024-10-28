@@ -17,7 +17,7 @@ const InvitedActions = ({item, type}) => {
     }
 
     return (
-        <WidgetFlexButton>Cancel invite</WidgetFlexButton>
+        <WidgetFlexButton onClick={() => window.modApi.cancelInvite(item.PlayerId)}>Cancel invite</WidgetFlexButton>
     )
 };
 
@@ -38,9 +38,9 @@ const PendingAcceptActions = ({item, type}) => {
 
     return (
         <>
-            <WidgetFlexButton className="positive">Accept</WidgetFlexButton>
+            <WidgetFlexButton onClick={() => window.modApi.acceptRequest(item.PlayerId)} className="positive">Accept</WidgetFlexButton>
             &nbsp;
-            <WidgetFlexButton>Reject</WidgetFlexButton>
+            <WidgetFlexButton onClick={() => window.modApi.rejectRequest(item.PlayerId)}>Reject</WidgetFlexButton>
         </>
     )
 };

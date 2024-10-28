@@ -7,8 +7,8 @@ public static class PlayerPartyRoles
     public const string None = "";
     public const string Missile = "missile";
     public const string Cannon = "cannon";
-    public const string Lasers = "cannon";
-    public const string Railgun = "cannon";
+    public const string Lasers = "laser";
+    public const string Railgun = "railgun";
 
     public static HashSet<string> All =>
     [

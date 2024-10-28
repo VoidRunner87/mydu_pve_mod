@@ -14,5 +14,15 @@ public enum ActionType
     GiveTakePlayerItems = 100,
     Interact = 101,
     FetchPlayerParty = 102,
+    LoadPlayerParty = 103,
+    SetPlayerLocation = 104,
+    LeaveParty = 105,
+    DisbandParty = 106,
+    CancelPartyInvite = 107,
+    AcceptPartyRequest = 108,
+    RejectPartyRequest = 109,
+    SetPartyRole = 110,
+    InviteToParty = 111,
+    CreateParty = 112,
     Callback = 1999999
 }

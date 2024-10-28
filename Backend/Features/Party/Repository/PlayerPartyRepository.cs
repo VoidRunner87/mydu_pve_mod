@@ -232,7 +232,7 @@ public class PlayerPartyRepository(IServiceProvider provider) : IPlayerPartyRepo
 
         await db.ExecuteAsync(
             "DELETE FROM public.mod_player_party WHERE group_id = @id AND player_id = @player_id AND is_leader IS FALSE",
-            new { id = groupId.Id, playerId = (long)playerId.id }
+            new { id = groupId.Id, player_id = (long)playerId.id }
         );
     }
 

@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import PartyEntryMember from "./party-entry-member";
-import {Widget, WidgetButtonRow, WidgetHeader, WidgetPage} from "./widget";
+import {Widget, WidgetButtonRow, WidgetHeader, WidgetPage, WidgetRow} from "./widget";
 import PartyEntryPending from "./party-entry-pending";
 import styled from "styled-components";
 import {WidgetFlexButton} from "./buttons";
@@ -40,8 +40,15 @@ const WidgetTitle = styled.div`
     user-select: none;
 `;
 
+const handleCloseWidget = () => {
+    clearInterval(window.party_data_interval);
+    clearInterval(window.refresh_party_data_interval);
+    document.getElementById("party-root").remove();
+};
+
 const CloseWidget = () => {
-    return <WidgetButton>
+
+    return <WidgetButton onClick={handleCloseWidget}>
         <XIcon size={18}/>
     </WidgetButton>;
 }
@@ -78,6 +85,21 @@ export const Container = styled.div`
     z-index: 99999999 !important;
 `;
 
+const CreatePartyWidgetRow = ({leader}) => {
+    const handleCreateGroup = () => {
+        window.modApi.createGroup();
+    };
+
+    return (
+        <WidgetPage visible={!leader}>
+            <WidgetRow>You are not in a group</WidgetRow>
+            <WidgetButtonRow>
+                <WidgetFlexButton onClick={handleCreateGroup}>Create Group</WidgetFlexButton>
+            </WidgetButtonRow>
+        </WidgetPage>
+    );
+};
+
 const PartyWidget = () => {
 
     const [page, setPage] = useState("members");
@@ -96,20 +118,44 @@ const PartyWidget = () => {
         setPosition({ x: centerX, y: centerY });
     }, []);
 
-    useEffect(() => {
+    const fetchData = () => {
         const url = window.global_resources["player-party"];
 
         fetch(url)
             .then(res => {
                 return res.json()
-            })
+            }, error => {})
             .then(resJson => {
                 setMembers(resJson.Members);
                 setLeader(resJson.Leader);
                 setPendingAccept(resJson.PendingAccept);
                 setInvited(resJson.Invited);
-            });
+            }, error => {});
+    };
 
+    useEffect(() => fetchData(), []);
+
+    useEffect(() => {
+        if (window.party_data_interval) {
+            clearInterval(window.party_data_interval);
+        }
+        window.party_data_interval = setInterval(() => {
+            fetchData();
+        }, 250);
+
+        return () => clearInterval(window.party_data_interval);
+    }, []);
+
+    useEffect(() => {
+        if (window.refresh_party_data_interval) {
+            clearInterval(window.refresh_party_data_interval);
+        }
+
+        window.refresh_party_data_interval = setInterval(() => {
+            window.modApi.refreshPlayerPartyData();
+        }, 2000);
+
+        return () => clearInterval(window.refresh_party_data_interval);
     }, []);
 
     const PartyMembers = ({data}) => {
@@ -157,7 +203,21 @@ const PartyWidget = () => {
 
     const handleMouseLeave = (e) => {
         setDragging(false);
-    }
+    };
+
+    const handleSetRole = (role) => {
+        window.modApi.setRole(role);
+    };
+
+    const handleLeaveGroup = () => {
+        window.modApi.leaveGroup();
+        handleCloseWidget();
+    };
+
+    const handleDisbandGroup = () => {
+        window.modApi.disbandGroup();
+        handleCloseWidget();
+    };
 
     return (
         <Container>
@@ -171,25 +231,26 @@ const PartyWidget = () => {
                                  onMouseMove={handleMouseMove}>Group</WidgetTitle>
                     <CloseWidget/>
                 </WidgetHeader>
+                <CreatePartyWidgetRow leader={leader} />
                 <WidgetPage visible={page === "members"}>
                     <PartyEntryMember item={leader}/>
                     <PartyMembers data={members}/>
                 </WidgetPage>
                 <WidgetPage visible={page === "pending"}>
                     <WidgetButtonRow>
-                        <WidgetFlexButton>Cannon</WidgetFlexButton>
+                        <WidgetFlexButton onClick={() => handleSetRole("cannon")}>Cannon</WidgetFlexButton>
                         &nbsp;
-                        <WidgetFlexButton>Laser</WidgetFlexButton>
+                        <WidgetFlexButton onClick={() => handleSetRole("laser")}>Laser</WidgetFlexButton>
                         &nbsp;
-                        <WidgetFlexButton>Missile</WidgetFlexButton>
+                        <WidgetFlexButton onClick={() => handleSetRole("missile")}>Missile</WidgetFlexButton>
                         &nbsp;
-                        <WidgetFlexButton>Railgun</WidgetFlexButton>
+                        <WidgetFlexButton onClick={() => handleSetRole("railgun")}>Railgun</WidgetFlexButton>
                     </WidgetButtonRow>
                     <WidgetButtonRow>
-                        <WidgetFlexButton>Leave Group</WidgetFlexButton>
+                        <WidgetFlexButton onClick={handleLeaveGroup}>Leave Group</WidgetFlexButton>
                     </WidgetButtonRow>
                     <WidgetButtonRow>
-                        <WidgetFlexButton className="danger">Disband Group</WidgetFlexButton>
+                        <WidgetFlexButton onClick={handleDisbandGroup} className="danger">Disband Group</WidgetFlexButton>
                     </WidgetButtonRow>
                     <PendingPlayers type={"invited"} data={invited}/>
                     <PendingPlayers type={"pending-accept"} data={pendingAccept}/>

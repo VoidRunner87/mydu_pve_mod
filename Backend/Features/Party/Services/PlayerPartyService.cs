@@ -151,6 +151,30 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         return PartyOperationOutcome.Successful(groupId, "Accepted");
     }
 
+    public async Task<PartyOperationOutcome> CancelPartyInvite(PlayerId instigatorPlayerId, PlayerId invitedPlayerId)
+    {
+        if (!await _repository.IsInAParty(invitedPlayerId))
+        {
+            return PartyOperationOutcome.PlayerNotInAParty();
+        }
+
+        var groupId = await _repository.FindPartyGroupId(instigatorPlayerId);
+        
+        if (!await _repository.IsPartyLeader(groupId, instigatorPlayerId))
+        {
+            return PartyOperationOutcome.MustBePartyLeader();
+        }
+
+        if (await _repository.IsAcceptedMember(invitedPlayerId))
+        {
+            return PartyOperationOutcome.AlreadyAccepted(groupId);
+        }
+        
+        await _repository.RemoveNonLeaderPlayerFromParty(groupId, invitedPlayerId);
+        
+        return PartyOperationOutcome.Successful(groupId, "Canceled");
+    }
+
     public async Task<PartyOperationOutcome> AcceptPartyRequest(PlayerId instigatorPlayerId, PlayerId invitedPlayerId)
     {
         if (!await _repository.IsInAParty(invitedPlayerId))

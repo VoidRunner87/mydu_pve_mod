@@ -24,11 +24,52 @@ modApi.setPage = (page) => {
 };
 
 modApi.refreshNpcQuestList = () => {
-    CPPMod.sendModAction("Mod.DynamicEncounters", 1000001, [], JSON.stringify(window.player_context));
+    CPPMod.sendModAction("Mod.DynamicEncounters", 1000001, [], JSON.stringify(window.player_context || {}));
 };
 
 modApi.refreshPlayerQuestList = () => {
-    CPPMod.sendModAction("Mod.DynamicEncounters", 1000005, [], JSON.stringify(window.player_context));
+    CPPMod.sendModAction("Mod.DynamicEncounters", 1000005, [], JSON.stringify(window.player_context || {}));
+};
+
+modApi.refreshPlayerPartyData = () => {
+    CPPMod.sendModAction("Mod.DynamicEncounters", 102, [], JSON.stringify(window.player_context || {}));
+};
+
+modApi.setPlayerLocation = (playerId) => {
+    CPPMod.sendModAction("Mod.DynamicEncounters", 104, [], JSON.stringify({playerId}));
+};
+
+modApi.leaveGroup = () => {
+    CPPMod.sendModAction("Mod.DynamicEncounters", 105, [], JSON.stringify({}));
+};
+
+modApi.disbandGroup = () => {
+    CPPMod.sendModAction("Mod.DynamicEncounters", 106, [], JSON.stringify({}));
+};
+
+modApi.cancelInvite = (playerId) => {
+    CPPMod.sendModAction("Mod.DynamicEncounters", 107, [], JSON.stringify({playerId}));
+};
+
+modApi.acceptRequest = (playerId) => {
+    CPPMod.sendModAction("Mod.DynamicEncounters", 108, [], JSON.stringify({playerId}));
+};
+
+modApi.rejectRequest = (playerId) => {
+    CPPMod.sendModAction("Mod.DynamicEncounters", 109, [], JSON.stringify({playerId}));
+};
+
+modApi.setRole = (role) => {
+    CPPMod.sendModAction("Mod.DynamicEncounters", 110, [], JSON.stringify({role}));
+};
+
+modApi.createGroup = () => {
+    CPPMod.sendModAction(
+        "Mod.DynamicEncounters",
+        112,
+        [],
+        JSON.stringify({})
+    );
 };
 
 modApi.acceptQuest = (questId) => {
