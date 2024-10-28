@@ -13,6 +13,14 @@ public interface IPveModPartyApiClient
     Task<BasicOutcome> AcceptRequest(ulong instigatorPlayerId, ulong playerId, CancellationToken cancellationToken);
     Task<BasicOutcome> RejectRequest(ulong instigatorPlayerId, ulong playerId, CancellationToken cancellationToken);
     Task<BasicOutcome> AcceptInvite(ulong instigatorPlayerId, CancellationToken cancellationToken);
+
+    Task<BasicOutcome> SendPartyInvite(
+        ulong instigatorPlayerId,
+        ulong playerId,
+        string playerName,
+        CancellationToken cancellationToken
+    );
+
     Task<BasicOutcome> CancelInvite(ulong instigatorPlayerId, ulong playerId, CancellationToken cancellationToken);
     Task<BasicOutcome> CreateParty(ulong instigatorPlayerId, CancellationToken cancellationToken);
     Task<BasicOutcome> LeaveParty(ulong instigatorPlayerId, CancellationToken cancellationToken);

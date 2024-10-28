@@ -19,11 +19,11 @@ public partial class PlayerService(IServiceProvider provider) : IPlayerService
     {
         using var db = _factory.Create();
         db.Open();
-        
+
         var playerIdList = await db.QueryAsync<ulong>(
             $"""
-            SELECT * FROM public.player WHERE last_connection > NOW() - INTERVAL '{timeSpan.ToPostgresInterval()}'
-            """
+             SELECT * FROM public.player WHERE last_connection > NOW() - INTERVAL '{timeSpan.ToPostgresInterval()}'
+             """
         );
 
         return playerIdList;
@@ -133,6 +133,17 @@ public partial class PlayerService(IServiceProvider provider) : IPlayerService
         }
 
         return map;
+    }
+
+    public async Task<ulong> FindPlayerIdByName(string playerName)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        return (ulong)await db.ExecuteScalarAsync<long>(
+            "SELECT id FROM public.player WHERE display_name = @player_name",
+            new { player_name = playerName }
+        );
     }
 
     public struct ElementSkinRow

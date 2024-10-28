@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import {TargetIcon2} from "./icons";
+import {useState} from "react";
 
 export const IconButton = styled.button`
     background-color: rgb(250, 212, 122);
@@ -47,6 +48,7 @@ export const WidgetFlexButton = styled.button`
     display: flex;
     flex-grow: 1;
     justify-content: center;
+    align-items: center;
 
     &:hover {
         opacity: 0.9;
@@ -61,10 +63,37 @@ export const WidgetFlexButton = styled.button`
         border-color: rgb(80, 250, 80);
         color: rgb(80, 250, 80);
     }
+
+    &.p50 {
+        width: 50%;
+    }
 `;
 
 export const TargetButton = ({onClick}) => {
     return (
-        <IconButton onClick={onClick}><TargetIcon2 /></IconButton>
+        <IconButton onClick={onClick}><TargetIcon2/></IconButton>
+    );
+}
+
+export const ConfirmWidgetButton = ({onConfirm, className, children, confirmClassName, confirmTime = 3}) => {
+
+    const [showConfirm, setShowConfirm] = useState(false);
+
+    const handleClick = () => {
+        setShowConfirm(true);
+
+        setTimeout(() => {
+            setShowConfirm(false);
+        }, confirmTime * 1000);
+    };
+
+    if (showConfirm) {
+        return (<WidgetFlexButton hidden={!showConfirm} onClick={onConfirm}
+                                  className={confirmClassName}>Confirm</WidgetFlexButton>);
+    }
+
+    return (
+        <WidgetFlexButton hidden={showConfirm} onClick={handleClick}
+                          className={className}>{children}</WidgetFlexButton>
     );
 }

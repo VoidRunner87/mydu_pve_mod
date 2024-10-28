@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Features.NQ.Interfaces;
 using Mod.DynamicEncounters.Features.Party.Interfaces;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
@@ -20,10 +21,32 @@ public class PartyController : Controller
 
         return Ok(results);
     }
+    
+    [Route("create")]
+    public async Task<IActionResult> CreateParty([FromBody] PartyRequest request)
+    {
+        var result = await _service.CreateParty(request.InstigatorPlayerId);
+
+        return Ok(result);
+    }
+    
+    [Route("disband")]
+    public async Task<IActionResult> DisbandParty([FromBody] PartyRequest request)
+    {
+        var result = await _service.DisbandParty(request.InstigatorPlayerId);
+
+        return Ok(result);
+    }
 
     [Route("invite")]
     public async Task<IActionResult> InviteToParty([FromBody] PartyRequest request)
     {
+        if (request.PlayerId == 0 && !string.IsNullOrEmpty(request.PlayerName))
+        {
+            var playerService = _provider.GetRequiredService<IPlayerService>();
+            request.PlayerId = await playerService.FindPlayerIdByName(request.PlayerName);
+        }
+        
         var result = await _service.InviteToParty(request.InstigatorPlayerId, request.PlayerId);
 
         return Ok(result);
@@ -105,7 +128,7 @@ public class PartyController : Controller
     {
         public ulong InstigatorPlayerId { get; set; }
         public ulong PlayerId { get; set; }
-        
+        public string PlayerName { get; set; }
         public string Role { get; set; }
     }
 }

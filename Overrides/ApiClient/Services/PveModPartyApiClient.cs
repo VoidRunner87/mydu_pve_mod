@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Overrides.ApiClient.Data;
 using Mod.DynamicEncounters.Overrides.ApiClient.Interfaces;
 using Newtonsoft.Json;
+using NQ;
 
 namespace Mod.DynamicEncounters.Overrides.ApiClient.Services;
 
@@ -62,6 +63,16 @@ public class PveModPartyApiClient(IServiceProvider provider) : IPveModPartyApiCl
         return await PostAsync("party/disband", new
         {
             InstigatorPlayerId = instigatorPlayerId
+        }, cancellationToken);
+    }
+    
+    public async Task<BasicOutcome> SendPartyInvite(ulong instigatorPlayerId, ulong playerId, string playerName, CancellationToken cancellationToken)
+    {
+        return await PostAsync("party/invite/accept", new
+        {
+            InstigatorPlayerId = instigatorPlayerId,
+            PlayerId = playerId,
+            PlayerName = playerName
         }, cancellationToken);
     }
     

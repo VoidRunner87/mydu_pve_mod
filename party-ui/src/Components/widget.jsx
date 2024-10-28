@@ -7,7 +7,7 @@ export const Widget = styled.div`
     color: white;
     min-width: 350px;
     max-width: 400px;
-    background-color: rgba(13, 24, 28, 0.5);
+    background-color: rgba(13, 24, 28, 0.65);
     position: absolute;
 `;
 
@@ -15,7 +15,6 @@ export const WidgetHeader = styled.div`
     background: linear-gradient(to right, rgb(33, 51, 58), rgb(48, 73, 83) 50%, rgb(33, 51, 58));
     text-align: center;
     text-transform: uppercase;
-    padding: 8px;
     display: flex;
 `;
 
@@ -34,7 +33,20 @@ export const WidgetRow = styled.div`
     border-radius: 2px;
     
     &:hover {
-        background-color: rgba(13, 24, 28, 0.5);
+        background-color: rgb(10, 18, 21);
+    }
+`;
+
+export const WidgetFormRow = styled.div`
+    margin: 4px;
+    padding: 8px;
+    cursor: pointer;
+    background-color: rgba(13, 24, 28, 1);
+    border-radius: 2px;
+    display: flex;
+    
+    &:hover {
+        background-color: rgb(10, 18, 21);
     }
 `;
 
@@ -138,3 +150,25 @@ export const WidgetPage = ({visible, children}) => {
         <WidgetContainer>{children}</WidgetContainer>
     );
 };
+
+export const WidgetInputText = styled.input`
+    all: unset;
+    display: flex;
+    flex-grow: 1;
+    background-color: rgb(18, 52, 60, 0.5);
+    border: 1px solid rgb(180, 221, 235, 0.5);
+    border-radius: 2px;
+    height: 33px;
+    color: rgb(180, 221, 235);
+    font-weight: bold;
+    padding: 0 8px 0 8px;
+    
+    &:focus {
+        background-color: rgb(13, 24, 28);
+        border: 1px solid rgb(180, 221, 235, 1);
+    }
+    
+    &::placeholder {
+        color: rgb(180, 221, 235, 0.5);
+    }
+`;

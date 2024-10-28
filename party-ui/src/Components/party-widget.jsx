@@ -1,15 +1,17 @@
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import PartyEntryMember from "./party-entry-member";
-import {Widget, WidgetButtonRow, WidgetHeader, WidgetPage, WidgetRow} from "./widget";
+import {Widget, WidgetButtonRow, WidgetFormRow, WidgetHeader, WidgetInputText, WidgetPage, WidgetRow} from "./widget";
 import PartyEntryPending from "./party-entry-pending";
 import styled from "styled-components";
-import {WidgetFlexButton} from "./buttons";
+import {ConfirmWidgetButton, WidgetFlexButton} from "./buttons";
 import {ArrowLeftIcon, GearIcon, XIcon} from "./icons";
 
 const WidgetButton = styled.button`
     all: unset;
     display: flex;
     align-content: end;
+    align-items: center;
+    padding: 0 8px 0 8px;
     justify-content: end;
     cursor: pointer;
 
@@ -36,7 +38,7 @@ const WidgetTitle = styled.div`
     align-content: center;
     flex-grow: 1;
     cursor: move;
-    margin: 0 30px;
+    padding: 8px;
     user-select: none;
 `;
 
@@ -107,10 +109,12 @@ const PartyWidget = () => {
     const [pendingAccept, setPendingAccept] = useState([]);
     const [invited, setInvited] = useState([]);
     const [leader, setLeader] = useState(null);
+    const [inviteName, setInviteName] = useState("");
 
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [dragging, setDragging] = useState(false);
     const [offset, setOffset] = useState({ x: 0, y: 0 });
+    const mouseLeaveTimeout = useRef(null);
 
     useEffect(() => {
         const centerX = window.innerWidth / 2 - 200; // Adjust for half the widget width
@@ -202,7 +206,11 @@ const PartyWidget = () => {
     };
 
     const handleMouseLeave = (e) => {
-        setDragging(false);
+        clearTimeout(mouseLeaveTimeout.current);
+
+        mouseLeaveTimeout.current = setTimeout(() => {
+            setDragging(false);
+        }, 2000);
     };
 
     const handleSetRole = (role) => {
@@ -217,6 +225,18 @@ const PartyWidget = () => {
     const handleDisbandGroup = () => {
         window.modApi.disbandGroup();
         handleCloseWidget();
+    };
+
+    const handlePlayerNameChanged = (e) => {
+        setInviteName(e.target.value);
+    };
+
+    const handleInvite = () => {
+        if (inviteName)
+        {
+            window.modApi.inviteToGroup(inviteName);
+            setInviteName("");
+        }
     };
 
     return (
@@ -246,12 +266,14 @@ const PartyWidget = () => {
                         &nbsp;
                         <WidgetFlexButton onClick={() => handleSetRole("railgun")}>Railgun</WidgetFlexButton>
                     </WidgetButtonRow>
-                    <WidgetButtonRow>
-                        <WidgetFlexButton onClick={handleLeaveGroup}>Leave Group</WidgetFlexButton>
-                    </WidgetButtonRow>
-                    <WidgetButtonRow>
-                        <WidgetFlexButton onClick={handleDisbandGroup} className="danger">Disband Group</WidgetFlexButton>
-                    </WidgetButtonRow>
+                    <WidgetFormRow>
+                        <WidgetInputText placeholder="Player name" onChange={handlePlayerNameChanged} />&nbsp;<WidgetFlexButton onClick={handleInvite}>Invite</WidgetFlexButton>
+                    </WidgetFormRow>
+                    <WidgetFormRow>
+                        <ConfirmWidgetButton className="p50" onConfirm={handleLeaveGroup} confirmClassName="p50 danger">Leave Group</ConfirmWidgetButton>
+                        &nbsp;
+                        <ConfirmWidgetButton onConfirm={handleDisbandGroup} className="p50 danger" confirmClassName="p50 danger">Disband Group</ConfirmWidgetButton>
+                    </WidgetFormRow>
                     <PendingPlayers type={"invited"} data={invited}/>
                     <PendingPlayers type={"pending-accept"} data={pendingAccept}/>
                 </WidgetPage>

@@ -72,6 +72,10 @@ modApi.createGroup = () => {
     );
 };
 
+modApi.inviteToGroup = (playerName) => {
+    CPPMod.sendModAction("Mod.DynamicEncounters", 113, [], JSON.stringify({playerName}));
+};
+
 modApi.acceptQuest = (questId) => {
     let payload = window.player_context || {};
     payload.questId = questId;

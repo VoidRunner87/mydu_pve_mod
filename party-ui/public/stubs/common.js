@@ -125,6 +125,10 @@ modApi.setRole = (role) => {
     console.log('setRole', role);
 };
 
+modApi.inviteToGroup = (playerName) => {
+    console.log('inviteToGroup', playerName);
+};
+
 modApi.addInlineCss = (cssContent) => {
     let style = document.createElement("style");
     style.type = "text/css";

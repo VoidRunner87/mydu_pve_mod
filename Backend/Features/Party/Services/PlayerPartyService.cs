@@ -21,7 +21,7 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
 
         var groupId = await _repository.CreateParty(instigatorPlayerId);
 
-        return PartyOperationOutcome.Successful(groupId, "Party created");
+        return PartyOperationOutcome.Successful(groupId, "Group created");
     }
 
     public async Task<PartyOperationOutcome> RequestJoinParty(PlayerId instigatorPlayerId, PlayerId targetPlayerId)
@@ -72,7 +72,7 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         
         await _repository.RemovePlayerFromPartyAndFindNewLeader(groupId, playerId);
         
-        return PartyOperationOutcome.Successful(groupId, "Left the party");
+        return PartyOperationOutcome.Successful(groupId, "Left the group");
     }
 
     public async Task<PartyOperationOutcome> PromoteToPartyLeader(PlayerId instigatorPlayerId, PlayerId newLeaderPlayerId)

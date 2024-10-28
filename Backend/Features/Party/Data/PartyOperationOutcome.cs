@@ -16,32 +16,32 @@ public class PartyOperationOutcome : IOutcome
         => new() { Success = true, Message = "Already accepted", PartyGroupId = partyGroupId };
     
     public static PartyOperationOutcome Disbanded(PlayerPartyGroupId partyGroupId)
-        => new() { Success = true, Message = "", PartyGroupId = partyGroupId };
+        => new() { Success = true, Message = "Group disbanded", PartyGroupId = partyGroupId };
 
     public static PartyOperationOutcome Failed(string message)
         => new() { Success = false, Message = message };
 
     public static PartyOperationOutcome AlreadyInAParty()
-        => new() { Success = false, Message = "Already in a party" };
+        => new() { Success = false, Message = "Already in a group" };
     
     public static PartyOperationOutcome PlayerNotInAParty()
-        => new() { Success = false, Message = "Player selected not in a party" };
+        => new() { Success = false, Message = "Player selected not in a group" };
     
     public static PartyOperationOutcome NotAnAcceptedMember()
         => new() { Success = false, Message = "Player selected is pending invite or pending being accepted to join" };
     
     public static PartyOperationOutcome PlayerOnDifferentParties()
-        => new() { Success = false, Message = "Players are on different parties" };
+        => new() { Success = false, Message = "Players are on different groups" };
     
     public static PartyOperationOutcome InvalidRole()
         => new() { Success = false, Message = "Invalid role" };
     
     public static PartyOperationOutcome MustBePartyLeaderToDisband()
-        => new() { Success = false, Message = "Must be a party leader to disband" };
+        => new() { Success = false, Message = "Must be a group leader to disband" };
     
     public static PartyOperationOutcome MustBePartyLeaderPromoteAnotherPlayer()
-        => new() { Success = false, Message = "Must be a party leader to promote another player" };
+        => new() { Success = false, Message = "Must be a group leader to promote another player" };
     
     public static PartyOperationOutcome MustBePartyLeader()
-        => new() { Success = false, Message = "Must be a party leader" };
+        => new() { Success = false, Message = "Must be a group leader" };
 }

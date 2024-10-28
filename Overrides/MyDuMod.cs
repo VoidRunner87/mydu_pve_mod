@@ -65,12 +65,12 @@ public class MyDuMod : IMod
     {
         var grain = context.Grain.AsReference<IPlayerGrain>();
         var playerId = (ulong)grain.GetPrimaryKeyLong();
-        
+
         // TODO implement any initializing required
 
         await context.Invoke();
     }
-    
+
     public Task<ModInfo> GetModInfoFor(ulong playerId, bool admin)
     {
         var res = new ModInfo
@@ -129,7 +129,7 @@ public class MyDuMod : IMod
             _logger.LogWarning("Player {Player} Rate Limited", playerId);
             return;
         }
-        
+
         _logger.LogInformation(
             "Received Trigger Action from Player({PlayerId} != {ActionPlayerId}): {ActionId} | {Content}",
             playerId,
@@ -143,6 +143,16 @@ public class MyDuMod : IMod
 
         switch ((ActionType)action.actionId)
         {
+            case ActionType.InviteToParty:
+                var partyInviteRequest = action.PayloadAs<PartyRequest>();
+                await partyApi.SendPartyInvite(
+                        playerId,
+                        partyInviteRequest.PlayerId,
+                        partyInviteRequest.PlayerName,
+                        CancellationToken.None
+                    )
+                    .ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
+                break;
             case ActionType.CreateParty:
                 await partyApi.CreateParty(playerId, CancellationToken.None)
                     .ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
@@ -164,7 +174,7 @@ public class MyDuMod : IMod
                 break;
             case ActionType.AcceptPartyRequest:
                 await partyApi.AcceptRequest(
-                    playerId, 
+                    playerId,
                     action.PayloadAs<PartyRequest>().PlayerId,
                     CancellationToken.None
                 ).ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
@@ -186,10 +196,10 @@ public class MyDuMod : IMod
                 break;
             case ActionType.LoadPlayerParty:
                 await _injection.InjectJs(playerId, Resources.CommonJs);
-                
+
                 var fetchPlayerPartyForLoad = new FetchPartyDataAction(_provider);
                 await fetchPlayerPartyForLoad.HandleAction(playerId, action);
-                
+
                 var renderPlayerParty = new RenderPartyAppAction();
                 await renderPlayerParty.HandleAction(playerId, action);
                 break;

@@ -13,6 +13,7 @@ public interface IPlayerService
     Task GivePlayerElementSkins(ulong playerId, IEnumerable<ElementSkinItem> skinItems);
 
     Task<Dictionary<ulong, HashSet<string>>> GetAllElementSkins(ulong playerId);
+    Task<ulong> FindPlayerIdByName(string playerName);
     
     public struct ElementSkinItem
     {

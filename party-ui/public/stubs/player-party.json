@@ -6,6 +6,7 @@
     "PlayerName": "VoidRunner7891",
     "Construct": {
       "ConstructId": 1002580,
+      "ConstructKind": 4,
       "ConstructName": "Rogue 1R",
       "Size": 64,
       "ShieldRatio": 0.8,
@@ -21,6 +22,7 @@
       "PlayerName": "TobiwanKenobi",
       "Construct": {
         "ConstructId": 1002678,
+        "ConstructKind": 4,
         "ConstructName": "Scissorswift C",
         "Size": 32,
         "ShieldRatio": 0.15,
@@ -35,6 +37,7 @@
       "PlayerName": "DeadRank",
       "Construct": {
         "ConstructId": 1002234,
+        "ConstructKind": 4,
         "ConstructName": "Oblivion",
         "Size": 256,
         "ShieldRatio": 1.0,
