@@ -65,8 +65,12 @@ public class ProceduralQuestGeneratorService(IServiceProvider provider) : IProce
             }
         }
 
+        const double minDistanceQuests = DistanceHelpers.OneSuInMeters / 4d;
+
         // remove duplicates of the same mission
-        result = result.DistinctBy(x => x.Id).ToList();
+        result = result.DistinctBy(x => x.Id)
+            .Where(qi => qi.Distance > minDistanceQuests)
+            .ToList();
 
         return GenerateQuestListOutcome.WithAvailableQuests(result);
     }
