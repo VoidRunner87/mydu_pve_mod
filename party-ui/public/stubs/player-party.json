@@ -1,9 +1,12 @@
 {
   "GroupId": "0fb4f759-a11e-46ea-ada1-e6c44a99cbd6",
+  "PlayerIsLeader": true,
+  "PlayerIsPending": false,
   "Leader": {
     "IsLeader": true,
     "IsConnected": true,
     "PlayerName": "VoidRunner7891",
+    "PlayerId": 1,
     "Construct": {
       "ConstructId": 1002580,
       "ConstructKind": 4,
@@ -20,6 +23,7 @@
       "IsLeader": false,
       "IsConnected": true,
       "PlayerName": "TobiwanKenobi",
+      "PlayerId": 10000,
       "Construct": {
         "ConstructId": 1002678,
         "ConstructKind": 4,
@@ -35,6 +39,7 @@
       "IsLeader": false,
       "IsConnected": false,
       "PlayerName": "DeadRank",
+      "PlayerId": 3,
       "Construct": {
         "ConstructId": 1002234,
         "ConstructKind": 4,

@@ -21,6 +21,20 @@ const InvitedActions = ({item, type}) => {
     )
 };
 
+const SelfInvitedActions = ({item, type}) => {
+    if (type !== "invited") {
+        return null;
+    }
+
+    return (
+        <>
+            <WidgetFlexButton className="positive" onClick={() => window.modApi.acceptInvite()}>Accept invite</WidgetFlexButton>
+            &nbsp;
+            <WidgetFlexButton className="danger" onClick={() => window.modApi.leaveGroup()}>Reject invite</WidgetFlexButton>
+        </>
+    )
+};
+
 const InvitedContainer = ({item, type}) => {
     if (type !== "invited") {
         return null;
@@ -38,10 +52,21 @@ const PendingAcceptActions = ({item, type}) => {
 
     return (
         <>
-            <WidgetFlexButton onClick={() => window.modApi.acceptRequest(item.PlayerId)} className="positive">Accept</WidgetFlexButton>
+            <WidgetFlexButton onClick={() => window.modApi.acceptRequest(item.PlayerId)}
+                              className="positive">Accept</WidgetFlexButton>
             &nbsp;
             <WidgetFlexButton onClick={() => window.modApi.rejectRequest(item.PlayerId)}>Reject</WidgetFlexButton>
         </>
+    )
+};
+
+const SelfPendingAcceptActions = ({item, type}) => {
+    if (type !== "pending-accept") {
+        return null;
+    }
+
+    return (
+        <WidgetFlexButton onClick={() => window.modApi.leaveGroup()}>Cancel</WidgetFlexButton>
     )
 };
 
@@ -55,7 +80,7 @@ const PendingAcceptContainer = ({item, type}) => {
     )
 };
 
-const PartyEntryPending = ({item, type}) => {
+export const PartyEntryPending = ({item, type, canManage}) => {
 
     return (
         <WidgetRow>
@@ -64,12 +89,27 @@ const PartyEntryPending = ({item, type}) => {
                 <InvitedContainer type={type} item={item}/>
                 <PendingAcceptContainer type={type} item={item}/>
             </GridRow>
-            <GridRow>
+            {canManage ? <GridRow>
                 <InvitedActions type={type} item={item}/>
                 <PendingAcceptActions type={type} item={item}/>
-            </GridRow>
+            </GridRow> : null}
         </WidgetRow>
     );
-}
+};
 
-export default PartyEntryPending;
+export const SelfPartyEntryPending = ({item, type, canManage}) => {
+
+    return (
+        <WidgetRow>
+            <GridRow>
+                <PlayerName>{item.PlayerName}</PlayerName>
+                <InvitedContainer type={type} item={item}/>
+                <PendingAcceptContainer type={type} item={item}/>
+            </GridRow>
+            {canManage ? <GridRow>
+                <SelfInvitedActions type={type} item={item}/>
+                <SelfPendingAcceptActions type={type} item={item}/>
+            </GridRow> : null}
+        </WidgetRow>
+    );
+};

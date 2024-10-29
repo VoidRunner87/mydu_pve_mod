@@ -113,6 +113,10 @@ modApi.cancelInvite = (playerId) => {
     console.log('cancelInvite', playerId);
 };
 
+modApi.acceptInvite = () => {
+    console.log('acceptInvite');
+};
+
 modApi.acceptRequest = (playerId) => {
     console.log('acceptRequest', playerId);
 };

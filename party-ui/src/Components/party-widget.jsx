@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState} from "react";
 import PartyEntryMember from "./party-entry-member";
 import {Widget, WidgetButtonRow, WidgetFormRow, WidgetHeader, WidgetInputText, WidgetPage, WidgetRow} from "./widget";
-import PartyEntryPending from "./party-entry-pending";
+import {PartyEntryPending, SelfPartyEntryPending} from "./party-entry-pending";
 import styled from "styled-components";
 import {ConfirmWidgetButton, WidgetFlexButton} from "./buttons";
 import {ArrowLeftIcon, GearIcon, XIcon} from "./icons";
@@ -55,13 +55,13 @@ const CloseWidget = () => {
     </WidgetButton>;
 }
 
-const SettingsButton = ({onClick, visible, count}) => {
+const SettingsButton = ({onClick, visible, count, isLeader}) => {
     if (!visible) {
         return null;
     }
 
     return (
-        <WidgetButton className={count > 0 ? "tilt" : ""} onClick={onClick}>
+        <WidgetButton className={isLeader && count > 0 ? "tilt" : ""} onClick={onClick}>
             <GearIcon size={18}/>
         </WidgetButton>
     )
@@ -109,17 +109,18 @@ const PartyWidget = () => {
     const [pendingAccept, setPendingAccept] = useState([]);
     const [invited, setInvited] = useState([]);
     const [leader, setLeader] = useState(null);
-    const [inviteName, setInviteName] = useState("");
+    const [isLeader, setIsLeader] = useState(false);
+    const [isPending, setIsPending] = useState(false);
 
-    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [position, setPosition] = useState({x: 0, y: 0});
     const [dragging, setDragging] = useState(false);
-    const [offset, setOffset] = useState({ x: 0, y: 0 });
+    const [offset, setOffset] = useState({x: 0, y: 0});
     const mouseLeaveTimeout = useRef(null);
 
     useEffect(() => {
         const centerX = window.innerWidth / 2 - 200; // Adjust for half the widget width
         const centerY = window.innerHeight / 2 - 200; // Adjust for half the widget height
-        setPosition({ x: centerX, y: centerY });
+        setPosition({x: centerX, y: centerY});
     }, []);
 
     const fetchData = () => {
@@ -128,13 +129,17 @@ const PartyWidget = () => {
         fetch(url)
             .then(res => {
                 return res.json()
-            }, error => {})
+            }, error => {
+            })
             .then(resJson => {
                 setMembers(resJson.Members);
                 setLeader(resJson.Leader);
                 setPendingAccept(resJson.PendingAccept);
                 setInvited(resJson.Invited);
-            }, error => {});
+                setIsLeader(resJson.PlayerIsLeader);
+                setIsPending(resJson.PlayerIsPending);
+            }, error => {
+            });
     };
 
     useEffect(() => fetchData(), []);
@@ -169,10 +174,17 @@ const PartyWidget = () => {
         );
     }
 
-    const PendingPlayers = ({data, type}) => {
+    const PendingPlayers = ({data, type, canManage}) => {
 
         return data.map((item, index) =>
-            <PartyEntryPending key={index} type={type} item={item}/>
+            <PartyEntryPending key={index} type={type} item={item} canManage={canManage}/>
+        );
+    }
+
+    const SelfPendingPlayers = ({data, type, canManage}) => {
+
+        return data.map((item, index) =>
+            <SelfPartyEntryPending key={index} type={type} item={item} canManage={canManage}/>
         );
     }
 
@@ -227,34 +239,29 @@ const PartyWidget = () => {
         handleCloseWidget();
     };
 
-    const handlePlayerNameChanged = (e) => {
-        setInviteName(e.target.value);
-    };
-
-    const handleInvite = () => {
-        if (inviteName)
-        {
-            window.modApi.inviteToGroup(inviteName);
-            setInviteName("");
-        }
-    };
-
     return (
         <Container>
-            <Widget style={{ left: position.x, top: position.y }} onMouseLeave={handleMouseLeave}>
+            <Widget style={{left: position.x, top: position.y}} onMouseLeave={handleMouseLeave}>
                 <WidgetHeader>
-                    <SettingsButton count={invited.length + pendingAccept.length} visible={page === "members"}
+                    <SettingsButton isLeader={isLeader} count={invited.length + pendingAccept.length}
+                                    visible={page === "members"}
                                     onClick={handlePendingClick}/>
                     <BackToMembersButton visible={page !== "members"} onClick={handleReturnToMembersClick}/>
                     <WidgetTitle onMouseDown={handleMouseDown}
                                  onMouseUp={handleMouseUp}
-                                 onMouseMove={handleMouseMove}>Group</WidgetTitle>
+                                 onMouseMove={handleMouseMove}>Group {isLeader}</WidgetTitle>
                     <CloseWidget/>
                 </WidgetHeader>
-                <CreatePartyWidgetRow leader={leader} />
+                <CreatePartyWidgetRow leader={leader}/>
                 <WidgetPage visible={page === "members"}>
                     <PartyEntryMember item={leader}/>
                     <PartyMembers data={members}/>
+                    {isPending ?
+                        <>
+                            <SelfPendingPlayers type={"invited"} data={invited} canManage={isPending}/>
+                            <SelfPendingPlayers type={"pending-accept"} data={pendingAccept} canManage={isPending}/>
+                        </> : null
+                    }
                 </WidgetPage>
                 <WidgetPage visible={page === "pending"}>
                     <WidgetButtonRow>
@@ -266,16 +273,20 @@ const PartyWidget = () => {
                         &nbsp;
                         <WidgetFlexButton onClick={() => handleSetRole("railgun")}>Railgun</WidgetFlexButton>
                     </WidgetButtonRow>
-                    {/*<WidgetFormRow>*/}
-                    {/*    <WidgetInputText placeholder="Player name" onChange={handlePlayerNameChanged} />&nbsp;<WidgetFlexButton onClick={handleInvite}>Invite</WidgetFlexButton>*/}
-                    {/*</WidgetFormRow>*/}
                     <WidgetFormRow>
-                        <ConfirmWidgetButton className="p50" onConfirm={handleLeaveGroup} confirmClassName="p50 danger">Leave Group</ConfirmWidgetButton>
-                        &nbsp;
-                        <ConfirmWidgetButton onConfirm={handleDisbandGroup} className="p50 danger" confirmClassName="p50 danger">Disband Group</ConfirmWidgetButton>
+                        <ConfirmWidgetButton className="p50"
+                                             onConfirm={handleLeaveGroup}
+                                             confirmClassName="p50 danger">Leave Group</ConfirmWidgetButton>
+                        {isLeader ? <span>&nbsp;</span> : ""}
+                        {isLeader ?
+                            <ConfirmWidgetButton onConfirm={handleDisbandGroup}
+                                                 className="p50 danger"
+                                                 confirmClassName="p50 danger">Disband Group</ConfirmWidgetButton> :
+                            ""
+                        }
                     </WidgetFormRow>
-                    <PendingPlayers type={"invited"} data={invited}/>
-                    <PendingPlayers type={"pending-accept"} data={pendingAccept}/>
+                    <PendingPlayers type={"invited"} data={invited} canManage={isLeader}/>
+                    <PendingPlayers type={"pending-accept"} data={pendingAccept} canManage={isLeader}/>
                 </WidgetPage>
             </Widget>
         </Container>
