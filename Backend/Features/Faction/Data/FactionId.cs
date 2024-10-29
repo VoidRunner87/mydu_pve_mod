@@ -7,4 +7,6 @@ public readonly struct FactionId(long id)
     public static implicit operator FactionId(long id) => new(id);
 
     public static implicit operator long(FactionId factionId) => factionId.Id;
+
+    public override string ToString() => $"{Id}";
 }

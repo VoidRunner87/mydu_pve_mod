@@ -32,6 +32,13 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
         int seed
     )
     {
+        using var scope = _logger.BeginScope(new Dictionary<string, object>
+        {
+            {nameof(playerId), playerId},
+            {nameof(factionId), factionId},
+            {nameof(territoryId), territoryId},
+        });
+        
         var factionRepository = provider.GetRequiredService<IFactionRepository>();
         var faction = await factionRepository.FindAsync(factionId);
 
@@ -78,7 +85,7 @@ public class ProceduralTransportMissionGeneratorService(IServiceProvider provide
 
         if (dropContainerList.Count == 0)
         {
-            return ProceduralQuestOutcome.Failed("No drop containers available");
+            return ProceduralQuestOutcome.Failed($"No drop containers available for '{dropContainerTerritory}'");
         }
 
         var dropContainer = random.PickOneAtRandom(dropContainerList);

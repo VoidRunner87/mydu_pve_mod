@@ -9,4 +9,6 @@ public readonly struct TerritoryId(Guid id)
     public static implicit operator TerritoryId(Guid id) => new(id);
 
     public static implicit operator Guid(TerritoryId territoryId) => territoryId.Id;
+
+    public override string ToString() => $"{Id}";
 }
