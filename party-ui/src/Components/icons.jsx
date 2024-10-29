@@ -9,7 +9,7 @@ export const ChevronUpIcon = ({size}) => {
 export const DotIcon = ({size, color = "currentColor"}) => {
     return (<svg className="text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                  width={size} height={size} fill={color} viewBox="0 0 10 10">
-        <circle cx="5" cy="5" r="3"/>
+        <circle cx="5" cy="5" r="5"/>
     </svg>);
 }
 
@@ -61,19 +61,15 @@ export const ArrowLeftIcon = ({size}) => {
 
 export const GlobeIcon = ({size}) => {
     return <svg width={size} height={size} viewBox="0 0 55.818 55.818" xmlns="http://www.w3.org/2000/svg">
-        <g data-name="Group 6" transform="translate(-1212.948 -289.602)">
-            <path id="Path_19" data-name="Path 19"
-                  d="M1249.54,294.79s-4.5.25-5,6.25a17.908,17.908,0,0,0,2.5,10.5s2.193-1.558-.028,5.971,7.278,14.529,10.778,6.279-.5-11.783,2-12.641a33.771,33.771,0,0,0,5.382-2.6l-3.229-6.081-5.21-5.421-7.43-4.027Z"
+        <g transform="translate(-1212.948 -289.602)">
+            <path d="M1249.54,294.79s-4.5.25-5,6.25a17.908,17.908,0,0,0,2.5,10.5s2.193-1.558-.028,5.971,7.278,14.529,10.778,6.279-.5-11.783,2-12.641a33.771,33.771,0,0,0,5.382-2.6l-3.229-6.081-5.21-5.421-7.43-4.027Z"
                   fill="currentColor"></path>
-            <path id="Path_20" data-name="Path 20"
-                  d="M1219.365,331.985s2.675-14.195,6.425-10.695.25,5.5,2.5,9,5.25,1.5,5.5,5.5.755,6.979,2.618,7.241S1222.967,339.984,1219.365,331.985Z"
+            <path d="M1219.365,331.985s2.675-14.195,6.425-10.695.25,5.5,2.5,9,5.25,1.5,5.5,5.5.755,6.979,2.618,7.241S1222.967,339.984,1219.365,331.985Z"
                   fill="currentColor"></path>
-            <path id="Path_21" data-name="Path 21"
-                  d="M1266.766,317.511a25.909,25.909,0,1,1-25.91-25.909A25.909,25.909,0,0,1,1266.766,317.511Z"
+            <path d="M1266.766,317.511a25.909,25.909,0,1,1-25.91-25.909A25.909,25.909,0,0,1,1266.766,317.511Z"
                   fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                   stroke-width="4"></path>
-            <path id="Path_22" data-name="Path 22"
-                  d="M1240.122,311.619a6.078,6.078,0,1,1-6.078-6.079A6.079,6.079,0,0,1,1240.122,311.619Z"
+            <path d="M1240.122,311.619a6.078,6.078,0,1,1-6.078-6.079A6.079,6.079,0,0,1,1240.122,311.619Z"
                   fill="currentColor"></path>
         </g>
     </svg>
@@ -81,7 +77,7 @@ export const GlobeIcon = ({size}) => {
 
 export const AsteroidIcon = ({size}) => {
     return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g>
+        <g transform="translate(-1, 0)">
             <path
                 d="M12 2C6.47715 2 2 6.47715 2 12C2 12.4447 2.02903 12.8826 2.0853 13.312C2.61321 17.3405 5.53889 20.6144 9.38261 21.654C10.2169 21.8796 11.0944 22 12 22C16.8786 22 20.9413 18.5064 21.8227 13.8845C21.9391 13.2742 22 12.6442 22 12C22 8.87326 20.565 6.08169 18.3176 4.24796C16.5954 2.84273 14.3961 2 12 2Z"
                 stroke="currentColor"></path>

@@ -134,7 +134,7 @@ const PartyEntryMember = ({item}) => {
         return (
             <GridRow>
                 <GridColShipName>
-                    <ConstructName><GlobeIcon size={15} />&nbsp;-&nbsp;{construct.ConstructName}</ConstructName>
+                    <ConstructName><GlobeIcon size={13} />&nbsp;-&nbsp;{construct.ConstructName}</ConstructName>
                 </GridColShipName>
             </GridRow>
         );
@@ -148,8 +148,8 @@ const PartyEntryMember = ({item}) => {
         <WidgetRow onDoubleClick={() => handleDoubleClick(item.PlayerId)}>
             <GridRow>
                 <PlayerName>
-                    <DotIcon size={13} color={getConnectedColor(item.IsConnected)}/>
-                    &nbsp;{item.PlayerName} {item.IsLeader ? <ChevronUpIcon size={15}/> : ""}
+                    <DotIcon size={12} color={getConnectedColor(item.IsConnected)}/>
+                    &nbsp;&nbsp;{item.PlayerName} {item.IsLeader ? <ChevronUpIcon size={15}/> : ""}
                 </PlayerName>
                 <Role>{item.Role}</Role>
             </GridRow>
