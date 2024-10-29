@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Backend;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Overrides;
@@ -50,7 +51,7 @@ public class MyDuMod : IMod
             _weaponGrainOverrides,
             nameof(WeaponGrainOverrides.WeaponFireOnce)
         );
-
+        
         hookCallManager.Register(
             "PlayerGrain.InventoryReady",
             HookMode.Replace,
@@ -101,7 +102,7 @@ public class MyDuMod : IMod
                     id = (ulong)ActionType.InviteToParty,
                     context = ModActionContext.Avatar,
                     label = "Group\\Invite to Group"
-                }
+                },
             ]
         };
 

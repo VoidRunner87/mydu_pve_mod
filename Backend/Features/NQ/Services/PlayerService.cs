@@ -135,15 +135,22 @@ public partial class PlayerService(IServiceProvider provider) : IPlayerService
         return map;
     }
 
-    public async Task<ulong> FindPlayerIdByName(string playerName)
+    public async Task<ulong?> FindPlayerIdByName(string playerName)
     {
         using var db = _factory.Create();
         db.Open();
 
-        return (ulong)await db.ExecuteScalarAsync<long>(
+        var playerId = (ulong?)await db.ExecuteScalarAsync<long>(
             "SELECT id FROM public.player WHERE display_name = @player_name",
             new { player_name = playerName }
         );
+
+        if (playerId == 0)
+        {
+            return null;
+        }
+
+        return playerId;
     }
 
     public struct ElementSkinRow

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Features.NQ.Interfaces;
 using Mod.DynamicEncounters.Features.Party.Data;
 using Mod.DynamicEncounters.Features.Party.Interfaces;
 using NQ;
@@ -40,6 +41,19 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         await _repository.AddPendingPartyRequest(groupId, instigatorPlayerId);
 
         return PartyOperationOutcome.Successful(groupId, "Request sent");
+    }
+
+    public async Task<PartyOperationOutcome> RequestJoinParty(PlayerId instigatorPlayerId, string playerName)
+    {
+        var playerService = provider.GetRequiredService<IPlayerService>();
+        var playerId = await playerService.FindPlayerIdByName(playerName);
+
+        if (playerId == null)
+        {
+            return PartyOperationOutcome.PlayerNotFound(playerName);
+        }
+
+        return await RequestJoinParty(instigatorPlayerId, playerId.Value);
     }
 
     public async Task<PartyOperationOutcome> DisbandParty(PlayerId instigatorPlayerId)
@@ -110,6 +124,19 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         return PartyOperationOutcome.Successful(leaderGroupId, "Promoted to leader");
     }
 
+    public async Task<PartyOperationOutcome> PromoteToPartyLeader(PlayerId instigatorPlayerId, string playerName)
+    {
+        var playerService = provider.GetRequiredService<IPlayerService>();
+        var playerId = await playerService.FindPlayerIdByName(playerName);
+
+        if (playerId == null)
+        {
+            return PartyOperationOutcome.PlayerNotFound(playerName);
+        }
+
+        return await PromoteToPartyLeader(instigatorPlayerId, playerId.Value);
+    }
+
     public async Task<PartyOperationOutcome> InviteToParty(PlayerId instigatorPlayerId, PlayerId invitedPlayerId)
     {
         if (await _repository.IsInAParty(invitedPlayerId))
@@ -132,6 +159,19 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         return PartyOperationOutcome.Successful(groupId, "Invite sent");
     }
 
+    public async Task<PartyOperationOutcome> InviteToParty(PlayerId instigatorPlayerId, string playerName)
+    {
+        var playerService = provider.GetRequiredService<IPlayerService>();
+        var playerId = await playerService.FindPlayerIdByName(playerName);
+
+        if (playerId == null)
+        {
+            return PartyOperationOutcome.PlayerNotFound(playerName);
+        }
+
+        return await InviteToParty(instigatorPlayerId, playerId.Value);
+    }
+
     public async Task<PartyOperationOutcome> AcceptPartyInvite(PlayerId invitedPlayerId)
     {
         if (!await _repository.IsInAParty(invitedPlayerId))
@@ -151,7 +191,7 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         return PartyOperationOutcome.Successful(groupId, "Accepted");
     }
 
-    public async Task<PartyOperationOutcome> CancelPartyInvite(PlayerId instigatorPlayerId, PlayerId invitedPlayerId)
+    public async Task<PartyOperationOutcome> CancelPartyInviteRequest(PlayerId instigatorPlayerId, PlayerId invitedPlayerId)
     {
         if (!await _repository.IsInAParty(invitedPlayerId))
         {
@@ -173,6 +213,19 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         await _repository.RemoveNonLeaderPlayerFromParty(groupId, invitedPlayerId);
         
         return PartyOperationOutcome.Successful(groupId, "Canceled");
+    }
+
+    public async Task<PartyOperationOutcome> CancelPartyInviteRequest(PlayerId instigatorPlayerId, string playerName)
+    {
+        var playerService = provider.GetRequiredService<IPlayerService>();
+        var playerId = await playerService.FindPlayerIdByName(playerName);
+
+        if (playerId == null)
+        {
+            return PartyOperationOutcome.PlayerNotFound(playerName);
+        }
+
+        return await CancelPartyInviteRequest(instigatorPlayerId, playerId.Value);
     }
 
     public async Task<PartyOperationOutcome> AcceptPartyRequest(PlayerId instigatorPlayerId, PlayerId invitedPlayerId)
@@ -197,6 +250,19 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         await _repository.AcceptPartyRequest(invitedPlayerId);
         
         return PartyOperationOutcome.Successful(groupId, "Accepted");
+    }
+
+    public async Task<PartyOperationOutcome> AcceptPartyRequest(PlayerId instigatorPlayerId, string playerName)
+    {
+        var playerService = provider.GetRequiredService<IPlayerService>();
+        var playerId = await playerService.FindPlayerIdByName(playerName);
+        
+        if (playerId == null)
+        {
+            return PartyOperationOutcome.PlayerNotFound(playerName);
+        }
+
+        return await AcceptPartyRequest(instigatorPlayerId, playerId.Value);
     }
 
     public async Task<PartyOperationOutcome> KickPartyMember(PlayerId instigatorPlayerId, PlayerId playerToKick)
@@ -228,6 +294,19 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         await _repository.RemoveNonLeaderPlayerFromParty(leaderGroupId, playerToKick);
         
         return PartyOperationOutcome.Successful(leaderGroupId, "Player removed");
+    }
+
+    public async Task<PartyOperationOutcome> KickPartyMember(PlayerId instigatorPlayerId, string playerName)
+    {
+        var playerService = provider.GetRequiredService<IPlayerService>();
+        var playerId = await playerService.FindPlayerIdByName(playerName);
+        
+        if (playerId == null)
+        {
+            return PartyOperationOutcome.PlayerNotFound(playerName);
+        }
+
+        return await KickPartyMember(instigatorPlayerId, playerId.Value);
     }
 
     public async Task<PartyOperationOutcome> SetPlayerPartyRole(PlayerId instigatorPlayerId, string role)

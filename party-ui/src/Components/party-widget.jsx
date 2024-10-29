@@ -266,9 +266,9 @@ const PartyWidget = () => {
                         &nbsp;
                         <WidgetFlexButton onClick={() => handleSetRole("railgun")}>Railgun</WidgetFlexButton>
                     </WidgetButtonRow>
-                    <WidgetFormRow>
-                        <WidgetInputText placeholder="Player name" onChange={handlePlayerNameChanged} />&nbsp;<WidgetFlexButton onClick={handleInvite}>Invite</WidgetFlexButton>
-                    </WidgetFormRow>
+                    {/*<WidgetFormRow>*/}
+                    {/*    <WidgetInputText placeholder="Player name" onChange={handlePlayerNameChanged} />&nbsp;<WidgetFlexButton onClick={handleInvite}>Invite</WidgetFlexButton>*/}
+                    {/*</WidgetFormRow>*/}
                     <WidgetFormRow>
                         <ConfirmWidgetButton className="p50" onConfirm={handleLeaveGroup} confirmClassName="p50 danger">Leave Group</ConfirmWidgetButton>
                         &nbsp;

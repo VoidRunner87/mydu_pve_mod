@@ -201,6 +201,14 @@ public class ThreadManager : IThreadManager
                         BehaviorTaskCategory.MovementPriority
                     ).Tick
                 );
+            case ThreadId.CommandHandler:
+                return CreateThread(
+                    threadId,
+                    new CommandHandlerLoop(
+                        this,
+                        cts.Token
+                    ).Tick
+                );
             default:
                 throw new ArgumentOutOfRangeException(nameof(threadId));
         }

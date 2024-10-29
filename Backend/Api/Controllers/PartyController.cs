@@ -44,7 +44,14 @@ public class PartyController : Controller
         if (request.PlayerId == 0 && !string.IsNullOrEmpty(request.PlayerName))
         {
             var playerService = _provider.GetRequiredService<IPlayerService>();
-            request.PlayerId = await playerService.FindPlayerIdByName(request.PlayerName);
+            var playerId = await playerService.FindPlayerIdByName(request.PlayerName);
+
+            if (playerId == null)
+            {
+                return BadRequest($"Player '{request.PlayerName}' not found");
+            }
+
+            request.PlayerId = playerId.Value;
         }
         
         var result = await _service.InviteToParty(request.InstigatorPlayerId, request.PlayerId);
@@ -74,7 +81,7 @@ public class PartyController : Controller
     [HttpPost]
     public async Task<IActionResult> CancelInvite([FromBody] PartyRequest request)
     {
-        var result = await _service.CancelPartyInvite(request.InstigatorPlayerId, request.PlayerId);
+        var result = await _service.CancelPartyInviteRequest(request.InstigatorPlayerId, request.PlayerId);
 
         return Ok(result);
     }

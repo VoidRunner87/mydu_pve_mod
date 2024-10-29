@@ -9,6 +9,9 @@ public class PartyOperationOutcome : IOutcome
 
     public PlayerPartyGroupId? PartyGroupId { get; init; }
 
+    public static PartyOperationOutcome Successful(string message)
+        => new() { Success = true, Message = message };
+    
     public static PartyOperationOutcome Successful(PlayerPartyGroupId partyGroupId, string message)
         => new() { Success = true, Message = message, PartyGroupId = partyGroupId };
     
@@ -44,4 +47,7 @@ public class PartyOperationOutcome : IOutcome
     
     public static PartyOperationOutcome MustBePartyLeader()
         => new() { Success = false, Message = "Must be a group leader" };
+
+    public static PartyOperationOutcome PlayerNotFound(string playerName)
+        => new() { Success = false, Message = $"Player '{playerName}' not found" };
 }

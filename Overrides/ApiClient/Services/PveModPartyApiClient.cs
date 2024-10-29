@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Overrides.ApiClient.Data;
 using Mod.DynamicEncounters.Overrides.ApiClient.Interfaces;
 using Newtonsoft.Json;
-using NQ;
 
 namespace Mod.DynamicEncounters.Overrides.ApiClient.Services;
 
@@ -93,13 +92,9 @@ public class PveModPartyApiClient(IServiceProvider provider) : IPveModPartyApiCl
         }, cancellationToken);
     }
     
-    public async Task<BasicOutcome> RejectRequest(ulong instigatorPlayerId, ulong playerId, CancellationToken cancellationToken)
+    public Task<BasicOutcome> RejectRequest(ulong instigatorPlayerId, ulong playerId, CancellationToken cancellationToken)
     {
-        return await PostAsync("party/request/reject", new
-        {
-            InstigatorPlayerId = instigatorPlayerId,
-            PlayerId = playerId
-        }, cancellationToken);
+        return CancelInvite(instigatorPlayerId, playerId, cancellationToken);
     }
     
     public async Task<BasicOutcome> PromoteToLeader(ulong instigatorPlayerId, ulong playerId, CancellationToken cancellationToken)

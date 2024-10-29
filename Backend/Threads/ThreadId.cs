@@ -12,4 +12,5 @@ public enum ThreadId
     ConstructBehaviorMovement = 8,
     TaskQueue = 9,
     Cleanup = 10,
+    CommandHandler = 11
 }

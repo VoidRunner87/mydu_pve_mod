@@ -11,5 +11,7 @@ public static class PartyRegistration
     {
         services.AddSingleton<IPlayerPartyService, PlayerPartyService>();
         services.AddSingleton<IPlayerPartyRepository, PlayerPartyRepository>();
+        services.AddSingleton<IPartyCommandParser, PartyCommandParser>();
+        services.AddSingleton<IPlayerPartyCommandHandler, PlayerPartyCommandHandler>();
     }
 }
