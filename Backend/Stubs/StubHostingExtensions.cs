@@ -25,7 +25,5 @@ public static class StubHostingExtensions
             
             await service.StartAsync(cts.Token);
         }
-
-        cts = (CancellationTokenSource) null;
     }
 }

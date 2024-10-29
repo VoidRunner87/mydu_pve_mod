@@ -1,6 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using BotLib.BotClient;
 using BotLib.Protocols;
+using BotLib.Protocols.Queuing;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,11 +34,20 @@ public class MaintenanceController : Controller
 
     [HttpPost]
     [Route("grpc/reconnect")]
-    public IActionResult ReconnectGrpc()
+    public async Task<IActionResult> ReconnectGrpc()
     {
         var provider = ModBase.ServiceProvider;
-        ClientExtensions.UseFactory(provider.GetRequiredService<IDuClientFactory>());
+        var clientFactory = provider.GetRequiredService<IDuClientFactory>();
+        ClientExtensions.UseFactory(clientFactory);
 
+        var pi = LoginInformations.BotLogin(
+            Environment.GetEnvironmentVariable("BOT_PREFIX")!,
+            Environment.GetEnvironmentVariable("BOT_LOGIN")!,
+            Environment.GetEnvironmentVariable("BOT_PASSWORD")!
+        );
+
+        await clientFactory.Connect(pi);
+        
         return Ok();
     }
 }
