@@ -40,6 +40,7 @@ public class CommandHandlerLoop(IThreadManager threadManager, CancellationToken 
             if (bex.error.code == ErrorCode.InvalidSession)
             {
                 await ModBase.Bot.Reconnect();
+                _logger.LogError(bex, "Invalid Session Error");
             }
             
             _logger.LogError(bex, "Business Exception");
