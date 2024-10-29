@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 using BotLib.Generated;
-using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Party.Data;
 using Mod.DynamicEncounters.Helpers;
 using NQ;

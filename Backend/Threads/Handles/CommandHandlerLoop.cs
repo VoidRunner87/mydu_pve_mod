@@ -24,16 +24,23 @@ public class CommandHandlerLoop(IThreadManager threadManager, CancellationToken 
         try
         {
             var messageContent =
-                await _listener.GetLastEventWait(CanHandleMessage, int.MaxValue);
-            _listener.Clear();
+                await _listener.GetLastEventWait(CanHandleMessage, 60000);
 
             await _commandHandler.HandleCommand(messageContent.fromPlayerId, messageContent.message);
+
+            _listener.Clear();
+
+            ReportHeartbeat();
         }
         catch (BusinessException bex)
         {
             _logger.LogError(bex, "Business Exception");
-            
+
             await ModBase.Bot.Reconnect();
+        }
+        catch (EventNotFoundException)
+        {
+            ReportHeartbeat();
         }
         catch (Exception e)
         {
