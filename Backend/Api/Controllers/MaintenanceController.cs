@@ -46,7 +46,7 @@ public class MaintenanceController : Controller
             Environment.GetEnvironmentVariable("BOT_PASSWORD")!
         );
 
-        await clientFactory.Connect(pi);
+        await clientFactory.Connect(pi, allowExisting: true);
         
         return Ok();
     }

@@ -98,7 +98,7 @@ public class StubDuClientFactory : IDuClientFactory
         {
             if (!allowExisting)
             {
-                var interpolatedStringHandler = new StringBuilder(86, 2);
+                var interpolatedStringHandler = new StringBuilder();
                 interpolatedStringHandler.Append(
                     "Connect: expecting a new client but player doesn't need creation: (player: ");
                 interpolatedStringHandler.Append(loginresponse.optState.spawnState.playerId);
