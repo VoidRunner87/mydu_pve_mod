@@ -54,6 +54,7 @@ public class PartyCommandParser : IPartyCommandParser
                         "> @g join PlayerName - Requests to join a player's group;",
                         "> @g invite PlayerName - Invites a player to the group;",
                         "> @g kick PlayerName - Kicks a player from the group;",
+                        "> @g accept - Accepts a group invite;",
                         "> @g accept PlayerName - Accepts a player request to join the group;",
                         "> @g reject PlayerName - Rejects a player request to join the group;",
                         "> @g leave - Leaves the group;",
@@ -91,7 +92,9 @@ public class PartyCommandParser : IPartyCommandParser
             case "accept":
                 if (pieces.Count == 0)
                 {
-                    return CommandHandlerOutcome.Failed("Missing player to accept. Ie: @accept PlayerName");
+                    return CommandHandlerOutcome.Execute(service =>
+                        service.AcceptPartyInvite(instigatorPlayerId)
+                    );
                 }
 
                 return CommandHandlerOutcome.Execute(service =>
