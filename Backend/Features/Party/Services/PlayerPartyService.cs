@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Features.NQ.Interfaces;
 using Mod.DynamicEncounters.Features.Party.Data;
@@ -324,11 +325,7 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         }
 
         // basic sanitation
-        role = role.ToLower().Trim();
-        if (!PlayerPartyRoles.All.Contains(role))
-        {
-            return PartyOperationOutcome.InvalidRole();
-        }
+        role = role.ToLower().Trim().Truncate(20);
         
         var groupId = await _repository.FindPartyGroupId(instigatorPlayerId);
 
