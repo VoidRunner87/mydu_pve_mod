@@ -36,7 +36,7 @@ public class StubDuClientFactory : IDuClientFactory
         GrpcVisibility.GrpcVisibilityConfig? grpcVisibilityConfig = null)
     {
         Console.WriteLine("Waiting in Queue");
-        Log.ForContext<DuClientFactory>()
+        Log.ForContext<StubDuClientFactory>()
             .Information("Waiting in Queue");
         
         QueueingStreamedData queueingResponse = await Queuing.WaitInQueue(li);
@@ -61,7 +61,7 @@ public class StubDuClientFactory : IDuClientFactory
         
         Console.WriteLine($"Connection GPRC: {queueingResponse.info.grpcInfo.address}");
         Console.WriteLine($"Connection FRONT: {queueingResponse.info.frontUri}");
-        Log.ForContext<DuClientFactory>()
+        Log.ForContext<StubDuClientFactory>()
             .Information("Connecting {username} to front `{front}` ", li, grpc);
         
         DuClient client = new DuClient(grpc, li, _httpClient, queueingResponse.info.frontUri);
@@ -119,14 +119,10 @@ public class StubDuClientFactory : IDuClientFactory
             client.updateWithLoginResponse(loginresponse.optState);
         }
 
-        PlayerConnectionReady playerConnectionReady = await grpc.StartHandle(
+        await grpc.StartHandle(
             new ActionBlock<IServerMessage>((Action<IServerMessage>)(msg => client.msgReceived(msg))),
             client.CancellationTokenSource.Token);
         (DuClient, PlayerLoginState) valueTuple = (client, lr);
-        queueingResponse = (QueueingStreamedData)null;
-        grpc = (GrpcVisibility)null;
-        loginresponse = (LoginResponseOrCreation)null;
-        lr = (PlayerLoginState)null;
         return valueTuple;
     }
 

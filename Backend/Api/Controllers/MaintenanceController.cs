@@ -1,4 +1,7 @@
 ﻿using System.Threading.Tasks;
+using BotLib.BotClient;
+using BotLib.Protocols;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
@@ -6,11 +9,11 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
-[Route("maintenance/bugged-wrecks")]
+[Route("maintenance")]
 public class MaintenanceController : Controller
 {
     [HttpDelete]
-    [Route("")]
+    [Route("bugged-wrecks")]
     public async Task<IActionResult> CleanupBuggedWrecks()
     {
         var provider = ModBase.ServiceProvider;
@@ -25,5 +28,15 @@ public class MaintenanceController : Controller
         }
         
         return Ok(items);
+    }
+
+    [HttpPost]
+    [Route("grpc/reconnect")]
+    public IActionResult ReconnectGrpc()
+    {
+        var provider = ModBase.ServiceProvider;
+        ClientExtensions.UseFactory(provider.GetRequiredService<IDuClientFactory>());
+
+        return Ok();
     }
 }
