@@ -14,6 +14,7 @@ public interface IPlayerService
 
     Task<Dictionary<ulong, HashSet<string>>> GetAllElementSkins(ulong playerId);
     Task<ulong?> FindPlayerIdByName(string playerName);
+    Task<string?> FindPlayerNameById(ulong playerId);
     
     public struct ElementSkinItem
     {

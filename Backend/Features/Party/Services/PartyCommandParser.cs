@@ -57,7 +57,9 @@ public class PartyCommandParser : IPartyCommandParser
                         "> @g accept - Accepts a group invite;",
                         "> @g accept PlayerName - Accepts a player request to join the group;",
                         "> @g reject PlayerName - Rejects a player request to join the group;",
-                        "> @g leave - Leaves the group;",
+                        "> @g decline - Declines a group invite you received;",
+                        "> @g cancel - Cancels a group request you sent; (same as decline)",
+                        "> @g leave - Leaves the group; (same as cancel)",
                         "> @g disband - Disbands the group;",
                         "> @g role commander - Sets your role as commander;"
                     };
@@ -141,6 +143,8 @@ public class PartyCommandParser : IPartyCommandParser
 
                 return CommandHandlerOutcome.Execute(service =>
                     service.PromoteToPartyLeader(instigatorPlayerId, pieces.Dequeue()));
+            case "decline":
+            case "cancel":
             case "leave":
                 return CommandHandlerOutcome.Execute(service => service.LeaveParty(instigatorPlayerId));
             case "disband":

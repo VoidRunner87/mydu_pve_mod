@@ -153,6 +153,24 @@ public partial class PlayerService(IServiceProvider provider) : IPlayerService
         return playerId;
     }
 
+    public async Task<string?> FindPlayerNameById(ulong playerId)
+    {
+        using var db = _factory.Create();
+        db.Open();
+
+        var playerName = (string?)await db.ExecuteScalarAsync<string>(
+            "SELECT display_name FROM public.player WHERE id = @id",
+            new { id = playerId }
+        );
+
+        if (string.IsNullOrEmpty(playerName))
+        {
+            return null;
+        }
+
+        return playerName;
+    }
+
     public struct ElementSkinRow
     {
         public long item_type { get; set; }

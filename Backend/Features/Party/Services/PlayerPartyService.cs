@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Features.Common.Services;
 using Mod.DynamicEncounters.Features.NQ.Interfaces;
 using Mod.DynamicEncounters.Features.Party.Data;
 using Mod.DynamicEncounters.Features.Party.Interfaces;
@@ -155,6 +156,12 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
 
         var groupId = await _repository.FindPartyGroupId(instigatorPlayerId);
         await _repository.AddPendingPartyInvite(groupId, invitedPlayerId);
+
+        var playerService = provider.GetRequiredService<IPlayerService>();
+        var instigatorName = await playerService.FindPlayerNameById(instigatorPlayerId);
+        
+        var playerAlertService = provider.GetRequiredService<IPlayerAlertService>();
+        await playerAlertService.SendInfoAlert(invitedPlayerId, $"{instigatorName} invited you to a group");
 
         return PartyOperationOutcome.Successful(groupId, "Invite sent");
     }
