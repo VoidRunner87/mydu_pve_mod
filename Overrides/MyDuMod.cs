@@ -154,6 +154,10 @@ public class MyDuMod : IMod
                     )
                     .ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
                 break;
+            case ActionType.AcceptInvite:
+                await partyApi.AcceptInvite(playerId, CancellationToken.None)
+                    .ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));
+                break;
             case ActionType.CreateParty:
                 await partyApi.CreateParty(playerId, CancellationToken.None)
                     .ContinueWith(x => x.Result.NotifyPlayer(_provider, playerId));

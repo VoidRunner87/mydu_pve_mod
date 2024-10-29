@@ -160,7 +160,7 @@ public partial class PlayerService(IServiceProvider provider) : IPlayerService
 
         var playerName = (string?)await db.ExecuteScalarAsync<string>(
             "SELECT display_name FROM public.player WHERE id = @id",
-            new { id = playerId }
+            new { id = (long)playerId }
         );
 
         if (string.IsNullOrEmpty(playerName))

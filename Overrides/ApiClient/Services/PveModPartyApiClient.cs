@@ -67,7 +67,7 @@ public class PveModPartyApiClient(IServiceProvider provider) : IPveModPartyApiCl
     
     public async Task<BasicOutcome> SendPartyInvite(ulong instigatorPlayerId, ulong playerId, string playerName, CancellationToken cancellationToken)
     {
-        return await PostAsync("party/invite/accept", new
+        return await PostAsync("party/invite", new
         {
             InstigatorPlayerId = instigatorPlayerId,
             PlayerId = playerId,

@@ -24,5 +24,6 @@ public enum ActionType
     SetPartyRole = 110,
     InviteToParty = 111,
     CreateParty = 112,
+    AcceptInvite = 113,
     Callback = 1999999
 }

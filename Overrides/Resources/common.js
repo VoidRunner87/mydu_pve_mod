@@ -51,6 +51,10 @@ modApi.cancelInvite = (playerId) => {
     CPPMod.sendModAction("Mod.DynamicEncounters", 107, [], JSON.stringify({playerId}));
 };
 
+modApi.acceptInvite = () => {
+    CPPMod.sendModAction("Mod.DynamicEncounters", 113, [], JSON.stringify({}));
+};
+
 modApi.acceptRequest = (playerId) => {
     CPPMod.sendModAction("Mod.DynamicEncounters", 108, [], JSON.stringify({playerId}));
 };

@@ -42,38 +42,86 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
             return;
         }
 
-        var pendingInvite = list.Where(x => x.IsPendingAcceptInvite);
-        var pendingRequest = list.Where(x => x.IsPendingAcceptRequest);
+        var pendingInvite = list.Where(x => x.IsPendingAcceptInvite).ToList();
+        var pendingRequest = list.Where(x => x.IsPendingAcceptRequest).ToList();
         var members = list
             .Where(x => !x.IsPendingAcceptRequest && !x.IsPendingAcceptInvite && !x.IsLeader);
 
-        var pendingInviteMappedTask = Task.WhenAll(pendingInvite.Select(MapToModelPending));
-        var pendingRequestMappedTask = Task.WhenAll(pendingRequest.Select(MapToModelPending));
-        var membersMappedTask = Task.WhenAll(members.Select(MapToModelMember));
+        var pendingList = pendingInvite.Select(x => x.PlayerId).ToList();
+        pendingList.AddRange(pendingRequest.Select(x => x.PlayerId).ToList());
+        var pendingSet = pendingList.ToHashSet();
 
-        await Task.WhenAll([pendingInviteMappedTask, pendingRequestMappedTask, membersMappedTask]);
+        var pendingInviteList = pendingInvite.Select(x => MapToModelPending(x, playerId));
+        var pendingRequestList = pendingRequest.Select(x => MapToModelPending(x, playerId));
+        
+        if (pendingSet.Contains(playerId))
+        {
+            var pendingPartyData = new PartyData
+            {
+                GroupId = list.First().GroupId,
+                PlayerIsLeader = false,
+                PlayerIsPending = true,
+                Leader = MapToModelRestricted(leader, playerId),
+                Members = [],
+                PendingAccept = pendingRequestList.Where(x => x.PlayerId == playerId),
+                Invited = pendingInviteList.Where(x => x.PlayerId == playerId)
+            };
+            
+            await injection.UploadJson(playerId, "player-party", pendingPartyData);
+            _logger.LogInformation("Party Data: {Json}", JsonConvert.SerializeObject(pendingPartyData));
+            return;
+        }
+
+        var membersMappedTask = await Task.WhenAll(members.Select(x => MapToModelMember(x, playerId)));
 
         var partyData = new PartyData
         {
             GroupId = list.First().GroupId,
-            Leader = await MapToModelMember(leader),
-            Invited = await pendingInviteMappedTask,
-            PendingAccept = await pendingRequestMappedTask,
-            Members = await membersMappedTask
+            PlayerIsLeader = playerId == leader.PlayerId,
+            PlayerIsPending = pendingSet.Contains(playerId),
+            Leader = await MapToModelMember(leader, playerId),
+            Invited = pendingInviteList,
+            PendingAccept = pendingRequestList,
+            Members = membersMappedTask
         };
-        
+
         _logger.LogInformation("Party Data: {Json}", JsonConvert.SerializeObject(partyData));
         // _logger.LogInformation("FetchPartyDataAction Took: {Time}ms", sw.ElapsedMilliseconds);
 
         await injection.UploadJson(playerId, "player-party", partyData);
     }
-
-    private async Task<PartyData.PartyMemberEntry> MapToModelMember(PlayerPartyItem item)
+    
+    private PartyData.PartyMemberEntry MapToModelRestricted(PlayerPartyItem item, ulong selfPlayerId)
     {
         var entry = new PartyData.PartyMemberEntry
         {
             PlayerId = item.PlayerId,
             PlayerName = item.PlayerName,
+            IsSelf = item.PlayerId == selfPlayerId,
+            IsConnected = false,
+            IsLeader = item.IsLeader,
+            Theme = item.Properties.Theme,
+            Construct = new PartyData.PartyMemberEntry.ConstructData
+            {
+                ConstructId = 0,
+                Size = 0,
+                ConstructKind = ConstructKind.UNIVERSE,
+                ConstructName = "",
+                ShieldRatio = 0,
+                CoreStressRatio = 0
+            }
+        };
+
+        return entry;
+    }
+
+    private async Task<PartyData.PartyMemberEntry> MapToModelMember(PlayerPartyItem item, ulong selfPlayerId)
+    {
+        var entry = new PartyData.PartyMemberEntry
+        {
+            PlayerId = item.PlayerId,
+            PlayerName = item.PlayerName,
+            IsSelf = item.PlayerId == selfPlayerId,
             IsConnected = item.IsConnected,
             IsLeader = item.IsLeader,
             Role = item.Properties.Role,
@@ -91,11 +139,11 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
 
         var playerPosition = await _playerService.GetPlayerPositionCached(item.PlayerId);
         if (playerPosition is not { Valid: true, ConstructId: > 0 }) return entry;
-        
+
         var constructItem = await _constructService.GetConstructInfoCached(playerPosition.ConstructId);
 
         if (constructItem == null) return entry;
-            
+
         entry.Construct = new PartyData.PartyMemberEntry.ConstructData
         {
             ConstructId = constructItem.Id,
@@ -120,14 +168,18 @@ public class FetchPartyDataAction(IServiceProvider provider) : IModActionHandler
 
         return entry;
     }
-    
-    private async Task<PartyData.PartyMemberEntry> MapToModelPending(PlayerPartyItem item)
+
+    private PartyData.PartyMemberEntry MapToModelPending(PlayerPartyItem? item, ulong selfPlayerId)
     {
-        await Task.Yield();
+        if (item == null)
+        {
+            return null;
+        }
         
         var entry = new PartyData.PartyMemberEntry
         {
             PlayerId = item.PlayerId,
+            IsSelf = selfPlayerId == item.PlayerId,
             PlayerName = item.PlayerName,
             IsConnected = item.IsConnected,
             IsLeader = item.IsLeader,

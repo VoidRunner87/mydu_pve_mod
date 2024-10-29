@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Common;
@@ -11,7 +12,7 @@ using NQ;
 
 namespace Mod.DynamicEncounters.Features.Party.Services;
 
-public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
+public partial class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
 {
     private readonly IPlayerPartyRepository _repository = provider.GetRequiredService<IPlayerPartyRepository>();
 
@@ -325,6 +326,7 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         }
 
         // basic sanitation
+        role = RemoveInvalidCharacters().Replace(role, "");
         role = role.ToLower().Trim().Truncate(15);
         
         var groupId = await _repository.FindPartyGroupId(instigatorPlayerId);
@@ -338,4 +340,7 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
     {
         return _repository.GetPartyByPlayerId(playerId);
     }
+
+    [GeneratedRegex("[^\\w ]")]
+    private static partial Regex RemoveInvalidCharacters();
 }
