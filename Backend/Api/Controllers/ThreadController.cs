@@ -35,4 +35,26 @@ public class ThreadController : Controller
         
         return Ok();
     }
+
+    [HttpPost]
+    [Route("manager/stop")]
+    public IActionResult StopThreadManager()
+    {
+        ThreadManager.Instance
+            .Pause();
+        ThreadManager.Instance
+            .CancelAllThreads();
+
+        return Ok();
+    }
+    
+    [HttpPost]
+    [Route("manager/resume")]
+    public IActionResult ResumeThreadManager()
+    {
+        ThreadManager.Instance
+            .Resume();
+
+        return Ok();
+    }
 }

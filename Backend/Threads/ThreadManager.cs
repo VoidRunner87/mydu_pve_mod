@@ -22,6 +22,7 @@ public class ThreadManager : IThreadManager
     private readonly ILogger<ThreadManager> _logger = ModBase.ServiceProvider.CreateLogger<ThreadManager>();
     private readonly ConcurrentDictionary<ThreadId, Thread> _threads = new();
     private readonly ConcurrentDictionary<ThreadId, DateTime> _threadStartMap = new();
+    private Timer _timer = new(TimeSpan.FromSeconds(1));
 
     public static ThreadManager Instance
     {
@@ -43,13 +44,32 @@ public class ThreadManager : IThreadManager
         );
     }
 
+    public void CancelAllThreads()
+    {
+        var threadIds = Enum.GetValues<ThreadId>();
+
+        foreach (var id in threadIds)
+        {
+            CancelThread(id);
+        }
+    }
+
+    public void Pause()
+    {
+        _timer.Stop();
+    }
+
+    public void Resume()
+    {
+        _timer.Start();
+    }
+
     public Task Start()
     {
         var taskCompletionSource = new TaskCompletionSource();
 
-        var timer = new Timer(TimeSpan.FromSeconds(1));
-        timer.Elapsed += (_, _) => { OnTimer(); };
-        timer.Start();
+        _timer.Elapsed += (_, _) => { OnTimer(); };
+        _timer.Start();
 
         return taskCompletionSource.Task;
     }
