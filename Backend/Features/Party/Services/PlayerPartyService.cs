@@ -325,7 +325,7 @@ public class PlayerPartyService(IServiceProvider provider) : IPlayerPartyService
         }
 
         // basic sanitation
-        role = role.ToLower().Trim().Truncate(20);
+        role = role.ToLower().Trim().Truncate(10);
         
         var groupId = await _repository.FindPartyGroupId(instigatorPlayerId);
 
