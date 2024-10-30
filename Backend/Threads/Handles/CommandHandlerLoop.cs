@@ -19,14 +19,15 @@ public class CommandHandlerLoop(IThreadManager threadManager, CancellationToken 
     private readonly ILogger<CommandHandlerLoop> _logger = ModBase.ServiceProvider.CreateLogger<CommandHandlerLoop>();
     private readonly IPlayerPartyCommandHandler _commandHandler =
         ModBase.ServiceProvider.GetRequiredService<IPlayerPartyCommandHandler>();
-    private readonly Timer _timer = new Timer(TimeSpan.FromSeconds(1)); 
     
     public override async Task Tick()
     {
+        var timer = new Timer(TimeSpan.FromSeconds(1)); 
+        
         try
         {
-            _timer.Elapsed += (_, _) => ReportHeartbeat();
-            _timer.Start();
+            timer.Elapsed += (_, _) => ReportHeartbeat();
+            timer.Start();
             
             var messageContent =
                 await _listener.GetLastEventWait(CanHandleMessage, 60000);
@@ -50,7 +51,7 @@ public class CommandHandlerLoop(IThreadManager threadManager, CancellationToken 
             _logger.LogError(e, "Failure on listening to commands");
         }
         
-        _timer.Stop();
+        timer.Stop();
     }
 
     private bool CanHandleMessage(MessageContent mc)
