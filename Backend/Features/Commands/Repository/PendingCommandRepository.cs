@@ -22,10 +22,10 @@ public class PendingCommandRepository(IServiceProvider provider) : IPendingComma
         var result = (await db.QueryAsync<DbRow>(
             """
             SELECT id, sender_id, message, date FROM public.chat_message 
-            WHERE date >= @date AND message ~ '^@'
+            WHERE date >= @date AND message ~ '^@' AND sender_id != @id
             ORDER BY date
             """,
-            new { date = afterDateTime }
+            new { date = afterDateTime, id = ModBase.Bot.PlayerId }
         )).ToList();
 
         return result.Select(MapToModel);
