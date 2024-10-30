@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Database.Interfaces;
 using Mod.DynamicEncounters.Database.Services;
+using Mod.DynamicEncounters.Features.Commands;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Common.Repository;
 using Mod.DynamicEncounters.Features.Common.Services;
@@ -67,5 +68,6 @@ public static class FeaturesRegistration
         services.RegisterExtendedProperties();
         services.RegisterQuests();
         services.RegisterPlayerParty();
+        services.RegisterCommands();
     }
 }

@@ -1,61 +1,51 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using BotLib.BotClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Features.Commands.Interfaces;
 using Mod.DynamicEncounters.Features.Party.Interfaces;
 using Mod.DynamicEncounters.Helpers;
-using NQ;
-using NQutils.Exceptions;
-using Timer = System.Timers.Timer;
 
 namespace Mod.DynamicEncounters.Threads.Handles;
 
 public class CommandHandlerLoop(IThreadManager threadManager, CancellationToken token)
     : ThreadHandle(ThreadId.CommandHandler, threadManager, token)
 {
-    private readonly EventListener<MessageContent> _listener = ModBase.Bot.Events.MessageReceived.Listener();
     private readonly ILogger<CommandHandlerLoop> _logger = ModBase.ServiceProvider.CreateLogger<CommandHandlerLoop>();
+    private readonly IPendingCommandRepository _pendingCommandRepository =
+        ModBase.ServiceProvider.GetRequiredService<IPendingCommandRepository>();
     private readonly IPlayerPartyCommandHandler _commandHandler =
         ModBase.ServiceProvider.GetRequiredService<IPlayerPartyCommandHandler>();
+
+    private DateTime _refDate = DateTime.UtcNow;
     
     public override async Task Tick()
     {
-        var timer = new Timer(TimeSpan.FromSeconds(1)); 
-        
-        try
-        {
-            timer.Elapsed += (_, _) => ReportHeartbeat();
-            timer.Start();
-            
-            var messageContent =
-                await _listener.GetLastEventWait(CanHandleMessage, 60000);
+        var now = DateTime.UtcNow;
+        var commandItems = await _pendingCommandRepository.QueryAsync(_refDate);
+        _refDate = now;
 
-            await _commandHandler.HandleCommand(messageContent.fromPlayerId, messageContent.message);
-
-            _listener.Clear();
-        }
-        catch (BusinessException bex)
+        foreach (var commandItem in commandItems)
         {
-            if (bex.error.code == ErrorCode.InvalidSession)
+            using var commandScope = _logger.BeginScope(new Dictionary<string, object>
             {
-                await ModBase.Bot.Reconnect();
-                _logger.LogError(bex, "Invalid Session Error");
-            }
+                { nameof(commandItem.PlayerId), commandItem.PlayerId },
+                { nameof(commandItem.Message), commandItem.Message },
+            });
             
-            _logger.LogError(bex, "Business Exception");
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failure on listening to commands");
+            try
+            {
+                await _commandHandler.HandleCommand(commandItem.PlayerId, commandItem.Message);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Failed to handle command");
+            }
         }
         
-        timer.Stop();
-    }
-
-    private bool CanHandleMessage(MessageContent mc)
-    {
-        return mc.message.StartsWith("@g");
+        ReportHeartbeat();
+        Thread.Sleep(150);
     }
 }
