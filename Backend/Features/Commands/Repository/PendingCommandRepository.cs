@@ -25,7 +25,7 @@ public class PendingCommandRepository(IServiceProvider provider) : IPendingComma
             WHERE date >= @date AND message ~ '^@' AND sender_id != @id
             ORDER BY date
             """,
-            new { date = afterDateTime, id = ModBase.Bot.PlayerId }
+            new { date = afterDateTime, id = (long)ModBase.Bot.PlayerId.id }
         )).ToList();
 
         return result.Select(MapToModel);
