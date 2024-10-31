@@ -2,13 +2,16 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Common;
+using Mod.DynamicEncounters.Common.Data;
 using Mod.DynamicEncounters.Features.Loot.Data;
 using Mod.DynamicEncounters.Features.Loot.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Helpers;
-using Newtonsoft.Json;
+using NQ;
+using NQutils.Exceptions;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
@@ -47,28 +50,33 @@ public class SpawnLootForConstruct(ScriptActionItem actionItem) : IScriptAction
         
         logger.LogInformation("Spawned Loot for Construct {Construct}", context.ConstructId);
 
-        try
+        var retryOptions = RetryOptions.Default(logger);
+        retryOptions.ShouldRetryOnException =
+            ex => ex is BusinessException bex && bex.error.code == ErrorCode.InvalidSession;
+        retryOptions.OnRetryAttempt = async _ => await ModBase.Bot.Reconnect();
+
+        var elementReplacer = provider.GetRequiredService<IElementReplacerService>();
+        foreach (var replace in itemBagData.ElementsToReplace)
         {
-            var elementReplacer = provider.GetRequiredService<IElementReplacerService>();
-            foreach (var replace in itemBagData.ElementsToReplace)
+            for (var i = 0; i < replace.Quantity; i++)
             {
-                for (var i = 0; i < replace.Quantity; i++)
+                try
                 {
                     await elementReplacer.ReplaceSingleElementAsync(
                         context.ConstructId.Value,
                         replace.ElementName,
                         replace.ReplaceElementName
-                    );
+                    ).WithRetry(retryOptions);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Failed to replace elements");
                 }
             }
+        }
         
-            logger.LogInformation("Processed Element Replacements");
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Failed to Replace Elements. Rule {Rule}", JsonConvert.SerializeObject(itemBagData.ElementsToReplace));
-        }
-
+        logger.LogInformation("Processed Element Replacements");
+        
         return ScriptActionResult.Successful();
     }
 }
