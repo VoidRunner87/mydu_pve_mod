@@ -32,6 +32,9 @@ There are a lot of configurations to be made and you need technical knowledge to
 There are no plans to make this easier to use. You NEED to understand how to setup a docker container and setup a .NET application to run.
 The guide here only takes you so far into running this on a basic setup.
 
+The mod has become more than a mod. It's a multi-threaded application that has a very direct integration/dependency with MyDU. 
+Some of that is due to performance, some due to choice.
+
 * Pull the docker container: [Docker Container](https://hub.docker.com/repository/docker/voidrunner7891/dynamic_encounters/general)
 * `docker pull voidrunner7891/dynamic_encounters`
 * Add it to the docker-compose of myDU:
