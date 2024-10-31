@@ -59,7 +59,19 @@ public class MyDuMod : IMod
             nameof(InventoryReady)
         );
 
+        // hookCallManager.Register(
+        //     "RadarGrain.ScanStart",
+        //     HookMode.Replace,
+        //     this,
+        //     nameof(ScanStart)
+        // );
+
         return Task.CompletedTask;
+    }
+
+    public async Task ScanStart(IIncomingGrainCallContext context, PlayerId pid, RadarScan v)
+    {
+        await Task.Yield();
     }
 
     public async Task InventoryReady(IIncomingGrainCallContext context)
@@ -144,6 +156,10 @@ public class MyDuMod : IMod
 
         switch ((ActionType)action.actionId)
         {
+            case ActionType.SendConstructAppear:
+                var sendConstructAppearAction = new SendConstructAppearAction(_provider);
+                await sendConstructAppearAction.HandleAction(playerId, action);
+                break;
             case ActionType.InviteToParty:
                 var partyInviteRequest = action.PayloadAs<PartyRequest>();
                 await partyApi.SendPartyInvite(

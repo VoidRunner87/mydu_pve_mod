@@ -11,6 +11,7 @@ public enum ActionType
     LoadPlayerBoardApp = 1000004,
     RefreshPlayerQuestList = 1000005,
     AbandonQuest = 1000006,
+    SendConstructAppear = 1000007,
     GiveTakePlayerItems = 100,
     Interact = 101,
     FetchPlayerParty = 102,
