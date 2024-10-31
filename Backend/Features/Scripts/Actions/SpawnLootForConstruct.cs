@@ -70,7 +70,7 @@ public class SpawnLootForConstruct(ScriptActionItem actionItem) : IScriptAction
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, "Failed to replace elements");
+                    logger.LogError(e, "Failed to replace element {El} to {El2}", replace.ElementName, replace.ReplaceElementName);
                 }
             }
         }
