@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using BotLib.BotClient;
 using BotLib.Protocols;
 using BotLib.Protocols.Queuing;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Common;
