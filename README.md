@@ -1,35 +1,41 @@
 ﻿# PVE Mod for MyDU
 
+The mod has become more than a mod. 
+It's a multi-threaded application that has a very direct integration/dependency with MyDU. 
+Some of that is due to performance, some due to choice.
+
 ## Showcase Video
 
 [![image](https://github.com/user-attachments/assets/8d5a4b86-d3a2-4319-b715-9a5608dbb6bc)](https://www.youtube.com/watch?v=vlXTiFBxXbk)
-
-## Disclaimer
-
-Before starting, know this:
-* There were several hacky adjustments I had to make for this to work.
-  * UPDATE: Some of those were cleaned up
-* I first focused on getting the solution ready to run as a separate docker container.
-* After the basic functionality I envision for this mod is done, I'll start looking into optimizing the cycles "loops" that run and the code to make it cleaner and faster.
-  * UPDATE: Threading and caching greatly reduces overloading orleans
-* There is a cost of CPU to running this mod. You need a decent setup or scale down the sectors generated.
-  * UPDATE: CPU cost has been reduced with threading and caching
 
 # Advantages of Running the mod on a separate container
 
 * No need to restart the server, just the mod container
 * The way the mod import is done is via assembly load and reflection. There are LOTS of conflicts with assemblies if you need anything extra like I do on this mode (see the code). Easier to have it as a separate container
+* Freedom of .NET version and packages
+
+# Disadvantages of Running the mod on a separate container
+
+* You can't use orleans transactions. To circumvent that I made DLL mods that do use transactions and are invoked from the containerized mod
+* Higher reliance on connection and HTTP traffic. Things can error out more often than implementing as a DLL mod. To deal with that there are retries or optimization choices that avoid hitting orleans directly.
 
 # Features
 
 * Sector Spawner
-* Sector Spatial Hashing
+* Sector Spatial Hashing / Spatial Querying for Performance on NPC Radar
 * Factions
 * Faction Territory
 * Dynamic Scripts
 * Element Extended Properties
+* NPC's Missions
+* Player Group / Party
 
 # Quick Start
+
+I first called this "quick start", but by no means this is a mod that is plug and play. 
+There are a lot of configurations to be made and you need technical knowledge to keep it maintained.
+There are no plans to make this easier to use. You NEED to understand how to setup a docker container and setup a .NET application to run.
+The guide here only takes you so far into running this on a basic setup.
 
 * Pull the docker container: [Docker Container](https://hub.docker.com/repository/docker/voidrunner7891/dynamic_encounters/general)
 * `docker pull voidrunner7891/dynamic_encounters`
