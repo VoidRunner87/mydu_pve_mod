@@ -17,6 +17,7 @@ Some of that is due to performance, some due to choice.
 # Disadvantages of Running the mod on a separate container
 
 * You can't use orleans transactions. To circumvent that I made DLL mods that do use transactions and are invoked from the containerized mod
+* Higher reliance on connection and HTTP traffic. Things can error out more often than implementing as a DLL mod. To deal with there are retries or caching implemented or optimization choices that avoid hitting orleans directly.
 
 # Features
 
