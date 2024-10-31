@@ -6,8 +6,10 @@ using BotLib.Protocols.Queuing;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Mod.DynamicEncounters.Common;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Serilog.Events;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
@@ -48,6 +50,15 @@ public class MaintenanceController : Controller
 
         await clientFactory.Connect(pi, allowExisting: true);
         
+        return Ok();
+    }
+
+    [Route("loglevel/{logLevel:int}")]
+    [HttpPost]
+    public IActionResult ChangeLogLevel(int logLevel)
+    {
+        LoggingConfiguration.LoggingLevelSwitch.MinimumLevel = (LogEventLevel)logLevel;
+
         return Ok();
     }
 }

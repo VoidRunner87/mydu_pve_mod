@@ -67,7 +67,7 @@ public class SectorLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle(
         await sectorPoolManager.LoadUnloadedSectors();
         await sectorPoolManager.ActivateEnteredSectors();
 
-        logger.LogInformation("Sector Loop Action took {Time}ms", sw.ElapsedMilliseconds);
+        logger.LogDebug("Sector Loop Action took {Time}ms", sw.ElapsedMilliseconds);
     }
 
     private async Task PrepareFactionSector(FactionItem faction)
@@ -94,7 +94,7 @@ public class SectorLoop(IThreadManager tm, CancellationToken ct) : ThreadHandle(
 
             if (encounters.Count == 0)
             {
-                logger.LogInformation("No Encounters for Faction: {Faction}({Id}) Territory({Territory})", faction.Name,
+                logger.LogDebug("No Encounters for Faction: {Faction}({Id}) Territory({Territory})", faction.Name,
                     faction.Id, ft.TerritoryId);
                 continue;
             }
