@@ -9,6 +9,7 @@ export const Widget = styled.div`
     max-width: 400px;
     background-color: rgba(13, 24, 28, 0.65);
     position: absolute;
+    z-index: 5000 !important;
 `;
 
 export const WidgetHeader = styled.div`

@@ -84,7 +84,7 @@ export const Container = styled.div`
     justify-content: center;
     align-items: center;
     height: 100vh;
-    z-index: 99999999 !important;
+    width: 100vw;
 `;
 
 const CreatePartyWidgetRow = ({leader}) => {
@@ -240,7 +240,7 @@ const PartyWidget = () => {
     };
 
     return (
-        <Container>
+        <Container onMouseMove={handleMouseMove}>
             <Widget style={{left: position.x, top: position.y}} onMouseLeave={handleMouseLeave}>
                 <WidgetHeader>
                     <SettingsButton isLeader={isLeader} count={invited.length + pendingAccept.length}
@@ -249,7 +249,7 @@ const PartyWidget = () => {
                     <BackToMembersButton visible={page !== "members"} onClick={handleReturnToMembersClick}/>
                     <WidgetTitle onMouseDown={handleMouseDown}
                                  onMouseUp={handleMouseUp}
-                                 onMouseMove={handleMouseMove}>Group {isLeader}</WidgetTitle>
+                                 >Group {isLeader}</WidgetTitle>
                     <CloseWidget/>
                 </WidgetHeader>
                 <CreatePartyWidgetRow leader={leader}/>
