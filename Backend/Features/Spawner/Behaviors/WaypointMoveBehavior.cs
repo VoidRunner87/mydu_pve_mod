@@ -52,6 +52,7 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
         if (targetWaypoint != null)
         {
             context.SetAutoTargetMovePosition(targetWaypoint.Position);
+            context.SetMoveModeWaypoint();
 
             if (context.Position.HasValue)
             {
@@ -77,6 +78,12 @@ public class WaypointMoveBehavior(ulong constructId, IPrefab prefab) : IConstruc
         if (context.GetTargetMovePosition().Dist(npcPos) <= 50000 && targetWaypoint != null)
         {
             targetWaypoint.Visited = true;
+        }
+
+        // almost done braking, can move on
+        if (context.IsBraking() && context.Velocity.Size() < 1000)
+        {
+            context.SetBraking(false);
         }
     }
 

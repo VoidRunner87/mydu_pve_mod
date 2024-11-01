@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using System.Numerics;
+using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 
@@ -6,6 +8,20 @@ namespace Mod.DynamicEncounters.Common.Vector;
 
 public static class VelocityHelper
 {
+    public static double CalculateBrakingDistance(double velocity, double deceleration)
+    {
+        return Math.Pow(velocity, 2) / (2 * deceleration);
+    }
+    
+    public static bool ShouldStartBraking(Vector3 currentPosition, Vector3 targetPosition, Vector3 currentVelocity, double deceleration)
+    {
+        double remainingDistance = Vector3.Distance(currentPosition, targetPosition);
+
+        var brakingDistance = CalculateBrakingDistance(currentVelocity.Length(), deceleration);
+
+        return remainingDistance <= brakingDistance;
+    }
+    
     public static Vec3 LinearInterpolateWithVelocity(
         Vec3 start, 
         Vec3 end, 

@@ -38,6 +38,9 @@ public class BehaviorContext(
     public const string AutoSelectAttackTargetConstructProperty = "AutoSelectAttackTargetConstruct";
     public const string EnginePowerProperty = "EnginePower";
     public const string IdleSinceProperty = "IdleSince";
+    public const string V0Property = "V0";
+    public const string BrakingProperty = "Braking";
+    public const string MoveModeProperty = "MoveMode";
 
     public DateTime StartedAt { get; } = DateTime.UtcNow;
     public Vec3 Velocity { get; set; }
