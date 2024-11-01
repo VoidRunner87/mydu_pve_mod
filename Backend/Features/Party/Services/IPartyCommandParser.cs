@@ -4,5 +4,5 @@ namespace Mod.DynamicEncounters.Features.Party.Services;
 
 public interface IPartyCommandParser
 {
-    CommandHandlerOutcome Parse(ulong instigatorPlayerId, string command);
+    PartyCommandHandlerOutcome Parse(ulong instigatorPlayerId, string command);
 }

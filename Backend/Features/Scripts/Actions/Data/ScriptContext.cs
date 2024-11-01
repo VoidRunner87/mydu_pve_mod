@@ -24,7 +24,8 @@ public class ScriptContext(
     {
         return new ScriptContext(ServiceProvider, FactionId, PlayerIds, Sector, TerritoryId)
         {
-            ConstructId = constructId
+            ConstructId = constructId,
+            Properties = Properties
         };
     }
 }

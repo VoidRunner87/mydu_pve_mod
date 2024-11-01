@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,7 @@ public class ScriptRunnerController : Controller
             )
             {
                 ConstructId = request.ConstructId,
+                Properties = new ConcurrentDictionary<string, object>(request.Properties)
             }
         );
 
@@ -48,5 +50,6 @@ public class ScriptRunnerController : Controller
         public ulong? ConstructId { get; set; }
         public long FactionId { get; set; } = 1;
         public Guid? TerritoryId { get; set; }
+        public Dictionary<string, object> Properties { get; set; } = [];
     }
 }

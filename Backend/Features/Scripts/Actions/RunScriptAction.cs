@@ -23,7 +23,8 @@ public class RunScriptAction(ScriptActionItem actionItem) : IScriptAction
             actionItem.Script,
             new ScriptContext(provider, context.FactionId, context.PlayerIds, context.Sector, context.TerritoryId)
             {
-                ConstructId = context.ConstructId
+                ConstructId = context.ConstructId,
+                Properties = context.Properties
             }
         );
     }

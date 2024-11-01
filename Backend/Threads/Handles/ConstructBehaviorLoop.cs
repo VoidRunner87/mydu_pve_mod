@@ -122,6 +122,9 @@ public class ConstructBehaviorLoop : HighTickModLoop
                         _provider,
                         constructDef
                     )
+                    {
+                        Properties = new ConcurrentDictionary<string, object>(handleItem.JsonProperties.Context)
+                    }
                 )
             );
 

@@ -31,7 +31,7 @@ public static class BehaviorContextNotificationExtensions
                 eventArgs.Context.TerritoryId
             )
             {
-                ConstructId = eventArgs.ConstructId
+                ConstructId = eventArgs.ConstructId,
             }
         );
 

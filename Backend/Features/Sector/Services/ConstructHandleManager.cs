@@ -63,7 +63,9 @@ public class ConstructHandleManager(IServiceProvider provider) : IConstructHandl
                         null // TODO TerritoryId
                     )
                     {
-                        ConstructId = handle.ConstructId
+                        ConstructId = handle.ConstructId,
+                        // TODO Properties for Cleanup Script
+                        // Properties = handle.
                     }
                 );
 

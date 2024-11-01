@@ -10,7 +10,7 @@ namespace Mod.DynamicEncounters.Features.Party.Services;
 
 public class PartyCommandParser : IPartyCommandParser
 {
-    public CommandHandlerOutcome Parse(ulong instigatorPlayerId, string command)
+    public PartyCommandHandlerOutcome Parse(ulong instigatorPlayerId, string command)
     {
         var pieces = new Queue<string>();
         var sb = new StringBuilder();
@@ -46,7 +46,7 @@ public class PartyCommandParser : IPartyCommandParser
         switch (subCommand)
         {
             case "help":
-                return CommandHandlerOutcome.Execute(async _ =>
+                return PartyCommandHandlerOutcome.Execute(async _ =>
                 {
                     var messages = new List<string>
                     {
@@ -82,7 +82,7 @@ public class PartyCommandParser : IPartyCommandParser
                     return PartyOperationOutcome.Successful("Check DM for Help");
                 });
             case "open":
-                return CommandHandlerOutcome.Execute(
+                return PartyCommandHandlerOutcome.Execute(
                     async _ =>
                     {
                         await ModBase.ServiceProvider.GetOrleans().GetModManagerGrain()
@@ -94,71 +94,71 @@ public class PartyCommandParser : IPartyCommandParser
             case "accept":
                 if (pieces.Count == 0)
                 {
-                    return CommandHandlerOutcome.Execute(service =>
+                    return PartyCommandHandlerOutcome.Execute(service =>
                         service.AcceptPartyInvite(instigatorPlayerId)
                     );
                 }
 
-                return CommandHandlerOutcome.Execute(service =>
+                return PartyCommandHandlerOutcome.Execute(service =>
                     service.AcceptPartyRequest(instigatorPlayerId, pieces.Dequeue())
                 );
             case "reject":
                 if (pieces.Count == 0)
                 {
-                    return CommandHandlerOutcome.Failed("Missing player to reject. Ie: @reject PlayerName");
+                    return PartyCommandHandlerOutcome.Failed("Missing player to reject. Ie: @reject PlayerName");
                 }
 
-                return CommandHandlerOutcome.Execute(service =>
+                return PartyCommandHandlerOutcome.Execute(service =>
                     service.CancelPartyInviteRequest(instigatorPlayerId, pieces.Dequeue())
                 );
             case "join":
                 if (pieces.Count == 0)
                 {
-                    return CommandHandlerOutcome.Failed("Missing player to join. Ie: @join PlayerName");
+                    return PartyCommandHandlerOutcome.Failed("Missing player to join. Ie: @join PlayerName");
                 }
 
-                return CommandHandlerOutcome.Execute(service =>
+                return PartyCommandHandlerOutcome.Execute(service =>
                     service.RequestJoinParty(instigatorPlayerId, pieces.Dequeue()));
             case "invite":
                 if (pieces.Count == 0)
                 {
-                    return CommandHandlerOutcome.Failed("Missing player to invite. Ie: @invite PlayerName");
+                    return PartyCommandHandlerOutcome.Failed("Missing player to invite. Ie: @invite PlayerName");
                 }
 
-                return CommandHandlerOutcome.Execute(service =>
+                return PartyCommandHandlerOutcome.Execute(service =>
                     service.InviteToParty(instigatorPlayerId, pieces.Dequeue()));
             case "kick":
                 if (pieces.Count == 0)
                 {
-                    return CommandHandlerOutcome.Failed("Missing player to kick. Ie: @kick PlayerName");
+                    return PartyCommandHandlerOutcome.Failed("Missing player to kick. Ie: @kick PlayerName");
                 }
 
-                return CommandHandlerOutcome.Execute(service =>
+                return PartyCommandHandlerOutcome.Execute(service =>
                     service.KickPartyMember(instigatorPlayerId, pieces.Dequeue()));
             case "promote":
                 if (pieces.Count == 0)
                 {
-                    return CommandHandlerOutcome.Failed("Missing player to promote. Ie: @promote PlayerName");
+                    return PartyCommandHandlerOutcome.Failed("Missing player to promote. Ie: @promote PlayerName");
                 }
 
-                return CommandHandlerOutcome.Execute(service =>
+                return PartyCommandHandlerOutcome.Execute(service =>
                     service.PromoteToPartyLeader(instigatorPlayerId, pieces.Dequeue()));
             case "decline":
             case "cancel":
             case "leave":
-                return CommandHandlerOutcome.Execute(service => service.LeaveParty(instigatorPlayerId));
+                return PartyCommandHandlerOutcome.Execute(service => service.LeaveParty(instigatorPlayerId));
             case "disband":
-                return CommandHandlerOutcome.Execute(service => service.DisbandParty(instigatorPlayerId));
+                return PartyCommandHandlerOutcome.Execute(service => service.DisbandParty(instigatorPlayerId));
             case "role":
                 if (pieces.Count == 0)
                 {
-                    return CommandHandlerOutcome.Failed("Missing role. Ie: @role commander");
+                    return PartyCommandHandlerOutcome.Failed("Missing role. Ie: @role commander");
                 }
                 
-                return CommandHandlerOutcome.Execute(service => 
+                return PartyCommandHandlerOutcome.Execute(service => 
                     service.SetPlayerPartyRole(instigatorPlayerId, pieces.Dequeue()));
         }
 
-        return CommandHandlerOutcome.Failed("Invalid Command");
+        return PartyCommandHandlerOutcome.Failed("Invalid Command");
     }
 }

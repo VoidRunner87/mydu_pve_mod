@@ -34,7 +34,8 @@ public class RepeatAction(ScriptActionItem actionItem) : IScriptAction
                     context.TerritoryId
                 )
                 {
-                    ConstructId = context.ConstructId
+                    ConstructId = context.ConstructId,
+                    Properties = context.Properties
                 }
             );
         }

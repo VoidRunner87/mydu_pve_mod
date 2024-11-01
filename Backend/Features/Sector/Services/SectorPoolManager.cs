@@ -275,6 +275,10 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                         sector.Sector,
                         sector.TerritoryId
                     )
+                    {
+                        // TODO properties for OnLoadScript
+                        // Properties = 
+                    }
                 ).OnError(exception =>
                 {
                     _logger.LogError(exception, "Failed to Execute On Load Script (Aggregate)");
@@ -451,7 +455,9 @@ public class SectorPoolManager(IServiceProvider serviceProvider) : ISectorPoolMa
                     sectorInstance.TerritoryId
                 )
                 {
-                    PlayerIds = playerIds
+                    PlayerIds = playerIds,
+                    // TODO Properties for OnSectorEnterScript
+                    // Properties = 
                 }
             );
 

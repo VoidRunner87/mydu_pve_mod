@@ -4,21 +4,21 @@ using Mod.DynamicEncounters.Features.Party.Interfaces;
 
 namespace Mod.DynamicEncounters.Features.Party.Data;
 
-public class CommandHandlerOutcome
+public class PartyCommandHandlerOutcome
 {
     public bool Success { get; set; }
     public Func<IPlayerPartyService, Task<PartyOperationOutcome>> Action { get; set; }
 
-    public static CommandHandlerOutcome Failed(string message)
+    public static PartyCommandHandlerOutcome Failed(string message)
     {
-        return new CommandHandlerOutcome
+        return new PartyCommandHandlerOutcome
         {
             Success = false,
             Action = _ => Task.FromResult(PartyOperationOutcome.Failed(message))
         };
     }
 
-    public static CommandHandlerOutcome Execute(Func<IPlayerPartyService, Task<PartyOperationOutcome>> action)
+    public static PartyCommandHandlerOutcome Execute(Func<IPlayerPartyService, Task<PartyOperationOutcome>> action)
         => new()
         {
             Success = true,

@@ -28,7 +28,7 @@ public class GiveElementSkinToPlayer(ScriptActionItem actionItem) : IScriptActio
 
         var playerService = provider.GetRequiredService<IPlayerService>();
 
-        context.TryGetPropertyParsedAs("Skins", out var skinItems, new List<ElementSkinItem>());
+        context.TryGetProperty("Skins", out var skinItems, new List<ElementSkinItem>());
 
         if (skinItems.Count == 0)
         {

@@ -46,7 +46,8 @@ public class ForEachConstructHandleTaggedOnSectorAction(
                 context.TerritoryId
             )
             {
-                ConstructId = handleItem.ConstructId
+                ConstructId = handleItem.ConstructId,
+                Properties = context.Properties
             };
 
             await scriptAction.ExecuteAsync(itemContext);
