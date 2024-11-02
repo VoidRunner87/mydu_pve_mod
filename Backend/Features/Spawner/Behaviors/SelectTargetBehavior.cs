@@ -61,7 +61,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         var targetConstructId = context.GetTargetConstructId();
 
         var targetSpan = DateTime.UtcNow - context.TargetSelectedTime;
-        if (targetSpan < TimeSpan.FromSeconds(10))
+        if (context.IsMoveModeDefault() && targetSpan < TimeSpan.FromSeconds(10))
         {
             context.SetAutoTargetMovePosition(await GetTargetMovePosition(targetConstructId));
 
