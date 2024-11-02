@@ -59,7 +59,10 @@ public class TaskQueueService(IServiceProvider provider) : ITaskQueueService
                         [..playerIds],
                         scriptActionItem.Sector ?? new Vec3(),
                         scriptActionItem.TerritoryId
-                    );
+                    )
+                    {
+                        ConstructId = scriptActionItem.ConstructId
+                    };
                     
                     context.AddProperties(scriptActionItem.Properties);
                     

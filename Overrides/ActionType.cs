@@ -12,6 +12,8 @@ public enum ActionType
     RefreshPlayerQuestList = 1000005,
     AbandonQuest = 1000006,
     SendConstructAppear = 1000007,
+    RemoveConstructBuffs = 1000008,
+    UpgradeConstructBuffs = 1000009,
     GiveTakePlayerItems = 100,
     Interact = 101,
     FetchPlayerParty = 102,

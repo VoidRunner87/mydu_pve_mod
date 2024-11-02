@@ -354,6 +354,14 @@ public class MyDuMod : IMod
                 await Notifications.SimpleNotificationToPlayer(_provider, playerId, "Mission abandoned");
 
                 break;
+            case ActionType.RemoveConstructBuffs:
+                var removeConstructBuffsAction = new RemoveConstructBuffsAction(_provider);
+                await removeConstructBuffsAction.HandleAction(playerId, action);
+                break;
+            case ActionType.UpgradeConstructBuffs:
+                var upgradeConstructBuffs = new UpgradeConstructAction(_provider);
+                await upgradeConstructBuffs.HandleAction(playerId, action);
+                break;
         }
     }
 
