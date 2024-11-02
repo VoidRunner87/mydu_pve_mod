@@ -95,7 +95,7 @@ public class MaintenanceController : Controller
             await taskQueueService.EnqueueScript(
                 new ScriptActionItem
                 {
-                    Script = "remove-buffs",
+                    Type = "remove-buffs",
                     ConstructId = constructId
                 },
                 DateTime.UtcNow
@@ -104,7 +104,7 @@ public class MaintenanceController : Controller
             await taskQueueService.EnqueueScript(
                 new ScriptActionItem
                 {
-                    Script = "buff",
+                    Type = "buff",
                     ConstructId = constructId
                 },
                 DateTime.UtcNow
