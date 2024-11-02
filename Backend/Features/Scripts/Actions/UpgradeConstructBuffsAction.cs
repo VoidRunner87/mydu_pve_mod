@@ -32,6 +32,7 @@ public class UpgradeConstructBuffsAction(ScriptActionItem actionItem) : IScriptA
             ModBase.Bot.PlayerId,
             new ModAction
             {
+                modName = "Mod.DynamicEncounters",
                 actionId = 1000009,
                 constructId = context.ConstructId.Value
             }

@@ -32,6 +32,7 @@ public class RemoveConstructBuffsAction(ScriptActionItem actionItem) : IScriptAc
             ModBase.Bot.PlayerId,
             new ModAction
             {
+                modName = "Mod.DynamicEncounters",
                 actionId = 1000008,
                 constructId = context.ConstructId.Value
             }

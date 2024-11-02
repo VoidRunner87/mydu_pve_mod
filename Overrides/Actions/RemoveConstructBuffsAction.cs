@@ -23,6 +23,8 @@ public class RemoveConstructBuffsAction(IServiceProvider provider) : IModActionH
         var logger = provider.GetRequiredService<ILoggerFactory>()
             .CreateLogger<RemoveConstructBuffsAction>();
 
+        logger.LogInformation("Begin Removing Buffs for {Construct}", action.constructId);
+        
         foreach (var elementId in elementIds)
         {
             var element = await constructElementsGrain.GetElement(elementId);
