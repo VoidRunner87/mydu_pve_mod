@@ -121,6 +121,7 @@ public class ModBase
             })
             .AddSingleton<ISql, Sql>()
             .AddSingleton<IYamlDeserializer, YamlDeserializer>()
+            .AddSingleton<IDateTimeProvider, DefaultDateTimeProvider>()
             .AddInitializableSingleton<IGameplayBank, GameplayBank>()
             .AddSingleton<ILocalizationManager, LocalizationManager>()
             .AddTransient<IDataAccessor, DataAccessor>()

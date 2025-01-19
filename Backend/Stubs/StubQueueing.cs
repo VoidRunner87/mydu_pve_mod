@@ -91,7 +91,7 @@ public class StubRealQueuing : IQueuing
     public async Task<QueueingStreamedData> WaitInQueue(LoginInformations li)
     {
         var response = await _httpClient.PostAsync(_address + "/public/auth/bot",
-            HTTPClientExtensions.SerializeContent((object)li.MakeQueuingRequest(await GetProtocolInfo()), false));
+            HTTPClientExtensions.SerializeContent(li.MakeQueuingRequest(await GetProtocolInfo()), false));
         if (response.StatusCode != HttpStatusCode.OK)
         {
             var s = await response.Content.ReadAsStringAsync();
@@ -161,10 +161,7 @@ public class StubRealQueuing : IQueuing
 
                 return eventStreamData;
             default:
-                var interpolatedStringHandler = new StringBuilder(43, 1);
-                interpolatedStringHandler.Append("Unknown content type in queuing response : ");
-                interpolatedStringHandler.Append(response.Content.Headers.ContentType);
-                throw new Exception(interpolatedStringHandler.ToString());
+                throw new Exception($"Unknown content type in queuing response: {response.Content.Headers.ContentType}");
         }
     }
 

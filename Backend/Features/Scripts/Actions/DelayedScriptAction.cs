@@ -6,8 +6,8 @@ using Mod.DynamicEncounters.Features.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
-using Mod.DynamicEncounters.Features.Spawner.Extensions;
 using Mod.DynamicEncounters.Features.TaskQueue.Interfaces;
+using Newtonsoft.Json;
 
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
@@ -26,18 +26,14 @@ public class DelayedScriptAction(ScriptActionItem actionItem) : IScriptAction
         var taskQueueService = provider.GetRequiredService<ITaskQueueService>();
 
         var delaySecondsDefault = await featureService.GetIntValueAsync("POIDespawnDelaySeconds", 60 * 5);
-        var delaySeconds = context.Properties.GetOrDefault("DelaySeconds", delaySecondsDefault);
-        var delayResult = delaySecondsDefault;
         
-        if (int.TryParse($"{delaySeconds}", out var delayInt))
-        {
-            delayResult = delayInt;
-        }
-
         foreach (var kvp in actionItem.Properties)
         {
             context.Properties.TryAdd(kvp.Key, kvp.Value);
         }
+        
+        var properties = context.GetProperties<Properties>();
+        var delayResult = properties.DelaySeconds ?? delaySecondsDefault;
 
         await taskQueueService.EnqueueScript(
             new ScriptActionItem
@@ -52,5 +48,10 @@ public class DelayedScriptAction(ScriptActionItem actionItem) : IScriptAction
         );
 
         return ScriptActionResult.Successful();
+    }
+
+    public class Properties
+    {
+        [JsonProperty] public int? DelaySeconds { get; set; }
     }
 }

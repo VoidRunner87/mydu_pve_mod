@@ -1,6 +1,7 @@
 ﻿using Backend.Scenegraph;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Common.Interfaces;
+using Mod.DynamicEncounters.Common.Services;
 using Mod.DynamicEncounters.Features.Common.Data;
 using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors;
@@ -94,6 +95,7 @@ public class AggressiveBehaviorTests
         services.AddSingleton(constructService);
         services.AddSingleton(voxelServiceClient);
         services.AddSingleton(sceneGraph);
+        services.AddSingleton<IDateTimeProvider>(new DefaultDateTimeProvider());
         services.AddLogging();
 
         var provider = services.BuildServiceProvider();

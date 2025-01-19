@@ -1,6 +1,6 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Backend;
 using Backend.Database;
@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Helpers;
 using NQ;
 using NQ.Interfaces;
+using NQutils.Def;
 using NQutils.Sql;
 using Services;
 
@@ -17,6 +18,95 @@ namespace Mod.DynamicEncounters.Api.Controllers;
 [Route("element")]
 public class ElementController : Controller
 {
+    [HttpGet]
+    [Route("fueltank")]
+    public IActionResult GetFuelTanks()
+    {
+        var provider = ModBase.ServiceProvider;
+        var bank = provider.GetGameplayBank();
+
+        var fuelContainer = bank.GetDefinition<FuelContainer>();
+
+        var items = new List<Dictionary<string, object>>();
+
+        AddFuelTankItem(fuelContainer, items);
+
+        return Ok(items);
+    }
+
+    [HttpGet]
+    [Route("engine")]
+    public IActionResult GetEngines()
+    {
+        var provider = ModBase.ServiceProvider;
+        var bank = provider.GetGameplayBank();
+
+        var atmoEngine = bank.GetDefinition<AtmosphericEngine>();
+        var spaceEngine = bank.GetDefinition<SpaceEngine>();
+        var rocketEngine = bank.GetDefinition<RocketEngine>();
+
+        var items = new List<Dictionary<string, object>>();
+
+        AddEngineItem(atmoEngine, items);
+        AddEngineItem(spaceEngine, items);
+        AddEngineItem(rocketEngine, items);
+
+        return Ok(items);
+    }
+
+    private void AddFuelTankItem(IGameplayDefinition item, List<Dictionary<string, object>> map)
+    {
+        var children = item.GetChildren().ToList();
+
+        if (children.Count == 0)
+        {
+            if (item.BaseObject is FuelContainer fuelContainer)
+            {
+                map.Add(new Dictionary<string, object>
+                {
+                    { "id", item.Id },
+                    { "name", item.Name },
+                    { "maxVolume", fuelContainer.maxVolume },
+                    { "unitMass", fuelContainer.unitMass },
+                    { "hitpoints", fuelContainer.hitpoints },
+                    { "scale", fuelContainer.scale },
+                });
+            }
+
+            return;
+        }
+
+        foreach (var child in children)
+        {
+            AddFuelTankItem(child, map);
+        }
+    }
+
+    private void AddEngineItem(IGameplayDefinition item, List<Dictionary<string, object>> map)
+    {
+        var children = item.GetChildren().ToList();
+
+        if (children.Count == 0)
+        {
+            if (item.BaseObject is EngineDisplay engine)
+            {
+                map.Add(new Dictionary<string, object>
+                {
+                    { "Name", item.Name },
+                    { "FuelRate", engine.fuelRate },
+                    { "MaxPower", engine.maxPower },
+                });
+            }
+
+            return;
+        }
+
+        foreach (var child in children)
+        {
+            AddEngineItem(child, map);
+        }
+    }
+
     [HttpGet]
     [Route("databank/construct/{constructId:long}/element/{elementId:long}")]
     public async Task<IActionResult> GetDataBankData(ulong constructId, ulong elementId)
@@ -52,7 +142,7 @@ public class ElementController : Controller
 
         var constructInfoGrain = orleans.GetConstructInfoGrain(constructId);
         var info = await constructInfoGrain.Get();
-        
+
         foreach (var elementInfo in elements)
         {
             var bbox = elementBoundingBox.GetBoundingBoxInConstruct(
@@ -65,12 +155,13 @@ public class ElementController : Controller
             list.Add(bbox);
         }
 
-        return Ok(new {
+        return Ok(new
+        {
             V1 = CalculateEncompassingBoundingBox(list),
             V2 = constructBoundingBox.GetConstructBoundingBox(constructId)
         });
     }
-    
+
     public static BoundingBox CalculateEncompassingBoundingBox(List<BoundingBox> boxes)
     {
         if (boxes == null || boxes.Count == 0)

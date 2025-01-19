@@ -19,11 +19,11 @@ public class ScriptContext(
     public Vec3 Sector { get; set; } = sector;
     public ulong? ConstructId { get; set; }
     public Guid? TerritoryId { get; set; } = territoryId;
-    public event EventHandler<ScriptContextEventArgs> OnEvent;
+    public event EventHandler<ScriptContextEventArgs>? OnEvent;
 
     public void RaiseEvent(ScriptContextEventArgs eventArgs)
     {
-        OnEvent(this, eventArgs);
+        OnEvent?.Invoke(this, eventArgs);
     }
 
     public ScriptContext WithConstructId(ulong constructId)

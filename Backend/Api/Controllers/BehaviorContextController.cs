@@ -63,8 +63,17 @@ public class BehaviorContextController : Controller
             return NotFound($"{propName} not found");
         }
 
-        var propValueTyped = req.ToObject(property.GetType());
-        property.SetValue(context, propValueTyped);
+        var propType = property.GetType();
+        
+        try
+        {
+            var propValueTyped = req.ToObject(propType);
+            property.SetValue(context, propValueTyped);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(new { message = $"Failed to set '{propName}' of type '{propType}'", exception = e });
+        }
         
         return Ok();
     }

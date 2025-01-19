@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Behaviors.Skills.Services;
 
-public class ProduceItemsWhenSafeSkill(ProduceItemsWhenSafeSkill.ProduceItemsWhenSafeSkillItem skillItem) : GiveTakeItemSkill(skillItem)
+public class ProduceLootWhenSafeSkill(ProduceLootWhenSafeSkill.ProduceLootWhenSafe skillItem) : GiveTakeLootSkill(skillItem)
 {
     public override async Task Use(BehaviorContext context)
     {
@@ -41,13 +41,13 @@ public class ProduceItemsWhenSafeSkill(ProduceItemsWhenSafeSkill.ProduceItemsWhe
         await base.Use(context);
     }
 
-    public new static ProduceItemsWhenSafeSkill Create(JToken jObj)
+    public new static ProduceLootWhenSafeSkill Create(JToken jObj)
     {
-        return new ProduceItemsWhenSafeSkill(jObj.ToObject<ProduceItemsWhenSafeSkillItem>());
+        return new ProduceLootWhenSafeSkill(jObj.ToObject<ProduceLootWhenSafe>());
     }
     
-    public class ProduceItemsWhenSafeSkillItem : GiveTakeItemSkillItem
+    public class ProduceLootWhenSafe : GiveTakeLootSkillItem
     {
-        [JsonProperty] public double AreScanRange { get; set; } = DistanceHelpers.OneSuInMeters * 8D;
+        [JsonProperty] public double AreScanRange { get; set; } = DistanceHelpers.OneSuInMeters * 3D;
     }
 }

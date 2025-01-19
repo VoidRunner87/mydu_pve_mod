@@ -30,7 +30,10 @@ public class AreaScanService(IServiceProvider provider) : IAreaScanService
              SELECT 
                  C.id, 
                  C.name, 
-                 ST_3DDistance(C.position, ST_MakePoint({VectorToSql(position)})) as distance 
+                 ST_3DDistance(C.position, ST_MakePoint({VectorToSql(position)})) as distance,
+                 C.position_x,
+                 C.position_y,
+                 C.position_z
              FROM public.construct C
              INNER JOIN public.ownership O ON O.id = C.owner_entity_id
              LEFT JOIN mod_npc_construct_handle CH ON (CH.construct_id = C.id)
@@ -64,8 +67,11 @@ public class AreaScanService(IServiceProvider provider) : IAreaScanService
             $"""
              SELECT 
                  C.id, 
-                 FORMAT('[%s] %s', C.id, C.name) name, 
-                 ST_3DDistance(C.position, ST_MakePoint({VectorToSql(position)})) as distance 
+                 FORMAT('[%s] %s', C.id, C.name) as name, 
+                 ST_3DDistance(C.position, ST_MakePoint({VectorToSql(position)})) as distance,
+                 C.position_x,
+                 C.position_y,
+                 C.position_z
              FROM public.construct C
              INNER JOIN public.ownership O ON O.id = C.owner_entity_id
              INNER JOIN mod_npc_construct_handle CH ON (CH.construct_id = C.id)
@@ -162,7 +168,13 @@ public class AreaScanService(IServiceProvider provider) : IAreaScanService
         return new ScanContact(
             row.name,
             (ulong)row.id,
-            row.distance
+            row.distance,
+            new Vec3
+            {
+                x = row.position_x,
+                y = row.position_y,
+                z = row.position_z
+            }
         );
     }
 
@@ -176,5 +188,8 @@ public class AreaScanService(IServiceProvider provider) : IAreaScanService
         public long id { get; set; }
         public string name { get; set; }
         public double distance { get; set; }
+        public double position_x { get; set; }
+        public double position_y { get; set; }
+        public double position_z { get; set; }
     }
 }

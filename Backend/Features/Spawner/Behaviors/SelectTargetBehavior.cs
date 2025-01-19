@@ -34,6 +34,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
     private IAreaScanService _areaScanService;
     private IConstructDamageService _constructDamageService;
     private IVoxelServiceClient _pveVoxelService;
+    private ISafeZoneService _safeZoneService;
 
     public bool IsActive() => _active;
 
@@ -51,6 +52,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
         _sectorPoolManager = provider.GetRequiredService<ISectorPoolManager>();
         _areaScanService = provider.GetRequiredService<IAreaScanService>();
         _pveVoxelService = provider.GetRequiredService<IVoxelServiceClient>();
+        _safeZoneService = provider.GetRequiredService<ISafeZoneService>();
 
         return Task.CompletedTask;
     }
@@ -95,6 +97,8 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
 
         if (context.Position.HasValue)
         {
+            var safeZones = await _safeZoneService.GetSafeZones();
+            
             var spatialQuerySw = new StopWatch();
             spatialQuerySw.Start();
 
@@ -103,6 +107,7 @@ public class SelectTargetBehavior(ulong constructId, IPrefab prefab) : IConstruc
                     context.Position.Value,
                     DistanceHelpers.OneSuInMeters * 8
                 ))
+                .Where(c => !safeZones.Any(sz => sz.IsPointInside(c.Position)))
                 .ToList();
 
             await Task.WhenAll(radarContacts

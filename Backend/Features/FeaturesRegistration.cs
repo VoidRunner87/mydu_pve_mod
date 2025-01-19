@@ -41,6 +41,7 @@ public static class FeaturesRegistration
         services.AddSingleton<IBlueprintSpawnerService, BlueprintSpawnerService>();
         services.AddSingleton<IAsteroidService, AsteroidService>();
         services.AddSingleton<IConstructRepository, ConstructRepository>();
+        services.AddSingleton<ISafeZoneService, SafeZoneService>();
         services.AddSingleton<IConstructService>(p =>
             new CachedConstructService(
                 new ConstructService(p),

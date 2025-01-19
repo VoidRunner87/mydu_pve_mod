@@ -12,14 +12,14 @@ public abstract class HighTickModLoop : BackgroundService
 {
     private StopWatch _stopWatch = new();
     private DateTime _lastTickTime;
-    private readonly int _framesPerSecond;
+    private readonly double _framesPerSecond;
     private readonly bool _fixedStep;
     private const double FixedDeltaTime = 1 / 20d;
     private const int MaxFixedStepLoops = 10;
     private TimeSpan _accumulatedTime = TimeSpan.Zero;
 
     protected HighTickModLoop(
-        int framesPerSecond, 
+        double framesPerSecond, 
         bool fixedStep
     )
     {
@@ -54,7 +54,7 @@ public abstract class HighTickModLoop : BackgroundService
         }
     }
 
-    public Task Tick(CancellationToken stoppingToken)
+    private Task Tick(CancellationToken stoppingToken)
     {
         if (stoppingToken.IsCancellationRequested) return Task.CompletedTask;
         

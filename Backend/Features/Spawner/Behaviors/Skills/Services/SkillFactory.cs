@@ -31,9 +31,9 @@ public class SkillFactory(IServiceProvider provider) : ISkillFactory
             case "roam-asteroids":
                 return AsteroidRoamSkill.Create(jObj);
             case "give-take-items":
-                return GiveTakeItemSkill.Create(jObj);
+                return GiveTakeLootSkill.Create(jObj);
             case "produce-when-safe":
-                return ProduceItemsWhenSafeSkill.Create(jObj);
+                return ProduceLootWhenSafeSkill.Create(jObj);
             case "scenario-facility-strike":
                 return FacilityStrikeScenarioSkill.Create(jObj);
             case "run-away":

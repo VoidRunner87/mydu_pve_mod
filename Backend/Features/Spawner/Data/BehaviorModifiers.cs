@@ -1,4 +1,5 @@
 using Mod.DynamicEncounters.Helpers;
+using Newtonsoft.Json;
 
 namespace Mod.DynamicEncounters.Features.Spawner.Data;
 
@@ -39,6 +40,9 @@ public class BehaviorModifiers
             = new() { Negative = 1d, Positive = 1d };
 
         public double GetFarDistanceM() => FarDistanceSu * DistanceHelpers.OneSuInMeters;
+        
+        [JsonProperty] public double OutsideOptimalRange2XAlpha { get; set; } = 2;
+        [JsonProperty] public double OutsideOptimalRangeAlpha { get; set; } = 4;
     }
 
     public struct ModifierByDotProduct

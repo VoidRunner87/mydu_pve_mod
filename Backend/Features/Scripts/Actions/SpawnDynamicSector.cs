@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -7,6 +8,8 @@ using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Services;
 using Mod.DynamicEncounters.Features.Sector.Data;
 using Mod.DynamicEncounters.Features.Sector.Interfaces;
+using Mod.DynamicEncounters.Features.Sector.Services;
+using Mod.DynamicEncounters.Features.Spawner.Extensions;
 using Mod.DynamicEncounters.Helpers;
 using Newtonsoft.Json;
 using NQ;
@@ -14,7 +17,7 @@ using NQ;
 namespace Mod.DynamicEncounters.Features.Scripts.Actions;
 
 [ScriptActionName(ActionName)]
-public class SpawnDynamicSector : IScriptAction
+public class SpawnDynamicSector(ScriptActionItem actionItem) : IScriptAction
 {
     public const string ActionName = "spawn-sector";
     public string Name => ActionName;
@@ -26,19 +29,22 @@ public class SpawnDynamicSector : IScriptAction
         var logger = provider.CreateLogger<SpawnDynamicSector>();
         var sectorInstanceRepository = provider.GetRequiredService<ISectorInstanceRepository>();
 
-        var props = context.GetProperties<Properties>();
+        actionItem.Properties.Merge(context.Properties.ToDictionary());
+        var props = actionItem.GetProperties<Properties>();
 
-        if (!context.TerritoryId.HasValue)
+        var territoryId = context.TerritoryId ?? actionItem.TerritoryId;
+        
+        if (!territoryId.HasValue)
         {
             logger.LogError("Missing Territory on Sector Instance Spawn");
             
             return ScriptActionResult.Failed();
         }
-        
+
         await sectorInstanceRepository.AddAsync(new SectorInstance
         {
             Name = props.Name,
-            Sector = props.Position ?? context.Sector,
+            Sector = (props.Position ?? context.Sector).GridSnap(props.SectorSize),
             FactionId = context.FactionId ?? 1,
             PublishAt = props.PublishTimeSpan.HasValue ? DateTime.UtcNow + props.PublishTimeSpan : null,
             ExpiresAt = DateTime.UtcNow + props.ExpirationTimeSpan,
@@ -46,7 +52,7 @@ public class SpawnDynamicSector : IScriptAction
             Id = Guid.NewGuid(),
             OnLoadScript = props.OnLoadScript,
             OnSectorEnterScript = props.OnSectorEnterScript,
-            TerritoryId = context.TerritoryId.Value,
+            TerritoryId = territoryId.Value,
             Properties = new SectorInstanceProperties
             {
                 Tags = props.Tags,
@@ -68,5 +74,6 @@ public class SpawnDynamicSector : IScriptAction
         [JsonProperty] public string[] Tags { get; set; } = [];
         [JsonProperty] public bool HasActiveMarker { get; set; }
         [JsonProperty] public string Name { get; set; } = string.Empty;
+        [JsonProperty] public double SectorSize { get; set; } = SectorPoolManager.SectorGridSnap;
     }
 }

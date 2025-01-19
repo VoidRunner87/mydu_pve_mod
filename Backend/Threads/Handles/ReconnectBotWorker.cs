@@ -17,7 +17,7 @@ public class ReconnectBotWorker : BackgroundService
             {
                 var timeoutCts = new CancellationTokenSource(TimeSpan.FromMinutes(1));
                 var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, timeoutCts.Token);
-            
+
                 await Tick(cts.Token);
                 await Task.Delay(TimeSpan.FromMilliseconds(100), stoppingToken);
             }
@@ -37,14 +37,14 @@ public class ReconnectBotWorker : BackgroundService
         }
 
         var logger = ModBase.ServiceProvider.CreateLogger<ReconnectBotWorker>();
-        
+
         try
         {
             logger.LogWarning("Reconnecting Bot");
-            
+
             await ModBase.Bot.Reconnect();
             ConstructBehaviorContextCache.RaiseBotReconnected();
-            
+
             logger.LogWarning("Reconnected Bot");
         }
         catch (Exception e)

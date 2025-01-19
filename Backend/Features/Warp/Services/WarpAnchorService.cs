@@ -218,6 +218,11 @@ public class WarpAnchorService(IServiceProvider provider) : IWarpAnchorService
             }
         }
 
+        var direction = (position - constructPos).Normalized();
+        var offsetPos = direction * command.Offset;
+
+        position += offsetPos;
+        
         var contacts = await _areaScanService.ScanForPlanetaryBodies(position, 0.25d * DistanceHelpers.OneSuInMeters);
         if (contacts.Any())
         {

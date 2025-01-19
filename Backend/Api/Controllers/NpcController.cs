@@ -5,23 +5,53 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Api.Controllers.Validators;
-using Mod.DynamicEncounters.Common;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Extensions;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
+using NQ;
 using Swashbuckle.AspNetCore.Annotations;
 using NameSanitationHelper = Mod.DynamicEncounters.Common.Helpers.NameSanitationHelper;
 
 namespace Mod.DynamicEncounters.Api.Controllers;
 
 [Route("npc")]
-public class NpcController(IServiceProvider provider) : Controller
+public class NpcController : Controller
 {
     private readonly IPrefabItemRepository _repository =
-        provider.GetRequiredService<IPrefabItemRepository>();
+        ModBase.ServiceProvider.GetRequiredService<IPrefabItemRepository>();
 
     private readonly AddNpcRequestValidator _validator = new();
 
+    [HttpPost]
+    [Route("delete-by-sector")]
+    public async Task<IActionResult> DeleteConstructsBySector([FromBody] DeleteNpcsOnAreaRequest request)
+    {
+        var provider = ModBase.ServiceProvider;
+        var areaScanService = provider.GetRequiredService<IAreaScanService>();
+
+        var contacts = await areaScanService.ScanForNpcConstructs(request.Position, request.Radius, request.Limit);
+
+        foreach (var contact in contacts)
+        {
+            await provider.GetScriptAction(new ScriptActionItem
+            {
+                Type = "delete",
+                ConstructId = contact.ConstructId
+            }).ExecuteAsync(new ScriptContext(provider, 1, [], new Vec3(), null));
+        }
+        
+        return Ok(contacts);
+    }
+
+    public class DeleteNpcsOnAreaRequest
+    {
+        public Vec3 Position { get; set; }
+        public double Radius { get; set; }
+        public int Limit { get; set; } = 20;
+    }
+    
     [SwaggerOperation("Adds an NPC prefab and script to the system")]
     [HttpPost]
     [Route("")]
@@ -68,7 +98,7 @@ public class NpcController(IServiceProvider provider) : Controller
 
         await _repository.AddAsync(prefab);
 
-        var scriptActionItemRepository = provider.GetRequiredService<IScriptActionItemRepository>();
+        var scriptActionItemRepository = ModBase.ServiceProvider.GetRequiredService<IScriptActionItemRepository>();
 
         var lootActions = request.LootList
             .Select(x => new ScriptActionItem

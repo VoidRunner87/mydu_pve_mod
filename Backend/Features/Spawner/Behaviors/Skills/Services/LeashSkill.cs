@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Effects.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Skills.Data;
-using Mod.DynamicEncounters.Features.Spawner.Behaviors.Skills.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Data;
 using Mod.DynamicEncounters.Helpers;
 
@@ -28,7 +27,7 @@ public class LeashSkill(SkillItem skillItem) : BaseSkill(skillItem)
         if (iAmFar || targetIsFar)
         {
             context.SetOverrideTargetMovePosition(context.StartPosition.Value);
-            context.Effects.Activate<ReturningToSectorCooldown>(TimeSpan.FromMinutes(2));
+            context.Effects.Activate<ReturningToSectorCooldown>(TimeSpan.FromSeconds(30));
         }
         else if (!isReturningCooldown)
         {

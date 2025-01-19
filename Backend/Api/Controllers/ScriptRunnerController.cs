@@ -42,6 +42,29 @@ public class ScriptRunnerController : Controller
         return Ok();
     }
 
+    [HttpPost]
+    [Route("action/run")]
+    public async Task<IActionResult> RunScriptAction([FromBody] RunScriptActionItemRequest request)
+    {
+        var provider = ModBase.ServiceProvider;
+
+        var scriptActionFactory = provider.GetRequiredService<IScriptActionFactory>();
+        var scriptAction = scriptActionFactory.Create(request.Script);
+
+        var context = request.Context;
+        context.ServiceProvider = provider;
+        
+        var result = await scriptAction.ExecuteAsync(context);
+
+        return Ok(result);
+    }
+
+    public class RunScriptActionItemRequest
+    {
+        public required ScriptActionItem Script { get; set; }
+        public required ScriptContext Context { get; set; }
+    }
+
     public class RunScriptContextRequest
     {
         public List<ulong> PlayerIds { get; set; } = [];

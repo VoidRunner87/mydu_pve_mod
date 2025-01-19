@@ -72,6 +72,7 @@
     <PackageReference Include="Google.Protobuf" Version="3.21.9" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Common\Extensions\" />
     <Folder Include="Database\Migrations\Orleans\" />
     <Folder Include="Features\Sector\Scripts\" />
     <Folder Include="Resources\" />
@@ -122,6 +123,9 @@
     <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\bin\Debug\net8.0\Mod.DynamicEncounters.runtimeconfig.json" />
     <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\bin\Debug\net8.0\Resources\Basic_Pirate.json" />
     <_ContentIncludedByDefault Remove="Mod.DynamicEncounters.Tests\bin\Debug\net8.0\Resources\Simple_POI.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mod.DynamicEncounters.SDK\Mod.DynamicEncounters.SDK.csproj" />
   </ItemGroup>
 
   <!-- https://github.com/dotnet/efcore/issues/15047 -->

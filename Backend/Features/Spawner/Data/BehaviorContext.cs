@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Mod.DynamicEncounters.Features.Common.Data;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Data;
 using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Effects.Interfaces;
 using Mod.DynamicEncounters.Features.Spawner.Behaviors.Effects.Services;
@@ -27,7 +28,7 @@ public class BehaviorContext(
     IPrefab prefab
 ) : BaseContext
 {
-    private static ISkillFactory SkillFactory => ModBase.ServiceProvider.GetRequiredService<ISkillFactory>();
+    private ISkillFactory SkillFactory => Provider.GetRequiredService<ISkillFactory>();
 
     private double _deltaTime;
 
@@ -70,7 +71,23 @@ public class BehaviorContext(
     public ConcurrentBag<ScanContact> Contacts { get; private set; } = [];
     public ConcurrentBag<DamageDealtData> DamageHistory { get; private set; } = [];
 
-    public IList<ISkill> Skills { get; set; } = SkillFactory.CreateAll(prefab.DefinitionItem.Skills).ToList();
+    private bool _skillsInitialized;
+    private IList<ISkill> _skills = [];
+
+    public IList<ISkill> Skills
+    {
+        get
+        {
+            if (!_skillsInitialized)
+            {
+                _skills = SkillFactory.CreateAll(prefab.DefinitionItem.Skills).ToList();
+                _skillsInitialized = true;
+            }
+
+            return _skills;
+        }
+        set => _skills = value;
+    }
 
     public bool BoosterActive { get; set; } = false;
     public double AccelerationG { get; set; } = prefab.DefinitionItem.AccelerationG;
@@ -162,7 +179,7 @@ public class BehaviorContext(
 
     [Newtonsoft.Json.JsonIgnore]
     [JsonIgnore]
-    public IPrefab Prefab { get; set; } = prefab;
+    public IPrefab Prefab => prefab;
 
     public DateTime? TargetSelectedTime { get; set; }
 
@@ -207,7 +224,7 @@ public class BehaviorContext(
     {
         return GetAvailableWeapons().Any();
     }
-    
+
     public bool HasAnyWeapons()
     {
         return GetAvailableWeapons().Any();
@@ -280,7 +297,7 @@ public class BehaviorContext(
     {
         TargetMovePosition = position;
     }
-    
+
     public void SetOverrideTargetMovePosition(Vec3? position)
     {
         OverrideTargetMovePosition = position;
@@ -377,7 +394,7 @@ public class BehaviorContext(
     {
         if (TargetLinearVelocity.Size() < MinVelocity)
         {
-            return MaxVelocity / 2;
+            return MaxVelocity / Prefab.DefinitionItem.Mods.Velocity.OutsideOptimalRange2XAlpha;
         }
 
         return Math.Clamp(
@@ -391,7 +408,7 @@ public class BehaviorContext(
     {
         if (TargetLinearVelocity.Size() < MinVelocity)
         {
-            return MaxVelocity / 4;
+            return MaxVelocity / Prefab.DefinitionItem.Mods.Velocity.OutsideOptimalRangeAlpha;
         }
 
         return Math.Clamp(
@@ -419,7 +436,7 @@ public class BehaviorContext(
     {
         var brakingDistance = CalculateBrakingDistance();
         var movePositionDistance = GetMovePositionDistance();
-        
+
         if (movePositionDistance <= brakingDistance * Modifiers.Velocity.BrakeDistanceFactor)
         {
             return 0D;
@@ -632,5 +649,15 @@ public class BehaviorContext(
         {
             return now > ExpiresAt;
         }
+    }
+
+    public ScriptContext GetScriptContext()
+    {
+        return new ScriptContext(
+            Provider,
+            FactionId,
+            PlayerIds,
+            Sector,
+            TerritoryId).WithConstructId(ConstructId);
     }
 }

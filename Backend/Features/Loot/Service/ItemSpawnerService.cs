@@ -7,6 +7,7 @@ using Backend.Business;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Mod.DynamicEncounters.Common.Data;
+using Mod.DynamicEncounters.Features.Common.Interfaces;
 using Mod.DynamicEncounters.Features.Loot.Data;
 using Mod.DynamicEncounters.Features.Loot.Interfaces;
 using Mod.DynamicEncounters.Helpers;
@@ -25,25 +26,25 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
     private readonly IDataAccessor _dataAccessor = provider.GetRequiredService<IDataAccessor>();
     private readonly ILogger<ItemSpawnerService> _logger = provider.CreateLogger<ItemSpawnerService>();
 
-    public async Task SpawnItems(SpawnItemOnRandomContainersCommand onRandomContainersCommand)
+    public async Task SpawnItems(SpawnItemOnRandomContainersCommand command)
     {
         var containers = new List<ElementId>();
 
-        await foreach (var container in GetAvailableContainers(onRandomContainersCommand.ConstructId))
+        await foreach (var container in GetAvailableContainers(command.ConstructId))
         {
             containers.Add(container);
         }
 
         if (containers.Count == 0)
         {
-            _logger.LogWarning("No containers found on Construct {Construct}", onRandomContainersCommand.ConstructId);
+            _logger.LogWarning("No containers found on Construct {Construct}", command.ConstructId);
 
             return;
         }
 
         var random = provider.GetRandomProvider().GetRandom();
 
-        foreach (var entry in onRandomContainersCommand.ItemBag.GetEntries())
+        foreach (var entry in command.ItemBag.GetEntries())
         {
             var targetContainer = random.PickOneAtRandom(containers);
 
@@ -76,7 +77,30 @@ public class ItemSpawnerService(IServiceProvider provider) : IItemSpawnerService
             }
         }
 
-        _logger.LogInformation("Items Spawned on Construct {Construct}", onRandomContainersCommand.ConstructId);
+        _logger.LogInformation("Items Spawned on Construct {Construct}", command.ConstructId);
+    }
+
+    public async Task SpawnItemsForPlayersAround(SpawnItemOnRandomContainersAroundAreaCommand command)
+    {
+        var areaScanService = provider.GetRequiredService<IAreaScanService>();
+        var random = provider.GetRandomProvider().GetRandom();
+        var contacts = (await areaScanService.ScanForPlayerContacts(
+            command.InstigatorConstructId,
+            command.Position,
+            command.Radius,
+            command.Limit)).ToHashSet();
+
+        contacts = contacts.Where(x => x.ConstructId != command.InstigatorConstructId)
+            .ToHashSet();
+
+        if (contacts.Count == 0)
+        {
+            return;
+        }
+
+        var randomContact = random.PickOneAtRandom(contacts);
+
+        await SpawnItems(new SpawnItemOnRandomContainersCommand(randomContact.ConstructId, command.ItemBag));
     }
 
     public async Task GiveTakeItemsWithCallback(GiveTakePlayerItemsWithCallbackCommand command)
