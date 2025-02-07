@@ -1,0 +1,258 @@
+﻿using System;
+using System.Linq;
+using System.Net.Http;
+using System.Reflection;
+using System.Threading.Tasks;
+using Backend;
+using Backend.AWS;
+using Backend.Business;
+using Backend.Scenegraph;
+using Backend.Storage;
+using Backend.Voxels;
+using BotLib.BotClient;
+using BotLib.Protocols;
+using BotLib.Protocols.Queuing;
+using FluentMigrator.Runner;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Mod.DynamicEncounters.Common.Helpers;
+using Mod.DynamicEncounters.Common.Interfaces;
+using Mod.DynamicEncounters.Common.Services;
+using Mod.DynamicEncounters.Features;
+using Mod.DynamicEncounters.Features.Scripts.Actions.Interfaces;
+using Mod.DynamicEncounters.Helpers;
+using Mod.DynamicEncounters.Stubs;
+using Newtonsoft.Json;
+using NQ.Router;
+using NQ.Visibility;
+using NQutils;
+using NQutils.Config;
+using NQutils.Sql;
+using Orleans;
+using Services;
+
+namespace Mod.DynamicEncounters;
+
+/// Mod base class
+public class ModBase
+{
+    public static IDuClientFactory RestDuClientFactory => ServiceProvider.GetRequiredService<IDuClientFactory>();
+
+    /// Use this to acess registered service
+    public static IServiceProvider ServiceProvider;
+
+    /// Use this to make gameplay calls, see "Interfaces/GrainGetterExtensions.cs" for what's available
+    protected static IClusterClient Orleans;
+
+    /// Use this object for various data access/modify helper functions
+    protected static IDataAccessor DataAccessor;
+
+    /// Conveniance field for mods who need a single bot
+    public static Client Bot;
+
+    public static IUserContent UserContent;
+    public static IVoxelService VoxelService;
+    public static IVoxelImporter VoxelImporter;
+    public static ISql Sql;
+    public static IGameplayBank Bank;
+    public static IRDMSStorage Rdms;
+    public static IPlanetList PlanetList;
+    public static IS3 S3;
+    public static IScenegraph SceneG;
+    public static IScriptService SpawnerScripts;
+
+    public string Name { get; set; }
+
+    public ModBase()
+    {
+        Name = GetType().Name;
+    }
+
+    public ModBase WithName<T>(string suffix)
+    {
+        Name = $"{typeof(T).Name}_{suffix}";
+        
+        return this;
+    }
+
+    /// Create or login a user, return bot client instance
+    public static async Task<Client> CreateUser(string prefix, bool allowExisting = false, bool randomize = false)
+    {
+        var username = prefix;
+        if (randomize)
+        {
+            // Do not use random utilities as they are using tests random (that is seeded), and we want to be able to start the same test multiple times
+            var r = new Random(Guid.NewGuid().GetHashCode());
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
+            username = prefix + '-' + new string(Enumerable.Repeat(0, 127 - prefix.Length)
+                .Select(_ => chars[r.Next(chars.Length)]).ToArray());
+        }
+
+        var pi = LoginInformations.BotLogin(username,
+            Environment.GetEnvironmentVariable("BOT_LOGIN")!,
+            Environment.GetEnvironmentVariable("BOT_PASSWORD")!
+        );
+
+        return await Client.FromFactory(RestDuClientFactory, pi, allowExising: allowExisting);
+    }
+
+    /// Setup everything, must be called once at startup
+    public static async Task Setup(IServiceCollection services)
+    {
+        JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Include,
+            DefaultValueHandling = DefaultValueHandling.Include
+        };
+
+        //services.RegisterCoreServices();
+        var queueingUrl = Environment.GetEnvironmentVariable("QUEUEING");
+        if (string.IsNullOrEmpty(queueingUrl))
+            queueingUrl = "http://queueing:9630";
+
+        Console.WriteLine($"Queuing URL: {queueingUrl}");
+
+        services
+            .AddFluentMigratorCore()
+            .ConfigureRunner(rb =>
+            {
+                rb.AddPostgres().WithGlobalConnectionString(Config.Instance.postgres.ConnectionString());
+                rb.ScanIn(Assembly.GetExecutingAssembly()).For.Migrations();
+            })
+            .AddSingleton<ISql, Sql>()
+            .AddSingleton<IYamlDeserializer, YamlDeserializer>()
+            .AddSingleton<IDateTimeProvider, DefaultDateTimeProvider>()
+            .AddInitializableSingleton<IGameplayBank, GameplayBank>()
+            .AddSingleton<ILocalizationManager, LocalizationManager>()
+            .AddTransient<IDataAccessor, DataAccessor>()
+            .AddLogging(logging => logging.SetupPveModLog(logWebHostInfo: true))
+            .AddOrleansClient("PVE")
+            .AddHttpClient()
+            .AddTransient<NQutils.Stats.IStats, NQutils.Stats.FakeIStats>()
+            .AddSingleton<IQueuing>(sp =>
+                new StubRealQueuing(queueingUrl, sp.GetRequiredService<IHttpClientFactory>().CreateClient())
+            )
+            .AddSingleton<IDuClientFactory, StubDuClientFactory>()
+            .AddSingleton<IS3, FakeS3.FakeS3Singleton>()
+            .AddSingleton<IItemStorageService, ItemStorageService>()
+            .AddInitializableSingleton<IUserContent, UserContent>()
+            .AddInitializableSingleton<IVoxelService, VoxelService>()
+            .AddInitializableSingleton<IVoxelImporter, VoxelService>()
+            .AddInitializableSingleton<ISql, Sql>()
+            .AddInitializableSingleton<IRDMSStorage, RDMSStorage>()
+            .AddInitializableSingleton<IPlanetList, PlanetListStub>()
+            .AddInitializableSingleton<IScenegraph, Scenegraph>()
+            .AddInitializableSingleton<IElementBoundingBox, ElementBoundingBox>()
+            .AddInitializableSingleton<IConstructBoundingBox, ConstructBoundingBox>()
+            .AddInitializableSingleton<IPub, Pub>()
+            .AddInitializableSingleton<IRecipes, Recipes>()
+            .AddInitializableSingleton<Internal.InternalClient, Internal.InternalClient>()
+            .RegisterGRPCClient()
+            .AddInitializableSingleton<IScenegraphAPI, ScenegraphAPI>()
+            // Mod Starts Here
+            .RegisterModFeatures()
+            ;
+
+        var sp = services.BuildServiceProvider();
+        ServiceProvider = sp;
+        ClientExtensions.SetSingletons(sp);
+        ClientExtensions.UseFactory(sp.GetRequiredService<IDuClientFactory>());
+        Orleans = ServiceProvider.GetRequiredService<IClusterClient>();
+        DataAccessor = ServiceProvider.GetRequiredService<IDataAccessor>();
+        UserContent = ServiceProvider.GetRequiredService<IUserContent>();
+        VoxelService = ServiceProvider.GetRequiredService<IVoxelService>();
+        VoxelImporter = ServiceProvider.GetRequiredService<IVoxelImporter>();
+        SceneG = ServiceProvider.GetRequiredService<IScenegraph>();
+        Sql = ServiceProvider.GetRequiredService<ISql>();
+        Bank = ServiceProvider.GetRequiredService<IGameplayBank>();
+        Rdms = ServiceProvider.GetRequiredService<IRDMSStorage>();
+        PlanetList = ServiceProvider.GetRequiredService<IPlanetList>();
+        S3 = ServiceProvider.GetRequiredService<IS3>();
+        SpawnerScripts = ServiceProvider.GetRequiredService<IScriptService>();
+
+        var logger = ServiceProvider.CreateLogger<ModBase>();
+
+        try
+        {
+            Console.WriteLine("Starting Services V2");
+            await ServiceProvider.StartServicesV2();
+            Console.WriteLine("Services Started");
+
+            Console.WriteLine("Creating BOT User");
+            Bot = await RefreshClient();
+            Console.WriteLine("BOT User Created");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to Start");
+            throw;
+        }
+    }
+
+    public virtual Task Start()
+    {
+        return Task.CompletedTask;
+    }
+
+    public static async Task<Client> RefreshClient()
+    {
+        return await CreateUser(Environment.GetEnvironmentVariable("BOT_PREFIX")!, true);
+    }
+
+    public static void UpdateDatabase(IServiceScope scope)
+    {
+        Console.WriteLine("Executing DB Migrations");
+        var migrationRunner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+        migrationRunner.MigrateUp();
+
+        // var orleansMigrationRunner = GetOrleansMigrationRunner();
+        // orleansMigrationRunner.MigrateUp();
+        
+        Console.WriteLine("Migrations Executed");
+    }
+
+    private static IMigrationRunner GetOrleansMigrationRunner()
+    {
+        throw new NotImplementedException();
+        
+        // var serviceCollection = new ServiceCollection()
+        //     .AddFluentMigratorCore()
+        //     .ConfigureRunner(rb =>
+        //     {
+        //         // var pg = Config.Instance.postgres;
+        //         //
+        //         // var postgres = new PostgresSettings
+        //         // {
+        //         //     database = "orleans",
+        //         //     extra = pg.extra,
+        //         //     host = pg.host,
+        //         //     max_connection = pg.max_connection,
+        //         //     password = pg.password,
+        //         //     port = pg.port,
+        //         //     user = pg.user
+        //         // };
+        //         //
+        //         // rb.AddPostgres().WithGlobalConnectionString(postgres.ConnectionString());
+        //         // rb.ScanIn(typeof(Orleans.Migrations.AddIndexToOrleansToFixDuplicateSilos).Assembly).For.Migrations();
+        //     })
+        //     .BuildServiceProvider(false);
+        //
+        // var migrationRunner = serviceCollection.GetRequiredService<IMigrationRunner>();
+        //
+        // return migrationRunner;
+    }
+
+    public static void DowngradeDatabase(IServiceScope scope, int version)
+    {
+        Console.WriteLine("Executing DB Migrations");
+        var migrationRunner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+        migrationRunner.MigrateDown(version);
+        Console.WriteLine("Migrations Executed");
+    }
+
+    /// Override this with main bot code
+    public virtual Task Loop()
+    {
+        return Task.CompletedTask;
+    }
+}

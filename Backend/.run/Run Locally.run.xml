@@ -1,0 +1,29 @@
+﻿<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Locally" type="DotNetProject" factoryName=".NET Project">
+    <option name="EXE_PATH" value="$PROJECT_DIR$/bin/Debug/net8.0/Mod.DynamicEncounters.dll" />
+    <option name="PROGRAM_PARAMETERS" value="" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="PASS_PARENT_ENVS" value="1" />
+    <envs>
+      <env name="API_ENABLED" value="true" />
+      <env name="BOT_LOGIN" value="bot" />
+      <env name="BOT_PASSWORD" value="bot" />
+      <env name="BOT_PREFIX" value="PVE" />
+      <env name="ENVIRONMENT" value="DEV" />
+      <env name="QUEUEING" value="http://localhost:9630" />
+      <env name="PVE_VOXEL_SERVICE_ENABLED" value="true" />
+    </envs>
+    <option name="USE_EXTERNAL_CONSOLE" value="0" />
+    <option name="USE_MONO" value="0" />
+    <option name="RUNTIME_ARGUMENTS" value="" />
+    <option name="PROJECT_PATH" value="$PROJECT_DIR$/Mod.DynamicEncounters.csproj" />
+    <option name="PROJECT_EXE_PATH_TRACKING" value="1" />
+    <option name="PROJECT_ARGUMENTS_TRACKING" value="1" />
+    <option name="PROJECT_WORKING_DIRECTORY_TRACKING" value="1" />
+    <option name="PROJECT_KIND" value="DotNetCore" />
+    <option name="PROJECT_TFM" value="net8.0" />
+    <method v="2">
+      <option name="Build" />
+    </method>
+  </configuration>
+</component>

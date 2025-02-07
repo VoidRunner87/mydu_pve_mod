@@ -1,0 +1,8 @@
+actions:
+  - type: spawn
+    prefab: wreck-unknown-origin
+    minQuantity: 1
+    maxQuantity: 1
+    area:
+      type: sphere
+      radius: 200000

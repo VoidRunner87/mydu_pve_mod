@@ -1,0 +1,81 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Nullable>annotations</Nullable>
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>12</LangVersion>
+        <PackageId>Mod.DynamicEncounters</PackageId>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="Grains">
+          <HintPath>NQ\Grains.dll</HintPath>
+        </Reference>
+        <Reference Include="NQutils"/>
+        <Reference Include="Backend"/>
+        <Reference Include="Backend.PubSub"/>
+        <Reference Include="Interfaces"/>
+        <Reference Include="Router.Orleans"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Google.Protobuf" Version="3.21.9" />
+        <PackageReference Include="Grpc.Core.Api" Version="2.49.0" />
+        <PackageReference Include="MathNet.Spatial" Version="0.6.0" />
+        <PackageReference Include="Microsoft.Orleans.Core" Version="3.6.5"/>
+        <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="3.6.5"/>
+        <PackageReference Include="prometheus-net" Version="6.0.0"/>
+        <PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0"/>
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="Resources\common.js" />
+        <EmbeddedResource Include="Resources\create-party-root-div.js" />
+        <EmbeddedResource Include="Resources\create-root-div.js" />
+        <EmbeddedResource Include="Resources\npc-app.css" />
+        <EmbeddedResource Include="Resources\npc-app.js" />
+        <EmbeddedResource Remove="obj\**" />
+        <None Remove="Resources\party-app.css" />
+        <EmbeddedResource Include="Resources\party-app.css" />
+        <None Remove="Resources\party-app.js" />
+        <EmbeddedResource Include="Resources\party-app.js" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Overrides\" />
+    </ItemGroup>
+    <ItemGroup>
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.AssemblyInfoInputs.cache" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.assets.cache" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.csproj.AssemblyReference.cache" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.GeneratedMSBuildEditorConfig.editorconfig" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.Overrides.AssemblyInfoInputs.cache" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.Overrides.assets.cache" />
+      <Content Include="obj\Debug\net6.0\Mod.DynamicEncounters.Overrides.csproj.AssemblyReference.cache" />
+      <Content Include="obj\Mod.DynamicEncounters.csproj.nuget.dgspec.json" />
+      <Content Include="obj\Mod.DynamicEncounters.csproj.nuget.g.props" />
+      <Content Include="obj\Mod.DynamicEncounters.csproj.nuget.g.targets" />
+      <Content Include="obj\Mod.DynamicEncounters.Overrides.csproj.nuget.dgspec.json" />
+      <Content Include="obj\project.assets.json" />
+      <Content Include="obj\project.nuget.cache" />
+      <Content Include="obj\project.packagespec.json" />
+      <Content Include="obj\rider.project.model.nuget.info" />
+      <Content Include="obj\rider.project.restore.info" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Include="obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
+      <Compile Include="obj\Debug\net6.0\Mod.DynamicEncounters.AssemblyInfo.cs" />
+      <Compile Remove="obj\**" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Remove="obj\**" />
+    </ItemGroup>
+
+    <!-- https://github.com/dotnet/efcore/issues/15047 -->
+    <Target Name="AddAssemblyAliasToReactiveAsync" AfterTargets="ResolveAssemblyReferences">
+        <ItemGroup>
+            <ReferencePath Condition=" '%(FileName)' == 'System.Interactive.Async' ">
+                <Aliases>reactive</Aliases>
+            </ReferencePath>
+        </ItemGroup>
+    </Target>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="../../../Mods"/>
+    </Target>
+</Project>

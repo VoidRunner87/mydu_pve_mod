@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.0"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
+        <PackageReference Include="NSubstitute" Version="5.3.0" />
+        <PackageReference Include="NUnit" Version="3.14.0"/>
+        <PackageReference Include="NUnit.Analyzers" Version="3.9.0"/>
+        <PackageReference Include="NUnit3TestAdapter" Version="4.5.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="NUnit.Framework"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Backend\Mod.DynamicEncounters.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Resources\complex-script.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Backend">
+        <HintPath>..\..\Backend\NQ\Backend.dll</HintPath>
+      </Reference>
+      <Reference Include="Backend.PubSub">
+        <HintPath>..\..\Backend\NQ\Backend.PubSub.dll</HintPath>
+      </Reference>
+      <Reference Include="Backend.Telemetry">
+        <HintPath>..\..\Backend\NQ\Backend.Telemetry.dll</HintPath>
+      </Reference>
+      <Reference Include="BotLib">
+        <HintPath>..\..\Backend\NQ\BotLib.dll</HintPath>
+      </Reference>
+      <Reference Include="Grains">
+        <HintPath>..\..\Backend\NQ\Grains.dll</HintPath>
+      </Reference>
+      <Reference Include="Interfaces">
+        <HintPath>..\..\Backend\NQ\Interfaces.dll</HintPath>
+      </Reference>
+      <Reference Include="NQutils">
+        <HintPath>..\..\Overrides\NQ\NQutils.dll</HintPath>
+      </Reference>
+      <Reference Include="Router">
+        <HintPath>..\..\Backend\NQ\Router.dll</HintPath>
+      </Reference>
+      <Reference Include="Router.Orleans">
+        <HintPath>..\..\Backend\NQ\Router.Orleans.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Resources\tag-sector-as-active.json" />
+      <EmbeddedResource Include="Resources\tag-sector-as-active.json" />
+    </ItemGroup>
+
+</Project>

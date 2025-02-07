@@ -1,0 +1,11 @@
+﻿{
+  "Name": "spawn-test-1",
+  "Actions": [
+    {
+      "type": "tag-sector-active",
+      "properties": {
+        "DelaySeconds": 999
+      }
+    }
+  ]
+}

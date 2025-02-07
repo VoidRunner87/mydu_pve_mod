@@ -1,0 +1,59 @@
+{
+  "GroupId": "0fb4f759-a11e-46ea-ada1-e6c44a99cbd6",
+  "Leader": {
+    "IsLeader": true,
+    "IsConnected": true,
+    "PlayerName": "VoidRunner7891",
+    "Construct": null,
+    "Role": "railgun",
+    "Theme": "default"
+  },
+  "Members": [
+    {
+      "IsLeader": false,
+      "IsConnected": true,
+      "PlayerName": "TobiwanKenobi",
+      "Construct": {
+        "ConstructId": 1002678,
+        "ConstructKind": 2,
+        "ConstructName": "W-1234-5",
+        "Size": 32,
+        "ShieldRatio": 0.15,
+        "CoreStressRatio": 0.05
+      },
+      "Role": "cannon",
+      "Theme": "default"
+    },
+    {
+      "IsLeader": false,
+      "IsConnected": false,
+      "PlayerName": "DeadRank",
+      "Construct": {
+        "ConstructId": 1002234,
+        "ConstructKind": 1,
+        "ConstructName": "Feli",
+        "Size": 256,
+        "ShieldRatio": 1.0,
+        "CoreStressRatio": 1.0
+      },
+      "Role": "laser",
+      "Theme": "default"
+    }
+  ],
+  "Invited": [
+    {
+      "IsLeader": false,
+      "IsConnected": true,
+      "PlayerName": "Madlocke",
+      "Theme": "default"
+    }
+  ],
+  "PendingAccept": [
+    {
+      "IsLeader": false,
+      "IsConnected": true,
+      "PlayerName": "IndyAnaJones",
+      "Theme": "default"
+    }
+  ]
+}

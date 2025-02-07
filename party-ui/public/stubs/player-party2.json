@@ -1,0 +1,20 @@
+{
+  "GroupId": "0fb4f759-a11e-46ea-ada1-e6c44a99cbd6",
+  "Leader": {
+    "IsLeader": true,
+    "IsConnected": true,
+    "PlayerName": "admin",
+    "Construct": {
+      "ConstructId": 1003029,
+      "ConstructName": "Bastard 1RD DA MNV V2",
+      "Size": 64,
+      "ShieldRatio": 1.0,
+      "CoreStressRatio": 1.0
+    },
+    "Role": "cannon",
+    "Theme": "default"
+  },
+  "Members": [],
+  "Invited": [],
+  "PendingAccept": []
+}

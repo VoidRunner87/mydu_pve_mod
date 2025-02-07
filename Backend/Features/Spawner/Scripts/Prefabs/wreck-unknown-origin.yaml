@@ -1,0 +1,8 @@
+name: wreck-unknown-origin
+folder: wrecks
+path: Wreck_5_UnknownOrigin.json
+ownerId: 0 # 2=Aphelia, 4=Unknown 
+serverProperties:
+  isDynamicWreck: true
+  header:
+    prettyName: 'Unknown Ship Emissions'

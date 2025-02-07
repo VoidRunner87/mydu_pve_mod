@@ -1,0 +1,47 @@
+{
+  "GroupId": "27e28386-5e06-4f76-a453-5d8ce8e35ac1",
+  "PlayerIsLeader": false,
+  "PlayerIsPending": true,
+  "Leader": {
+    "IsLeader": true,
+    "IsConnected": false,
+    "PlayerId": 10014,
+    "PlayerName": "simpleton",
+    "Construct": {
+      "ConstructId": 0,
+      "ConstructKind": 0,
+      "ConstructName": "",
+      "Size": 0,
+      "ShieldRatio": 0.0,
+      "CoreStressRatio": 0.0
+    },
+    "Role": "",
+    "Theme": "default",
+    "IsSelf": false
+  },
+  "Members": [],
+  "Invited": [
+    {
+      "IsLeader": false,
+      "IsConnected": true,
+      "PlayerId": 10000,
+      "PlayerName": "admin",
+      "Construct": null,
+      "Role": "",
+      "Theme": "default",
+      "IsSelf": true
+    }
+  ],
+  "PendingAccept": [
+    {
+      "IsLeader": false,
+      "IsConnected": true,
+      "PlayerId": 10000,
+      "PlayerName": "admin",
+      "Construct": null,
+      "Role": "",
+      "Theme": "default",
+      "IsSelf": true
+    }
+  ]
+}
