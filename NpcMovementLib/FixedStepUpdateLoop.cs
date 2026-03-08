@@ -33,6 +33,34 @@ namespace NpcMovementLib;
 /// since the last tick. Useful for logic that doesn't need deterministic timing (e.g. target
 /// selection, AI decision-making at 1 FPS).
 ///
+/// VELOCITY CONVENTION: ABSOLUTE, NOT FRAME-BASED
+/// ================================================
+/// All velocities in this system (from GetConstructVelocities, stored on constructs, etc.)
+/// are ABSOLUTE world-space velocities in meters per second (m/s). They are NOT per-frame
+/// displacement deltas.
+///
+/// This matters because:
+///
+///   - To move an NPC, you multiply:  displacement = velocity * deltaTime
+///     If velocity were a per-frame delta, you'd just add it directly — but that would
+///     break when the tick rate changes. Absolute velocity is tick-rate-independent.
+///
+///   - To predict a future position (e.g. for weapons leading), you use the kinematic equation:
+///       futurePos = pos + velocity * t + 0.5 * acceleration * t²
+///     This only works if velocity is in m/s.
+///
+///   - To compute relative velocity between two constructs (e.g. for tracking):
+///       relativeVel = targetVelocity - myVelocity
+///     Both must be in the same absolute units for subtraction to be meaningful.
+///
+///   - When sending position updates to the game engine, velocity is converted back
+///     from a position delta:
+///       displayVelocity = (newPosition - oldPosition) / deltaTime
+///     This converts a frame displacement INTO an absolute velocity for the engine.
+///
+/// In short: velocities are always rates (m/s). The fixed-step deltaTime (0.05s) is the
+/// multiplier that converts them into per-tick displacements inside the tick callback.
+///
 /// USAGE IN THE MOD
 /// ================
 /// The mod runs three loops at different priorities:
@@ -50,6 +78,9 @@ public class FixedStepUpdateLoop
     /// <summary>
     /// The fixed delta time for each simulation step: 1/20th of a second = 50ms.
     /// Every tick callback receives exactly this value, ensuring deterministic physics.
+    ///
+    /// This is the multiplier that converts absolute velocities (m/s) into per-tick
+    /// displacements (meters): displacement = velocity_m_per_s * 0.05s
     /// </summary>
     private const double FixedDeltaTime = 1.0 / 20.0; // 50ms
 
@@ -98,9 +129,21 @@ public class FixedStepUpdateLoop
     ///   var loop = new FixedStepUpdateLoop(targetFps: 20, useFixedStep: true);
     ///   await loop.RunAsync(async (deltaTime, ct) =>
     ///   {
-    ///       // deltaTime is always exactly 0.05 (50ms) in fixed-step mode
+    ///       // deltaTime is always exactly 0.05s in fixed-step mode.
+    ///       //
+    ///       // npc.Velocity is an ABSOLUTE velocity in m/s (from GetConstructVelocities).
+    ///       // Multiplying by deltaTime converts it to a per-tick displacement:
+    ///       //   200 m/s * 0.05s = 10 meters this tick
     ///       npc.Position += npc.Velocity * deltaTime;
+    ///
+    ///       // Same for acceleration: it's in m/s², so multiplying by deltaTime
+    ///       // gives the velocity change for this tick:
+    ///       //   40 m/s² * 0.05s = 2 m/s added this tick
     ///       npc.Velocity += npc.Acceleration * deltaTime;
+    ///
+    ///       // When reporting back to the engine, convert the displacement back to
+    ///       // an absolute velocity so the engine can interpolate between updates:
+    ///       //   displayVelocity = (newPos - oldPos) / deltaTime → back to m/s
     ///       await SendPositionUpdate(npc);
     ///   }, cancellationToken);
     /// </code>
@@ -213,7 +256,10 @@ public class FixedStepUpdateLoop
         {
             if (stoppingToken.IsCancellationRequested) return;
 
-            // Fire one tick with the fixed delta time (always 0.05 seconds)
+            // Fire one tick with the fixed delta time (always 0.05 seconds).
+            // Inside the callback, multiply absolute velocities (m/s) by this value
+            // to get the displacement for this tick. The velocity itself never changes
+            // because of the tick rate — only the displacement per tick does.
             await onTick(FixedDeltaTime, stoppingToken);
 
             // Subtract the chunk we just consumed
