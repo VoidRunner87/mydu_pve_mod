@@ -1,6 +1,6 @@
-using NpcMovementLib.Data;
+using NpcCommonLib.Data;
 
-namespace NpcMovementLib.Interfaces;
+namespace NpcCommonLib.Interfaces;
 
 /// <summary>
 /// Provides read-only access to a construct's transform (position + rotation) and velocity data.

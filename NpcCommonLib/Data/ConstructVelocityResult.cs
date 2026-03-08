@@ -1,6 +1,6 @@
-using NpcMovementLib.Math;
+using NpcCommonLib.Math;
 
-namespace NpcMovementLib.Data;
+namespace NpcCommonLib.Data;
 
 /// <summary>
 /// Result containing the linear and angular velocity of a construct,

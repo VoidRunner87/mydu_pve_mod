@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace NpcMovementLib.Math;
+namespace NpcCommonLib.Math;
 
 /// <summary>
 /// A double-precision 3D vector used for NPC position, velocity, and acceleration calculations.

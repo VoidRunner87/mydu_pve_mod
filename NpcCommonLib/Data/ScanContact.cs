@@ -1,6 +1,6 @@
-using NpcMovementLib.Math;
+using NpcCommonLib.Math;
 
-namespace NpcMovementLib.Data;
+namespace NpcCommonLib.Data;
 
 /// <summary>
 /// Represents a single radar contact detected by the NPC's scanning system.

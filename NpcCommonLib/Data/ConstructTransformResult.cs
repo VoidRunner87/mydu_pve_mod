@@ -1,7 +1,7 @@
 using System.Numerics;
-using NpcMovementLib.Math;
+using NpcCommonLib.Math;
 
-namespace NpcMovementLib.Data;
+namespace NpcCommonLib.Data;
 
 /// <summary>
 /// Result returned by <see cref="Interfaces.IConstructService.GetConstructTransformAsync"/>

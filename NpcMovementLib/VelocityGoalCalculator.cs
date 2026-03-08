@@ -1,5 +1,5 @@
 using NpcMovementLib.Data;
-using NpcMovementLib.Math;
+using NpcCommonLib.Math;
 
 namespace NpcMovementLib;
 

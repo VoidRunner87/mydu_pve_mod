@@ -1,5 +1,5 @@
-using NpcMovementLib.Data;
-using NpcMovementLib.Math;
+using NpcCommonLib.Data;
+using NpcCommonLib.Math;
 
 namespace NpcWeaponLib.Interfaces;
 

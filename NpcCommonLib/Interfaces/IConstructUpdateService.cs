@@ -1,7 +1,7 @@
 using System.Numerics;
-using NpcMovementLib.Math;
+using NpcCommonLib.Math;
 
-namespace NpcMovementLib.Interfaces;
+namespace NpcCommonLib.Interfaces;
 
 /// <summary>
 /// Sends construct position, rotation, and velocity updates to the game server,

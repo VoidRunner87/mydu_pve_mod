@@ -1,4 +1,4 @@
-namespace NpcMovementLib.Data;
+namespace NpcCommonLib.Data;
 
 /// <summary>
 /// Strongly-typed value object representing a unique construct identifier.

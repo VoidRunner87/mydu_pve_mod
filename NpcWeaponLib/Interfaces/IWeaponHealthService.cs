@@ -1,4 +1,4 @@
-using NpcMovementLib.Data;
+using NpcCommonLib.Data;
 using NpcWeaponLib.Data;
 
 namespace NpcWeaponLib.Interfaces;
