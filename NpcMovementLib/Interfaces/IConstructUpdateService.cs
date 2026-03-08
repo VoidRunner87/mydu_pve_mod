@@ -39,7 +39,8 @@ public interface IConstructUpdateService
     /// Pushes an NPC construct's updated transform and velocity to the game server.
     /// </summary>
     /// <param name="constructId">
-    /// The unique identifier of the NPC construct being updated.
+    /// The strongly-typed identifier of the NPC construct being updated.
+    /// See <see cref="Data.ConstructId"/> for conversion semantics.
     /// </param>
     /// <param name="position">
     /// The construct's new absolute world-space position in metres, as computed by
@@ -67,7 +68,7 @@ public interface IConstructUpdateService
     /// "stutter" on clients for one tick but will correct itself on the next successful update.
     /// </remarks>
     Task SendConstructUpdate(
-        ulong constructId,
+        Data.ConstructId constructId,
         Vec3 position,
         Quaternion rotation,
         Vec3 velocity

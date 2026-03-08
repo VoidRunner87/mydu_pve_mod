@@ -38,8 +38,9 @@ public interface IRadarService
     /// Scans for player-owned constructs around a position within the specified radius.
     /// </summary>
     /// <param name="constructId">
-    /// The unique identifier of the NPC construct performing the scan. This construct is
-    /// excluded from the results to prevent the NPC from detecting itself.
+    /// The strongly-typed identifier of the NPC construct performing the scan. This construct
+    /// is excluded from the results to prevent the NPC from detecting itself.
+    /// See <see cref="ConstructId"/> for conversion semantics.
     /// </param>
     /// <param name="position">
     /// The scan origin in absolute world-space coordinates (metres). Typically the NPC's
@@ -68,5 +69,5 @@ public interface IRadarService
     /// efficient range queries. The <c>CachedAreaScanService</c> wrapper may cache results
     /// briefly to reduce database load when multiple NPC behaviors scan in the same tick.
     /// </remarks>
-    Task<IList<ScanContact>> ScanForPlayerContacts(ulong constructId, Vec3 position, double radius);
+    Task<IList<ScanContact>> ScanForPlayerContacts(ConstructId constructId, Vec3 position, double radius);
 }

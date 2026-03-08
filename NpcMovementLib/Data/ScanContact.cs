@@ -21,7 +21,7 @@ public class ScanContact
     /// and to set the NPC's target via <c>BehaviorContext.SetTargetConstructId</c> in the
     /// original code.
     /// </remarks>
-    public required ulong ConstructId { get; set; }
+    public required ConstructId ConstructId { get; set; }
 
     /// <summary>
     /// Display name of the detected construct (e.g., the ship's pretty name).

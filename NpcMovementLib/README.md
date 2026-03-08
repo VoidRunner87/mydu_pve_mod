@@ -296,9 +296,9 @@ Read construct state from the game world.
 ```csharp
 public interface IConstructService
 {
-    Task<ConstructTransformResult> GetConstructTransformAsync(ulong constructId);
-    Task<ConstructVelocityResult> GetConstructVelocities(ulong constructId);
-    Task<bool> Exists(ulong constructId);
+    Task<ConstructTransformResult> GetConstructTransformAsync(ConstructId constructId);
+    Task<ConstructVelocityResult> GetConstructVelocities(ConstructId constructId);
+    Task<bool> Exists(ConstructId constructId);
 }
 ```
 
@@ -312,7 +312,7 @@ Push NPC movement results back to the game server.
 ```csharp
 public interface IConstructUpdateService
 {
-    Task SendConstructUpdate(ulong constructId, Vec3 position, Quaternion rotation, Vec3 velocity);
+    Task SendConstructUpdate(ConstructId constructId, Vec3 position, Quaternion rotation, Vec3 velocity);
 }
 ```
 
@@ -323,7 +323,7 @@ Scan for player constructs near an NPC. Returns a list of `ScanContact` (constru
 ```csharp
 public interface IRadarService
 {
-    Task<IList<ScanContact>> ScanForPlayerContacts(ulong constructId, Vec3 position, double radius);
+    Task<IList<ScanContact>> ScanForPlayerContacts(ConstructId constructId, Vec3 position, double radius);
 }
 ```
 

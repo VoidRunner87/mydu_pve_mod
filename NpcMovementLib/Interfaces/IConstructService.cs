@@ -35,8 +35,8 @@ public interface IConstructService
     /// Gets the world-space position and rotation of the specified construct.
     /// </summary>
     /// <param name="constructId">
-    /// The unique identifier of the construct (NPC or player). In the game, this is a 64-bit
-    /// unsigned integer assigned when the construct is created.
+    /// The strongly-typed identifier of the construct (NPC or player).
+    /// See <see cref="ConstructId"/> for conversion semantics.
     /// </param>
     /// <returns>
     /// A <see cref="ConstructTransformResult"/> containing:
@@ -54,13 +54,13 @@ public interface IConstructService
     /// If the grain call fails but the construct still exists in the database, it falls back to a
     /// direct SQL query against <c>public.construct</c>.
     /// </remarks>
-    Task<ConstructTransformResult> GetConstructTransformAsync(ulong constructId);
+    Task<ConstructTransformResult> GetConstructTransformAsync(ConstructId constructId);
 
     /// <summary>
     /// Gets the linear and angular velocities of the specified construct.
     /// </summary>
     /// <param name="constructId">
-    /// The unique identifier of the construct whose velocities are being queried.
+    /// The strongly-typed identifier of the construct whose velocities are being queried.
     /// </param>
     /// <returns>
     /// A <see cref="ConstructVelocityResult"/> containing:
@@ -78,13 +78,13 @@ public interface IConstructService
     /// <see cref="MovementSimulator"/>) and for relative-velocity calculations during combat
     /// (e.g., weapon lead prediction: <c>futurePos = pos + velocity * t + 0.5 * accel * t^2</c>).
     /// </remarks>
-    Task<ConstructVelocityResult> GetConstructVelocities(ulong constructId);
+    Task<ConstructVelocityResult> GetConstructVelocities(ConstructId constructId);
 
     /// <summary>
     /// Checks whether a construct with the given identifier exists in the game world.
     /// </summary>
     /// <param name="constructId">
-    /// The unique identifier of the construct to check.
+    /// The strongly-typed identifier of the construct to check.
     /// </param>
     /// <returns>
     /// <see langword="true"/> if a construct record exists (regardless of deletion state);
@@ -96,5 +96,5 @@ public interface IConstructService
     /// has been soft-deleted. Use the backend's <c>ExistsAndNotDeleted</c> method when deletion
     /// state matters (e.g., alive-check behaviors).
     /// </remarks>
-    Task<bool> Exists(ulong constructId);
+    Task<bool> Exists(ConstructId constructId);
 }
