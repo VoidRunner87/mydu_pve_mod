@@ -11,13 +11,30 @@ namespace NpcWeaponLib.Data;
 /// </remarks>
 public class WeaponModifiers
 {
+    /// <summary>Multiplier for <see cref="WeaponStats.BaseDamage"/>. Default 1.0 (no change).</summary>
     public float Damage { get; set; } = 1;
+
+    /// <summary>Multiplier for <see cref="WeaponStats.BaseAccuracy"/>. Default 1.0 (no change).</summary>
     public float Accuracy { get; set; } = 1;
+
+    /// <summary>Multiplier for <see cref="WeaponStats.BaseCycleTime"/>. Lower values = faster firing. Default 1.0.</summary>
     public float CycleTime { get; set; } = 1;
+
+    /// <summary>Multiplier for <see cref="WeaponStats.BaseOptimalDistance"/>. Default 1.0 (no change).</summary>
     public float OptimalDistance { get; set; } = 1;
+
+    /// <summary>Multiplier for <see cref="WeaponStats.FalloffDistance"/>. Default 1.0 (no change).</summary>
     public float FalloffDistance { get; set; } = 1;
+
+    /// <summary>Multiplier for <see cref="WeaponStats.FalloffAimingCone"/>. Default 1.0 (no change).</summary>
     public float FalloffAimingCone { get; set; } = 1;
+
+    /// <summary>Multiplier for <see cref="WeaponStats.FalloffTracking"/>. Default 1.0 (no change).</summary>
     public float FalloffTracking { get; set; } = 1;
+
+    /// <summary>Multiplier for <see cref="WeaponStats.BaseOptimalTracking"/>. Default 1.0 (no change).</summary>
     public float OptimalTracking { get; set; } = 1;
+
+    /// <summary>Multiplier for <see cref="WeaponStats.BaseOptimalAimingCone"/>. Default 1.0 (no change).</summary>
     public float OptimalAimingCone { get; set; } = 1;
 }

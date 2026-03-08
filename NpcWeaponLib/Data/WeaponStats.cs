@@ -28,8 +28,13 @@ public class WeaponStats
     /// <summary>Default buff factor applied to cycle time and reload time (0.5625x).</summary>
     public const double FullBuff = 0.5625d;
 
+    /// <summary>Unique item type identifier from the game bank.</summary>
     public required ulong ItemTypeId { get; set; }
+
+    /// <summary>Internal item type name (e.g., "WeaponMissileSmallPrecision3").</summary>
     public required string ItemTypeName { get; set; }
+
+    /// <summary>Human-readable weapon name (e.g., "Rare Military Small Railgun s").</summary>
     public required string DisplayName { get; set; }
 
     /// <summary>Base damage per shot before modifiers.</summary>
@@ -75,24 +80,44 @@ public class WeaponStats
     /// Half-falloff firing distance: optimal + falloff/2.
     /// Used by <see cref="WeaponSelector"/> to match weapons to target range.
     /// </summary>
+    /// <returns>Distance in metres representing the weapon's effective midpoint range.</returns>
     public double GetHalfFalloffDistance() => BaseOptimalDistance + FalloffDistance / 2;
 
     /// <summary>Number of shots per magazine given ammo unit volume and magazine buff.</summary>
+    /// <param name="ammo">Ammo type whose <see cref="AmmoStats.UnitVolume"/> determines shots per magazine.</param>
+    /// <param name="magBuff">Magazine volume multiplier. Defaults to <see cref="FullMagBuff"/> (1.5x).</param>
+    /// <returns>Whole number of shots that fit in the magazine.</returns>
     public double GetNumberOfShotsInMagazine(AmmoStats ammo, double magBuff = FullMagBuff)
         => Math.Floor(MagazineVolume * magBuff / ammo.UnitVolume);
 
     /// <summary>Time to fire all shots in a full magazine, in seconds.</summary>
+    /// <param name="ammo">Ammo type for magazine capacity calculation.</param>
+    /// <param name="magBuff">Magazine volume multiplier. Defaults to <see cref="FullMagBuff"/>.</param>
+    /// <param name="cycleBuff">Cycle time multiplier. Defaults to <see cref="FullBuff"/>.</param>
+    /// <returns>Time in seconds to fire the entire magazine.</returns>
     public double GetTimeToEmpty(AmmoStats ammo, double magBuff = FullMagBuff, double cycleBuff = FullBuff)
         => GetNumberOfShotsInMagazine(ammo, magBuff) * (BaseCycleTime * cycleBuff);
 
     /// <summary>Reload duration in seconds, with buff factor.</summary>
+    /// <param name="reloadBuff">Reload time multiplier. Defaults to <see cref="FullBuff"/>.</param>
+    /// <returns>Reload time in seconds.</returns>
     public double GetReloadTime(double reloadBuff = FullBuff) => BaseReloadTime * reloadBuff;
 
     /// <summary>Full cycle: fire all shots + reload, in seconds.</summary>
+    /// <param name="ammo">Ammo type for magazine capacity calculation.</param>
+    /// <param name="magBuff">Magazine volume multiplier. Defaults to <see cref="FullMagBuff"/>.</param>
+    /// <param name="cycleBuff">Cycle time multiplier. Defaults to <see cref="FullBuff"/>.</param>
+    /// <param name="reloadBuff">Reload time multiplier. Defaults to <see cref="FullBuff"/>.</param>
+    /// <returns>Total seconds for one complete fire-and-reload cycle.</returns>
     public double GetTotalCycleTime(AmmoStats ammo, double magBuff = FullMagBuff, double cycleBuff = FullBuff, double reloadBuff = FullBuff)
         => GetTimeToEmpty(ammo, magBuff, cycleBuff) + GetReloadTime(reloadBuff);
 
     /// <summary>Average shots per second across full cycle (fire + reload).</summary>
+    /// <param name="ammo">Ammo type for magazine capacity calculation.</param>
+    /// <param name="magBuff">Magazine volume multiplier. Defaults to <see cref="FullMagBuff"/>.</param>
+    /// <param name="cycleBuff">Cycle time multiplier. Defaults to <see cref="FullBuff"/>.</param>
+    /// <param name="reloadBuff">Reload time multiplier. Defaults to <see cref="FullBuff"/>.</param>
+    /// <returns>Sustained rate of fire in shots per second.</returns>
     public double GetSustainedRateOfFire(AmmoStats ammo, double magBuff = FullMagBuff, double cycleBuff = FullBuff, double reloadBuff = FullBuff)
         => GetNumberOfShotsInMagazine(ammo, magBuff) / GetTotalCycleTime(ammo, magBuff, cycleBuff, reloadBuff);
 
@@ -100,6 +125,11 @@ public class WeaponStats
     /// Seconds between shots for a single weapon, accounting for sustained ROF.
     /// Clamped: buff factors to [0.1, 5], result floor at BaseCycleTime if ROF is too high.
     /// </summary>
+    /// <param name="ammo">Ammo type for magazine capacity calculation.</param>
+    /// <param name="magBuff">Magazine volume multiplier, clamped to [0.1, 5]. Defaults to <see cref="FullMagBuff"/>.</param>
+    /// <param name="cycleBuff">Cycle time multiplier, clamped to [0.1, 5]. Defaults to <see cref="FullBuff"/>.</param>
+    /// <param name="reloadBuff">Reload time multiplier, clamped to [0.1, 5]. Defaults to <see cref="FullBuff"/>.</param>
+    /// <returns>Seconds between shots. Falls back to <see cref="BaseCycleTime"/> (clamped to [0.5, 60]) if result is below 0.5 seconds.</returns>
     public double GetShotWaitTime(AmmoStats ammo, double magBuff = FullMagBuff, double cycleBuff = FullBuff, double reloadBuff = FullBuff)
     {
         cycleBuff = Math.Clamp(cycleBuff, 0.1d, 5d);
@@ -114,6 +144,12 @@ public class WeaponStats
     /// Effective wait time when N guns of this type fire in parallel.
     /// <paramref name="weaponCount"/> is clamped to [1, 10].
     /// </summary>
+    /// <param name="ammo">Ammo type for magazine capacity calculation.</param>
+    /// <param name="weaponCount">Number of parallel weapons, clamped to [1, 10].</param>
+    /// <param name="magBuff">Magazine volume multiplier. Defaults to <see cref="FullMagBuff"/>.</param>
+    /// <param name="cycleBuff">Cycle time multiplier. Defaults to <see cref="FullBuff"/>.</param>
+    /// <param name="reloadBuff">Reload time multiplier. Defaults to <see cref="FullBuff"/>.</param>
+    /// <returns>Seconds between shots when <paramref name="weaponCount"/> weapons fire in parallel.</returns>
     public double GetShotWaitTimePerGun(AmmoStats ammo, int weaponCount, double magBuff = FullMagBuff, double cycleBuff = FullBuff, double reloadBuff = FullBuff)
         => GetShotWaitTime(ammo, magBuff, cycleBuff, reloadBuff) / Math.Clamp(weaponCount, 1d, 10d);
 }

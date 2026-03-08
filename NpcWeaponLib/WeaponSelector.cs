@@ -26,6 +26,7 @@ public static class WeaponSelector
     /// <param name="weapons">All weapons on the construct.</param>
     /// <param name="effectiveness">Per-weapon health data, keyed by ItemTypeName.</param>
     /// <param name="targetDistance">Distance to target in metres.</param>
+    /// <returns>The best-matching functional weapon, or <c>null</c> if no functional weapons remain.</returns>
     public static WeaponStats? SelectBestWeapon(
         IEnumerable<WeaponStats> weapons,
         IDictionary<string, IList<WeaponEffectiveness>> effectiveness,
@@ -47,6 +48,12 @@ public static class WeaponSelector
     /// <summary>
     /// Returns (functionalCount, totalCount) for a specific weapon type.
     /// </summary>
+    /// <param name="effectiveness">Per-weapon health data, keyed by ItemTypeName.</param>
+    /// <param name="itemTypeName">Weapon type to query.</param>
+    /// <returns>
+    /// A tuple of (FunctionalCount, TotalCount). Returns (0, 1) if the weapon type is not found,
+    /// to avoid division by zero.
+    /// </returns>
     public static (int FunctionalCount, int TotalCount) GetEffectivenessFactors(
         IDictionary<string, IList<WeaponEffectiveness>> effectiveness,
         string itemTypeName)
@@ -58,6 +65,8 @@ public static class WeaponSelector
     }
 
     /// <summary>Returns true if any weapon across all types is still functional.</summary>
+    /// <param name="effectiveness">Per-weapon health data, keyed by ItemTypeName.</param>
+    /// <returns><c>true</c> if at least one weapon has hitpoints above 1%; <c>false</c> if all destroyed.</returns>
     public static bool HasAnyFunctionalWeapons(IDictionary<string, IList<WeaponEffectiveness>> effectiveness)
     {
         return effectiveness.SelectMany(kvp => kvp.Value).Any(e => !e.IsDestroyed());

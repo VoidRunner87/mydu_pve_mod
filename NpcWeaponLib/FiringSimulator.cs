@@ -37,6 +37,10 @@ public class FiringSimulator
     private double _accumulatedTime;
     private readonly Random _random;
 
+    /// <summary>
+    /// Creates a new firing simulator instance.
+    /// </summary>
+    /// <param name="random">Optional random number generator for ammo selection. If null, a new <see cref="Random"/> is created.</param>
     public FiringSimulator(Random? random = null)
     {
         _random = random ?? new Random();
@@ -46,8 +50,18 @@ public class FiringSimulator
     public double AccumulatedTime => _accumulatedTime;
 
     /// <summary>
-    /// Processes a single firing tick.
+    /// Processes a single firing tick. Accumulates delta time and fires when the interval is reached.
     /// </summary>
+    /// <param name="input">All inputs for this tick including NPC state, target, weapons, and timing.</param>
+    /// <returns>
+    /// A <see cref="FiringOutput"/> indicating whether the NPC should fire, along with the
+    /// <see cref="ShotData"/> if firing, or a <see cref="FiringSuppressedReason"/> if not.
+    /// </returns>
+    /// <remarks>
+    /// The caller is responsible for safe zone checks (via <see cref="Interfaces.ISafeZoneService"/>),
+    /// hit position resolution (via <see cref="Interfaces.IHitPositionService"/>), and shot dispatch
+    /// (via <see cref="Interfaces.IShotDispatchService"/>). This method only computes whether and what to fire.
+    /// </remarks>
     public FiringOutput Tick(FiringInput input)
     {
         // --- Guard: not alive ---

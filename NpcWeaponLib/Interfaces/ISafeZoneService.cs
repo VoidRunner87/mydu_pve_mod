@@ -8,5 +8,10 @@ namespace NpcWeaponLib.Interfaces;
 /// </summary>
 public interface ISafeZoneService
 {
+    /// <summary>
+    /// Checks whether the given construct is currently inside a safe zone.
+    /// </summary>
+    /// <param name="constructId">Construct to check.</param>
+    /// <returns><c>true</c> if the construct is inside a safe zone; <c>false</c> otherwise.</returns>
     Task<bool> IsInSafeZoneAsync(ConstructId constructId);
 }

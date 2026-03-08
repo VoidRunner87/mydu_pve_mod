@@ -15,5 +15,10 @@ namespace NpcWeaponLib.Interfaces;
 /// </remarks>
 public interface IShotDispatchService
 {
+    /// <summary>
+    /// Sends the computed shot to the game server for damage processing.
+    /// </summary>
+    /// <param name="shot">Complete shot data including weapon properties, positions, and ammo info.</param>
+    /// <returns>A task that completes when the shot has been dispatched.</returns>
     Task DispatchShotAsync(ShotData shot);
 }
