@@ -12,6 +12,6 @@ public class ClosestTargetStrategy : ITargetSelectionStrategy
 {
     public ScanContact? SelectTarget(TargetSelectionParams @params)
     {
-        return @params.Contacts.MinBy(c => c.Distance);
+        return @params.Contacts.Count == 0 ? null : @params.Contacts.MinBy(c => c.Distance);
     }
 }
