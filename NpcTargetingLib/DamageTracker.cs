@@ -1,4 +1,3 @@
-using NpcCommonLib.Data;
 using NpcTargetingLib.Data;
 
 namespace NpcTargetingLib;
