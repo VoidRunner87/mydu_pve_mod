@@ -1,0 +1,326 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace NpcMovementLib;
+
+/// <summary>
+/// A self-contained example of the fixed-step update loop technique used to drive NPC movement.
+///
+/// WHY FIXED STEP?
+/// ===============
+/// In a variable-timestep loop, delta time changes every frame depending on how long the previous
+/// frame took. This leads to inconsistent physics: an NPC might overshoot a target on a slow frame
+/// or jitter on a fast one. A fixed-step loop guarantees that every simulation tick uses the exact
+/// same delta time (e.g. 50ms), producing deterministic, reproducible movement regardless of
+/// real-world timing.
+///
+/// HOW IT WORKS
+/// ============
+/// 1. Each iteration, we measure how much real time has elapsed since the last iteration.
+/// 2. That elapsed time is added to an accumulator.
+/// 3. We then consume the accumulator in fixed-size chunks (the fixed delta time).
+///    - If the machine is fast, the accumulator may be less than one chunk → no tick this iteration.
+///    - If the machine is slow or a frame spike occurs, the accumulator may hold several chunks
+///      → we run multiple "catch-up" ticks to keep the simulation in sync with real time.
+/// 4. A maximum catch-up limit (MaxFixedStepLoops) prevents a death spiral: if the simulation
+///    falls too far behind (e.g. the process was suspended), we cap the catch-up and reset
+///    the accumulator rather than running hundreds of ticks at once.
+///
+/// VARIABLE-STEP MODE
+/// ==================
+/// Also included for comparison. In this mode, delta time is simply the real elapsed time
+/// since the last tick. Useful for logic that doesn't need deterministic timing (e.g. target
+/// selection, AI decision-making at 1 FPS).
+///
+/// VELOCITY CONVENTION: ABSOLUTE, NOT FRAME-BASED
+/// ================================================
+/// All velocities in this system (from GetConstructVelocities, stored on constructs, etc.)
+/// are ABSOLUTE world-space velocities in metres per second (m/s). They are NOT per-frame
+/// displacement deltas.
+///
+/// This matters because:
+///
+///   - To move an NPC, you multiply:  displacement = velocity * deltaTime
+///     If velocity were a per-frame delta, you'd just add it directly — but that would
+///     break when the tick rate changes. Absolute velocity is tick-rate-independent.
+///
+///   - To predict a future position (e.g. for weapons leading), you use the kinematic equation:
+///       futurePos = pos + velocity * t + 0.5 * acceleration * t²
+///     This only works if velocity is in m/s.
+///
+///   - To compute relative velocity between two constructs (e.g. for tracking):
+///       relativeVel = targetVelocity - myVelocity
+///     Both must be in the same absolute units for subtraction to be meaningful.
+///
+///   - When sending position updates to the game engine, velocity is converted back
+///     from a position delta:
+///       displayVelocity = (newPosition - oldPosition) / deltaTime
+///     This converts a frame displacement INTO an absolute velocity for the engine.
+///
+/// In short: velocities are always rates (m/s). The fixed-step deltaTime (0.05s) is the
+/// multiplier that converts them into per-tick displacements inside the tick callback.
+///
+/// USAGE IN THE MOD
+/// ================
+/// The mod runs three loops at different priorities:
+///   - MovementPriority:  20 FPS, fixed step (this technique) → position/velocity updates
+///   - HighPriority:      10 FPS, variable step              → combat, damage, targeting
+///   - MediumPriority:     1 FPS, variable step              → target selection, AI decisions
+///
+/// Each loop processes all active NPC constructs in parallel via Parallel.ForEachAsync,
+/// and each NPC behavior declares which loop category it belongs to.
+/// </summary>
+public class FixedStepUpdateLoop
+{
+    // -- Configuration --
+
+    /// <summary>
+    /// The fixed delta time for each simulation step: 1/20th of a second = 50ms.
+    /// Every tick callback receives exactly this value, ensuring deterministic physics.
+    ///
+    /// This is the multiplier that converts absolute velocities (m/s) into per-tick
+    /// displacements (metres): displacement = velocity_m_per_s * 0.05s
+    /// </summary>
+    private const double FixedDeltaTime = 1.0 / 20.0; // 50ms
+
+    /// <summary>
+    /// Maximum number of fixed-step ticks to run in a single iteration.
+    /// Prevents a "death spiral" where the simulation can never catch up
+    /// if real time gets too far ahead (e.g. after a process freeze or long GC pause).
+    /// If we exceed this, the accumulator is reset to zero — we accept losing
+    /// some simulation time rather than freezing the server with hundreds of catch-up ticks.
+    /// </summary>
+    private const int MaxFixedStepLoops = 10;
+
+    /// <summary>
+    /// Target frames per second. Controls how long we sleep between iterations
+    /// to avoid busy-spinning. The actual tick rate is governed by the fixed step,
+    /// but this prevents the loop from running thousands of idle iterations per second.
+    /// </summary>
+    private readonly double _targetFps;
+
+    /// <summary>
+    /// When true, uses fixed-step mode (accumulator + catch-up).
+    /// When false, uses variable-step mode (real delta time passed directly).
+    /// </summary>
+    private readonly bool _useFixedStep;
+
+    // -- State --
+    private DateTime _lastTickTime;
+    private TimeSpan _accumulatedTime = TimeSpan.Zero;
+
+    /// <summary>
+    /// Initializes a new <see cref="FixedStepUpdateLoop"/> with the specified target frame rate and stepping mode.
+    /// </summary>
+    /// <param name="targetFps">
+    /// The target iterations per second. In fixed-step mode this controls the sleep duration between
+    /// iterations to prevent busy-spinning; the actual simulation tick rate is always governed by
+    /// <c>FixedDeltaTime</c> (50 ms). In variable-step mode this directly caps the tick rate.
+    /// Must be greater than zero. The game backend uses 20 FPS for movement, 10 FPS for combat,
+    /// and 1 FPS for AI decisions.
+    /// </param>
+    /// <param name="useFixedStep">
+    /// When <see langword="true"/> (default), uses the accumulator-based fixed-step mode that
+    /// guarantees deterministic delta time. When <see langword="false"/>, uses variable-step mode
+    /// where the real elapsed wall-clock time is passed directly to the tick callback.
+    /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="targetFps"/> is less than or equal to zero.
+    /// </exception>
+    public FixedStepUpdateLoop(double targetFps = 20, bool useFixedStep = true)
+    {
+        if (targetFps <= 0)
+            throw new ArgumentOutOfRangeException(nameof(targetFps), "Must be > 0");
+
+        _targetFps = targetFps;
+        _useFixedStep = useFixedStep;
+        _lastTickTime = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Runs the update loop until cancellation is requested via <paramref name="stoppingToken"/>.
+    /// The provided callback is invoked each tick with either a fixed or variable delta time,
+    /// depending on the mode selected in the constructor.
+    /// </summary>
+    /// <param name="onTick">
+    /// The callback to invoke on each simulation tick. The first argument is the delta time in
+    /// seconds (always exactly 0.05 in fixed-step mode). The second argument is a
+    /// <see cref="CancellationToken"/> that the callback should respect for cooperative cancellation.
+    /// All velocities used inside this callback should be absolute world-space values in m/s;
+    /// multiply by <c>deltaTime</c> to convert to per-tick displacement.
+    /// </param>
+    /// <param name="stoppingToken">
+    /// A cancellation token that, when triggered, causes the loop to exit gracefully.
+    /// <see cref="OperationCanceledException"/> from <c>Task.Delay</c> is caught internally
+    /// and causes a clean break from the loop.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> that completes when <paramref name="stoppingToken"/> is cancelled.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// <b>Thread safety:</b> This method is <b>not</b> safe to call concurrently from multiple threads.
+    /// Each <see cref="FixedStepUpdateLoop"/> instance maintains internal timing state
+    /// (<c>_lastTickTime</c>, <c>_accumulatedTime</c>) that is not synchronized. Use one instance
+    /// per logical loop. The game backend runs separate instances for each
+    /// <c>BehaviorTaskCategory</c> (MovementPriority, HighPriority, MediumPriority).
+    /// </para>
+    /// <para>
+    /// Example usage:
+    /// <code>
+    ///   var loop = new FixedStepUpdateLoop(targetFps: 20, useFixedStep: true);
+    ///   await loop.RunAsync(async (deltaTime, ct) =>
+    ///   {
+    ///       // deltaTime is always exactly 0.05s in fixed-step mode.
+    ///       //
+    ///       // npc.Velocity is an ABSOLUTE velocity in m/s (from GetConstructVelocities).
+    ///       // Multiplying by deltaTime converts it to a per-tick displacement:
+    ///       //   200 m/s * 0.05s = 10 metres this tick
+    ///       npc.Position += npc.Velocity * deltaTime;
+    ///
+    ///       // Same for acceleration: it's in m/s^2, so multiplying by deltaTime
+    ///       // gives the velocity change for this tick:
+    ///       //   40 m/s^2 * 0.05s = 2 m/s added this tick
+    ///       npc.Velocity += npc.Acceleration * deltaTime;
+    ///
+    ///       // When reporting back to the engine, convert the displacement back to
+    ///       // an absolute velocity so the engine can interpolate between updates:
+    ///       //   displayVelocity = (newPos - oldPos) / deltaTime -> back to m/s
+    ///       await SendPositionUpdate(npc);
+    ///   }, cancellationToken);
+    /// </code>
+    /// </para>
+    /// </remarks>
+    public async Task RunAsync(
+        Func<double, CancellationToken, Task> onTick,
+        CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                if (_useFixedStep)
+                    await RunFixedStepIteration(onTick, stoppingToken);
+                else
+                    await RunVariableStepIteration(onTick, stoppingToken);
+
+                // Yield control so other async work can proceed.
+                // Without this, the loop would starve other tasks on the same thread.
+                await Task.Yield();
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// VARIABLE-STEP MODE
+    ///
+    /// Simple approach: measure real elapsed time, sleep if we're ahead of target FPS,
+    /// then tick once with the actual delta time.
+    ///
+    /// Pros: Simple, no accumulator logic.
+    /// Cons: Delta time varies, so physics can be inconsistent on slow/fast frames.
+    ///
+    /// Used for: AI decisions, target selection — things that don't need frame-perfect timing.
+    /// </summary>
+    private async Task RunVariableStepIteration(
+        Func<double, CancellationToken, Task> onTick,
+        CancellationToken stoppingToken)
+    {
+        // Step 1: Measure real elapsed time
+        var now = DateTime.UtcNow;
+        var deltaTime = now - _lastTickTime;
+        _lastTickTime = now;
+
+        // Step 2: Sleep if we're running faster than our target FPS
+        var targetFrameTime = 1.0 / _targetFps;
+        if (deltaTime.TotalSeconds < targetFrameTime)
+        {
+            var waitSeconds = targetFrameTime - deltaTime.TotalSeconds;
+            await Task.Delay(TimeSpan.FromSeconds(waitSeconds), stoppingToken);
+        }
+
+        // Step 3: Tick once with the real delta time
+        await onTick(deltaTime.TotalSeconds, stoppingToken);
+    }
+
+    /// <summary>
+    /// FIXED-STEP MODE (the important one for movement)
+    ///
+    /// This is the core technique. Instead of passing variable delta time to the tick,
+    /// we accumulate real elapsed time and consume it in fixed-size chunks.
+    ///
+    /// Timeline example (target 20 FPS = 50ms per tick):
+    ///
+    ///   Real time:     |----62ms----|----45ms----|----130ms----|----30ms----|
+    ///   Accumulator:   62ms         57ms         137ms         17ms
+    ///   Ticks fired:   1 tick       1 tick       2 ticks       0 ticks
+    ///                  (12ms left)  (7ms left)   (37ms left)   (17ms left → carries over)
+    ///
+    /// The leftover accumulator carries forward, so over time the simulation
+    /// stays perfectly in sync with real time without drift.
+    ///
+    /// CATCH-UP SCENARIO:
+    ///   If the process freezes for 2 seconds, the accumulator would be 2000ms.
+    ///   At 50ms per tick, that's 40 ticks — too many. MaxFixedStepLoops (10) caps it.
+    ///   After 10 catch-up ticks, the accumulator is reset to zero.
+    ///   We lose ~1.5 seconds of simulation time, but the server stays responsive.
+    /// </summary>
+    private async Task RunFixedStepIteration(
+        Func<double, CancellationToken, Task> onTick,
+        CancellationToken stoppingToken)
+    {
+        // Step 1: Measure real elapsed time since last iteration
+        var now = DateTime.UtcNow;
+        var deltaTime = now - _lastTickTime;
+        _lastTickTime = now;
+
+        // Step 2: Sleep if we're running faster than target FPS
+        //         This is just to avoid busy-spinning. The fixed step handles the rest.
+        var targetFrameTime = 1.0 / _targetFps;
+        if (deltaTime.TotalSeconds < targetFrameTime)
+        {
+            var waitSeconds = targetFrameTime - deltaTime.TotalSeconds;
+            await Task.Delay(TimeSpan.FromSeconds(waitSeconds), stoppingToken);
+        }
+
+        // Step 3: Add elapsed real time to the accumulator
+        _accumulatedTime += deltaTime;
+
+        var fixedDeltaSpan = TimeSpan.FromSeconds(FixedDeltaTime);
+        var tickCount = 0;
+
+        // Step 4: Consume the accumulator in fixed-size chunks
+        //         Each tick gets exactly FixedDeltaTime (50ms), guaranteeing determinism.
+        while (_accumulatedTime >= fixedDeltaSpan)
+        {
+            if (stoppingToken.IsCancellationRequested) return;
+
+            // Fire one tick with the fixed delta time (always 0.05 seconds).
+            // Inside the callback, multiply absolute velocities (m/s) by this value
+            // to get the displacement for this tick. The velocity itself never changes
+            // because of the tick rate — only the displacement per tick does.
+            await onTick(FixedDeltaTime, stoppingToken);
+
+            // Subtract the chunk we just consumed
+            _accumulatedTime -= fixedDeltaSpan;
+
+            tickCount++;
+
+            // Step 5: Catch-up safety valve
+            //         If we've run too many ticks this iteration, bail out.
+            //         This prevents a "death spiral" where catch-up ticks take so long
+            //         that even more time accumulates, leading to even more catch-up ticks.
+            if (tickCount > MaxFixedStepLoops)
+            {
+                // Discard remaining accumulated time — accept the loss
+                _accumulatedTime = TimeSpan.Zero;
+                break;
+            }
+        }
+    }
+}
