@@ -6,20 +6,88 @@ using NpcMovementLib.Strategies;
 namespace NpcMovementLib;
 
 /// <summary>
-/// Main orchestrator: takes a MovementInput, runs the movement strategy + rotation, returns MovementOutput.
-/// This is the primary entry point for consumers.
+/// The main entry point for NPC movement simulation. Orchestrates velocity goal calculation,
+/// strategy selection, acceleration, and rotation into a single <see cref="Tick"/> call.
 /// </summary>
+/// <remarks>
+/// <para>
+/// This class is the library-side equivalent of
+/// <c>FollowTargetBehaviorV2.TickAsync</c> in the game backend. The backend version is
+/// tightly coupled to Orleans grains, <c>BehaviorContext</c>, and the <c>IMovementEffect</c>
+/// effect system. <see cref="MovementSimulator"/> extracts the same physics logic into a
+/// pure, dependency-free form so it can be unit-tested and reused outside the game server.
+/// </para>
+/// <para>
+/// Each call to <see cref="Tick"/> performs these steps in order:
+/// <list type="number">
+///   <item>Derive the construct's forward vector from <see cref="MovementInput.Rotation"/>.</item>
+///   <item>Compute the move direction toward <see cref="MovementInput.TargetMovePosition"/>.</item>
+///   <item>Blend acceleration between the forward and move directions using
+///         <see cref="MovementInput.RealismFactor"/> (0 = instant turn, 1 = realistic inertia).</item>
+///   <item>Compute the velocity goal via <see cref="VelocityGoalCalculator"/> (accounts for
+///         braking distance, weapon range, and speed modifiers).</item>
+///   <item>Delegate position/velocity integration to an <see cref="IMovementStrategy"/>:
+///         either <see cref="BrakingStrategy"/> (when engines are off or braking is active)
+///         or <see cref="BurnToTargetStrategy"/> (default thrust-based movement).</item>
+///   <item>Slerp the construct's rotation toward the movement direction at
+///         <see cref="MovementInput.RotationSpeed"/>.</item>
+/// </list>
+/// </para>
+/// <para>
+/// <b>Thread safety:</b> This class holds no mutable state between calls.
+/// A single instance can be shared across threads provided each call receives its own
+/// <see cref="MovementInput"/>.
+/// </para>
+/// </remarks>
 public class MovementSimulator
 {
     private readonly IMovementStrategy _defaultStrategy;
     private readonly IMovementStrategy _brakingStrategy;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MovementSimulator"/> class.
+    /// </summary>
+    /// <param name="defaultStrategy">
+    /// The movement strategy used when the NPC is actively thrusting (engines on, not braking).
+    /// If <see langword="null"/>, defaults to <see cref="BurnToTargetStrategy"/>, which applies
+    /// acceleration toward the target and clamps velocity to the computed goal.
+    /// </param>
     public MovementSimulator(IMovementStrategy? defaultStrategy = null)
     {
         _defaultStrategy = defaultStrategy ?? new BurnToTargetStrategy();
         _brakingStrategy = new BrakingStrategy();
     }
 
+    /// <summary>
+    /// Executes a single simulation tick, advancing the NPC's position, velocity, and rotation.
+    /// </summary>
+    /// <param name="input">
+    /// A snapshot of the NPC's current state and movement parameters. All positional values are in
+    /// metres (world-space), velocities in m/s, acceleration in <em>g</em> (multiples of 9.81 m/s²),
+    /// speeds in km/h, and <see cref="MovementInput.DeltaTime"/> in seconds (typically 0.05 s for
+    /// the 20 FPS fixed-step loop).
+    /// </param>
+    /// <returns>
+    /// A <see cref="MovementOutput"/> containing the updated world-space position, absolute velocity
+    /// (m/s), and rotation quaternion. The caller is responsible for pushing these values to the
+    /// game server via <see cref="Interfaces.IConstructUpdateService.SendConstructUpdate"/>.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// The acceleration blending works as follows:
+    /// <list type="bullet">
+    ///   <item><c>accelForward = forward * acceleration * RealismFactor</c> — thrust along the ship's nose.</item>
+    ///   <item><c>accelMove = moveDirection * acceleration * (1 - RealismFactor)</c> — thrust directly toward target.</item>
+    /// </list>
+    /// When <see cref="MovementInput.RealismFactor"/> is 0, the NPC can instantly change direction
+    /// (arcade-style). When it is 1, the NPC must turn before it can accelerate toward the target
+    /// (realistic flight model).
+    /// </para>
+    /// <para>
+    /// If the NPC's velocity is opposing its forward direction (<c>velToTargetDot &lt; 0</c>),
+    /// acceleration is boosted proportionally to help the construct reverse more quickly.
+    /// </para>
+    /// </remarks>
     public MovementOutput Tick(MovementInput input)
     {
         var npcPos = input.Position;

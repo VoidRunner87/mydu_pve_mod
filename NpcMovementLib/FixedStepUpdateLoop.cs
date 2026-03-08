@@ -36,7 +36,7 @@ namespace NpcMovementLib;
 /// VELOCITY CONVENTION: ABSOLUTE, NOT FRAME-BASED
 /// ================================================
 /// All velocities in this system (from GetConstructVelocities, stored on constructs, etc.)
-/// are ABSOLUTE world-space velocities in meters per second (m/s). They are NOT per-frame
+/// are ABSOLUTE world-space velocities in metres per second (m/s). They are NOT per-frame
 /// displacement deltas.
 ///
 /// This matters because:
@@ -80,7 +80,7 @@ public class FixedStepUpdateLoop
     /// Every tick callback receives exactly this value, ensuring deterministic physics.
     ///
     /// This is the multiplier that converts absolute velocities (m/s) into per-tick
-    /// displacements (meters): displacement = velocity_m_per_s * 0.05s
+    /// displacements (metres): displacement = velocity_m_per_s * 0.05s
     /// </summary>
     private const double FixedDeltaTime = 1.0 / 20.0; // 50ms
 
@@ -110,6 +110,24 @@ public class FixedStepUpdateLoop
     private DateTime _lastTickTime;
     private TimeSpan _accumulatedTime = TimeSpan.Zero;
 
+    /// <summary>
+    /// Initializes a new <see cref="FixedStepUpdateLoop"/> with the specified target frame rate and stepping mode.
+    /// </summary>
+    /// <param name="targetFps">
+    /// The target iterations per second. In fixed-step mode this controls the sleep duration between
+    /// iterations to prevent busy-spinning; the actual simulation tick rate is always governed by
+    /// <c>FixedDeltaTime</c> (50 ms). In variable-step mode this directly caps the tick rate.
+    /// Must be greater than zero. The game backend uses 20 FPS for movement, 10 FPS for combat,
+    /// and 1 FPS for AI decisions.
+    /// </param>
+    /// <param name="useFixedStep">
+    /// When <see langword="true"/> (default), uses the accumulator-based fixed-step mode that
+    /// guarantees deterministic delta time. When <see langword="false"/>, uses variable-step mode
+    /// where the real elapsed wall-clock time is passed directly to the tick callback.
+    /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="targetFps"/> is less than or equal to zero.
+    /// </exception>
     public FixedStepUpdateLoop(double targetFps = 20, bool useFixedStep = true)
     {
         if (targetFps <= 0)
@@ -121,9 +139,34 @@ public class FixedStepUpdateLoop
     }
 
     /// <summary>
-    /// Runs the update loop until cancellation is requested.
-    /// The provided callback is invoked each tick with a fixed or variable delta time.
-    ///
+    /// Runs the update loop until cancellation is requested via <paramref name="stoppingToken"/>.
+    /// The provided callback is invoked each tick with either a fixed or variable delta time,
+    /// depending on the mode selected in the constructor.
+    /// </summary>
+    /// <param name="onTick">
+    /// The callback to invoke on each simulation tick. The first argument is the delta time in
+    /// seconds (always exactly 0.05 in fixed-step mode). The second argument is a
+    /// <see cref="CancellationToken"/> that the callback should respect for cooperative cancellation.
+    /// All velocities used inside this callback should be absolute world-space values in m/s;
+    /// multiply by <c>deltaTime</c> to convert to per-tick displacement.
+    /// </param>
+    /// <param name="stoppingToken">
+    /// A cancellation token that, when triggered, causes the loop to exit gracefully.
+    /// <see cref="OperationCanceledException"/> from <c>Task.Delay</c> is caught internally
+    /// and causes a clean break from the loop.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> that completes when <paramref name="stoppingToken"/> is cancelled.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// <b>Thread safety:</b> This method is <b>not</b> safe to call concurrently from multiple threads.
+    /// Each <see cref="FixedStepUpdateLoop"/> instance maintains internal timing state
+    /// (<c>_lastTickTime</c>, <c>_accumulatedTime</c>) that is not synchronized. Use one instance
+    /// per logical loop. The game backend runs separate instances for each
+    /// <c>BehaviorTaskCategory</c> (MovementPriority, HighPriority, MediumPriority).
+    /// </para>
+    /// <para>
     /// Example usage:
     /// <code>
     ///   var loop = new FixedStepUpdateLoop(targetFps: 20, useFixedStep: true);
@@ -133,21 +176,22 @@ public class FixedStepUpdateLoop
     ///       //
     ///       // npc.Velocity is an ABSOLUTE velocity in m/s (from GetConstructVelocities).
     ///       // Multiplying by deltaTime converts it to a per-tick displacement:
-    ///       //   200 m/s * 0.05s = 10 meters this tick
+    ///       //   200 m/s * 0.05s = 10 metres this tick
     ///       npc.Position += npc.Velocity * deltaTime;
     ///
-    ///       // Same for acceleration: it's in m/s², so multiplying by deltaTime
+    ///       // Same for acceleration: it's in m/s^2, so multiplying by deltaTime
     ///       // gives the velocity change for this tick:
-    ///       //   40 m/s² * 0.05s = 2 m/s added this tick
+    ///       //   40 m/s^2 * 0.05s = 2 m/s added this tick
     ///       npc.Velocity += npc.Acceleration * deltaTime;
     ///
     ///       // When reporting back to the engine, convert the displacement back to
     ///       // an absolute velocity so the engine can interpolate between updates:
-    ///       //   displayVelocity = (newPos - oldPos) / deltaTime → back to m/s
+    ///       //   displayVelocity = (newPos - oldPos) / deltaTime -> back to m/s
     ///       await SendPositionUpdate(npc);
     ///   }, cancellationToken);
     /// </code>
-    /// </summary>
+    /// </para>
+    /// </remarks>
     public async Task RunAsync(
         Func<double, CancellationToken, Task> onTick,
         CancellationToken stoppingToken)
