@@ -1,5 +1,6 @@
 using System.Numerics;
 using NpcMovementLib.Data;
+using NpcCommonLib.Math;
 using NpcMovementLib.Math;
 using NpcMovementLib.Strategies;
 

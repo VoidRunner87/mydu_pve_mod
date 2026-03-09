@@ -1,4 +1,5 @@
 using System.Numerics;
+using NpcCommonLib.Math;
 
 namespace NpcMovementLib.Math;
 

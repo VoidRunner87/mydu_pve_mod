@@ -1,7 +1,7 @@
 using System.Numerics;
-using NpcMovementLib.Math;
+using NpcCommonLib.Math;
 
-namespace NpcMovementLib.Interfaces;
+namespace NpcCommonLib.Interfaces;
 
 /// <summary>
 /// Sends construct position, rotation, and velocity updates to the game server,
@@ -17,11 +17,11 @@ namespace NpcMovementLib.Interfaces;
 /// </para>
 /// <para>
 /// This interface is called at the end of each movement tick, after
-/// <see cref="MovementSimulator.Tick"/> has computed the new position, velocity, and rotation.
+/// <c>MovementSimulator.Tick</c> has computed the new position, velocity, and rotation.
 /// The typical flow is:
 /// <list type="number">
 ///   <item><see cref="IConstructService.GetConstructTransformAsync"/> reads the initial position (first tick only).</item>
-///   <item><see cref="MovementSimulator.Tick"/> computes the new state.</item>
+///   <item><c>MovementSimulator.Tick</c> computes the new state.</item>
 ///   <item><see cref="SendConstructUpdate"/> pushes the result to the server.</item>
 /// </list>
 /// </para>
@@ -44,11 +44,11 @@ public interface IConstructUpdateService
     /// </param>
     /// <param name="position">
     /// The construct's new absolute world-space position in metres, as computed by
-    /// <see cref="MovementSimulator.Tick"/>.
+    /// <c>MovementSimulator.Tick</c>.
     /// </param>
     /// <param name="rotation">
     /// The construct's new orientation quaternion, as computed by Slerp interpolation
-    /// toward the movement direction in <see cref="MovementSimulator.Tick"/>.
+    /// toward the movement direction in <c>MovementSimulator.Tick</c>.
     /// </param>
     /// <param name="velocity">
     /// The construct's display velocity in metres per second (m/s). This should be

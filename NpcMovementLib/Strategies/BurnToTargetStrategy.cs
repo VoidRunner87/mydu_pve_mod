@@ -1,3 +1,4 @@
+using NpcCommonLib.Math;
 using NpcMovementLib.Math;
 
 namespace NpcMovementLib.Strategies;

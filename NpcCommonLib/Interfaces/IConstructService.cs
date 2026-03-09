@@ -1,6 +1,6 @@
-using NpcMovementLib.Data;
+using NpcCommonLib.Data;
 
-namespace NpcMovementLib.Interfaces;
+namespace NpcCommonLib.Interfaces;
 
 /// <summary>
 /// Provides read-only access to a construct's transform (position + rotation) and velocity data.
@@ -75,7 +75,7 @@ public interface IConstructService
     /// <remarks>
     /// In the game backend, this calls <c>GetConstructGrain(constructId).GetConstructVelocity()</c>
     /// on the Orleans cluster. The returned velocity is used both for movement simulation (via
-    /// <see cref="MovementSimulator"/>) and for relative-velocity calculations during combat
+    /// <c>MovementSimulator</c>) and for relative-velocity calculations during combat
     /// (e.g., weapon lead prediction: <c>futurePos = pos + velocity * t + 0.5 * accel * t^2</c>).
     /// </remarks>
     Task<ConstructVelocityResult> GetConstructVelocities(ConstructId constructId);

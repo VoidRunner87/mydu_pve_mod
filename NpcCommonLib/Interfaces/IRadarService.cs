@@ -1,7 +1,7 @@
-using NpcMovementLib.Data;
-using NpcMovementLib.Math;
+using NpcCommonLib.Data;
+using NpcCommonLib.Math;
 
-namespace NpcMovementLib.Interfaces;
+namespace NpcCommonLib.Interfaces;
 
 /// <summary>
 /// Provides radar scanning capability to detect player-owned constructs within a specified range

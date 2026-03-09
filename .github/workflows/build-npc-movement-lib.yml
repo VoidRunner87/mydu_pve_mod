@@ -1,13 +1,21 @@
-name: Build NpcMovementLib
+name: Build & Test NPC Libraries
 
 on:
   push:
     paths:
+      - 'NpcCommonLib/**'
       - 'NpcMovementLib/**'
+      - 'NpcWeaponLib/**'
+      - 'NpcTargetingLib/**'
+      - 'NpcSimulation.Tests/**'
       - '.github/workflows/build-npc-movement-lib.yml'
   pull_request:
     paths:
+      - 'NpcCommonLib/**'
       - 'NpcMovementLib/**'
+      - 'NpcWeaponLib/**'
+      - 'NpcTargetingLib/**'
+      - 'NpcSimulation.Tests/**'
       - '.github/workflows/build-npc-movement-lib.yml'
 
 jobs:
@@ -23,7 +31,20 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore NpcMovementLib/NpcMovementLib.csproj
+        run: |
+          dotnet restore NpcCommonLib/NpcCommonLib.csproj
+          dotnet restore NpcMovementLib/NpcMovementLib.csproj
+          dotnet restore NpcWeaponLib/NpcWeaponLib.csproj
+          dotnet restore NpcTargetingLib/NpcTargetingLib.csproj
+          dotnet restore NpcSimulation.Tests/NpcSimulation.Tests.csproj
 
       - name: Build
-        run: dotnet build NpcMovementLib/NpcMovementLib.csproj --configuration Release --no-restore
+        run: |
+          dotnet build NpcCommonLib/NpcCommonLib.csproj --configuration Release --no-restore
+          dotnet build NpcMovementLib/NpcMovementLib.csproj --configuration Release --no-restore
+          dotnet build NpcWeaponLib/NpcWeaponLib.csproj --configuration Release --no-restore
+          dotnet build NpcTargetingLib/NpcTargetingLib.csproj --configuration Release --no-restore
+          dotnet build NpcSimulation.Tests/NpcSimulation.Tests.csproj --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test NpcSimulation.Tests/NpcSimulation.Tests.csproj --configuration Release --no-build --logger "console;verbosity=detailed"

@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace NpcMovementLib.Math;
+namespace NpcCommonLib.Math;
 
 /// <summary>
 /// A double-precision 3D vector used for NPC position, velocity, and acceleration calculations.
@@ -127,7 +127,7 @@ public struct Vec3 : IEquatable<Vec3>
     /// <remarks>
     /// The dot product is positive when vectors point in a similar direction, zero when perpendicular,
     /// and negative when opposing. Used to compute relative speed along a line-of-sight direction
-    /// (e.g., in <see cref="VelocityHelper.CalculateTimeToReachDistance"/>).
+    /// (e.g., in <c>VelocityHelper.CalculateTimeToReachDistance</c>).
     /// </remarks>
     public readonly double Dot(Vec3 other)
     {
