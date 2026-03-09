@@ -9,8 +9,8 @@ A standalone C# class library for simulating NPC construct movement in a Dual Un
 - **Velocity goal calculator** -- range-aware speed modulation based on weapon optimal range, target velocity, and configurable dot-product modifiers.
 - **Waypoint navigation** -- stateful `WaypointNavigator` with looping support and a nearest-neighbor `RouteSolver` for waypoint ordering.
 - **Fixed-step update loop** -- deterministic 20 FPS tick with accumulator-based catch-up to prevent physics drift.
-- **Custom `Vec3` math** -- double-precision 3D vector struct with operator overloads, normalization, clamping, cross/dot products, and lerp.
-- **Integration interfaces** -- `IConstructService`, `IConstructUpdateService`, and `IRadarService` define the contract your game-server adapter must implement.
+- **Custom `Vec3` math** (via `NpcCommonLib`) -- double-precision 3D vector struct with operator overloads, normalization, clamping, cross/dot products, and lerp.
+- **Integration interfaces** (via `NpcCommonLib`) -- `IConstructService`, `IConstructUpdateService`, and `IRadarService` define the contract your game-server adapter must implement.
 
 ## Getting Started
 
@@ -27,7 +27,7 @@ The library targets `net8.0` and has no external NuGet dependencies.
 ```csharp
 using NpcMovementLib;
 using NpcMovementLib.Data;
-using NpcMovementLib.Math;
+using NpcCommonLib.Math;
 
 // Create the simulator (defaults to BurnToTargetStrategy)
 var simulator = new MovementSimulator();
@@ -287,7 +287,7 @@ await loop.RunAsync(async (deltaTime, ct) =>
 
 ## Integration Interfaces
 
-These interfaces define the boundary between `NpcMovementLib` and your game server. You implement them; the library consumes them.
+These interfaces live in `NpcCommonLib` and define the boundary between the NPC libraries and your game server. You implement them; the libraries consume them.
 
 ### IConstructService
 

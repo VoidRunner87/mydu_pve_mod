@@ -4,7 +4,7 @@ A standalone C# class library for simulating NPC weapon firing in a Dual Univers
 
 ## Features
 
-- **Pure simulation** -- no DI containers, no Orleans grains, no NQ SDK types. Depends only on `NpcMovementLib` for `Vec3` and `ConstructId`.
+- **Pure simulation** -- no DI containers, no Orleans grains, no NQ SDK types. Depends only on `NpcCommonLib` for `Vec3` and `ConstructId`.
 - **Accumulator-based fire timing** -- tracks elapsed time across ticks and fires when the computed interval is reached, preventing timing drift.
 - **Weapon selection by range** -- `WeaponSelector` picks the best functional weapon using half-falloff distance matching against target distance.
 - **Ammo filtering** -- filters compatible ammo by tier level and damage variant (kinetic, thermic, etc.) with random selection among matches.
@@ -21,15 +21,15 @@ A standalone C# class library for simulating NPC weapon firing in a Dual Univers
 <ProjectReference Include="..\NpcWeaponLib\NpcWeaponLib.csproj" />
 ```
 
-The library targets `net8.0` and depends only on `NpcMovementLib` (for `Vec3`, `ConstructId`).
+The library targets `net8.0` and depends only on `NpcCommonLib` (for `Vec3`, `ConstructId`).
 
 ### Basic usage
 
 ```csharp
 using NpcWeaponLib;
 using NpcWeaponLib.Data;
-using NpcMovementLib.Math;
-using NpcMovementLib.Data;
+using NpcCommonLib.Math;
+using NpcCommonLib.Data;
 
 var simulator = new FiringSimulator();
 
