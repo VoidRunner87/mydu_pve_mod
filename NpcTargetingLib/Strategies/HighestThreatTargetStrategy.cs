@@ -13,6 +13,7 @@ namespace NpcTargetingLib.Strategies;
 /// </remarks>
 public class HighestThreatTargetStrategy : ITargetSelectionStrategy
 {
+    /// <inheritdoc/>
     public ScanContact? SelectTarget(TargetSelectionParams @params)
     {
         var threatId = ThreatCalculator.GetHighestThreat(

@@ -21,6 +21,10 @@ public class MovePositionCalculator
     /// <summary>How often to regenerate the random offset. Default: 30 seconds.</summary>
     public TimeSpan OffsetRefreshInterval { get; set; } = TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    /// Creates a new move position calculator with an optional random number generator.
+    /// </summary>
+    /// <param name="random">RNG instance for offset generation; if null, a new <see cref="Random"/> is created.</param>
     public MovePositionCalculator(Random? random = null)
     {
         _random = random ?? new Random();

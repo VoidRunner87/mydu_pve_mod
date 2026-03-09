@@ -27,6 +27,7 @@ public class DamageTracker
     /// Registers a damage event and prunes expired entries.
     /// Thread-safe.
     /// </summary>
+    /// <param name="damage">The damage event to record.</param>
     public void RegisterDamage(DamageEvent damage)
     {
         lock (_lock)
@@ -40,6 +41,7 @@ public class DamageTracker
     /// <summary>
     /// Returns all damage events within the retention window.
     /// </summary>
+    /// <returns>A snapshot of recent damage events.</returns>
     public IReadOnlyList<DamageEvent> GetRecentHistory()
     {
         lock (_lock)
@@ -53,6 +55,7 @@ public class DamageTracker
     /// Returns all damage events within a custom time window.
     /// </summary>
     /// <param name="window">How far back to look.</param>
+    /// <returns>A snapshot of damage events within the specified window.</returns>
     public IReadOnlyList<DamageEvent> GetHistory(TimeSpan window)
     {
         lock (_lock)

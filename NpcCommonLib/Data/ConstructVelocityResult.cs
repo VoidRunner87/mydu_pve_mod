@@ -10,7 +10,7 @@ namespace NpcCommonLib.Data;
 /// Used to obtain the target's current velocity so the NPC can match speed
 /// or predict the target's future position. In the original code, the target's linear velocity
 /// is stored in <c>BehaviorContext.TargetLinearVelocity</c> and fed into
-/// <see cref="VelocityGoalCalculator"/> to compute range-appropriate speed goals.
+/// <c>VelocityGoalCalculator</c> to compute range-appropriate speed goals.
 /// </remarks>
 public class ConstructVelocityResult
 {
@@ -18,10 +18,10 @@ public class ConstructVelocityResult
     /// Linear (translational) velocity of the construct, in m/s.
     /// </summary>
     /// <remarks>
-    /// Used as <see cref="MovementInput.TargetLinearVelocity"/> when this result describes the
+    /// Used as <c>MovementInput.TargetLinearVelocity</c> when this result describes the
     /// enemy target. The magnitude (<c>Size()</c>) is compared against
-    /// <see cref="MovementInput.MinVelocity"/> to decide whether the target is
-    /// "nearly stationary" (triggering fallback speed calculations in <see cref="VelocityGoalCalculator"/>).
+    /// <c>MovementInput.MinVelocity</c> to decide whether the target is
+    /// "nearly stationary" (triggering fallback speed calculations in <c>VelocityGoalCalculator</c>).
     /// </remarks>
     public Vec3 Linear { get; set; }
 

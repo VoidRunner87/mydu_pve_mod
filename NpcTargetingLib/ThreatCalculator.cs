@@ -53,6 +53,8 @@ public static class ThreatCalculator
     /// <summary>
     /// Returns the construct ID of the nearest radar contact, or null if none.
     /// </summary>
+    /// <param name="contacts">Current radar contacts.</param>
+    /// <returns>The <see cref="ConstructId"/> of the closest contact, or null if the list is empty.</returns>
     public static ConstructId? GetClosestContact(IReadOnlyList<ScanContact> contacts)
     {
         if (contacts.Count == 0) return null;

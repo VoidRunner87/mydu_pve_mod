@@ -31,7 +31,7 @@ public class ConstructTransformResult
     /// <remarks>
     /// Only valid when <see cref="ConstructExists"/> is <c>true</c>.
     /// This is the authoritative server-side position used to initialize or correct
-    /// the NPC's <see cref="MovementInput.Position"/> on the first tick or after reconnection.
+    /// the NPC's <c>MovementInput.Position</c> on the first tick or after reconnection.
     /// </remarks>
     public Vec3 Position { get; set; }
 
@@ -41,7 +41,7 @@ public class ConstructTransformResult
     /// <remarks>
     /// Only valid when <see cref="ConstructExists"/> is <c>true</c>.
     /// Defaults to <see cref="Quaternion.Identity"/> (no rotation).
-    /// Used to seed <see cref="MovementInput.Rotation"/> when the movement loop starts.
+    /// Used to seed <c>MovementInput.Rotation</c> when the movement loop starts.
     /// </remarks>
     public Quaternion Rotation { get; set; } = Quaternion.Identity;
 }

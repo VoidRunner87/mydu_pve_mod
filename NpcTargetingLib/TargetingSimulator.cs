@@ -50,6 +50,8 @@ public class TargetingSimulator
     /// <summary>
     /// Processes a single targeting tick.
     /// </summary>
+    /// <param name="input">All inputs for this targeting tick (position, contacts, weapon data).</param>
+    /// <returns>A <see cref="TargetingOutput"/> containing the selected target and move-to position.</returns>
     public TargetingOutput Tick(TargetingInput input)
     {
         // --- No contacts ---

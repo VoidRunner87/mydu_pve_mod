@@ -15,11 +15,16 @@ public class RandomTargetStrategy : ITargetSelectionStrategy
     private double _accumulatedTime;
     private ConstructId? _lastSelectedId;
 
+    /// <summary>
+    /// Creates a new random target strategy with an optional random number generator.
+    /// </summary>
+    /// <param name="random">RNG instance; if null, a new <see cref="Random"/> is created.</param>
     public RandomTargetStrategy(Random? random = null)
     {
         _random = random ?? new Random();
     }
 
+    /// <inheritdoc/>
     public ScanContact? SelectTarget(TargetSelectionParams @params)
     {
         _accumulatedTime += @params.DeltaTime;

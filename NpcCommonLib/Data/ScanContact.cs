@@ -9,7 +9,7 @@ namespace NpcCommonLib.Data;
 /// In the original game code, radar contacts are collected in <c>BehaviorContext.Contacts</c>
 /// (a <c>ConcurrentBag&lt;ScanContact&gt;</c>) and used by target-selection behaviours
 /// such as <c>SelectTargetBehavior</c> to pick the closest or highest-threat target.
-/// This is the NpcMovementLib equivalent, returned by <see cref="Interfaces.IRadarService"/>.
+/// This is the NpcCommonLib equivalent, returned by <see cref="Interfaces.IRadarService"/>.
 /// </remarks>
 public class ScanContact
 {
