@@ -53,6 +53,45 @@ public struct Vec3 : IEquatable<Vec3>
     }
 
     /// <summary>
+    /// Returns the squared Euclidean length of this vector.
+    /// </summary>
+    /// <returns>The sum <c>X*X + Y*Y + Z*Z</c>, avoiding the sqrt cost of <see cref="Size"/>.</returns>
+    /// <remarks>
+    /// Prefer this over <see cref="Size"/> when comparing magnitudes or when the squared
+    /// value is sufficient (e.g., angular velocity denominators).
+    /// </remarks>
+    public readonly double LengthSquared()
+    {
+        return X * X + Y * Y + Z * Z;
+    }
+
+    /// <summary>
+    /// Returns an arbitrary vector perpendicular to this vector.
+    /// </summary>
+    /// <returns>
+    /// A non-normalized <see cref="Vec3"/> orthogonal to this vector. Returns <see cref="Zero"/>
+    /// if this vector is zero-length.
+    /// </returns>
+    /// <remarks>
+    /// Uses the smallest-component trick: identifies the component with the smallest absolute
+    /// value, then constructs a perpendicular by zeroing that component and swapping the other two.
+    /// The result is not unit-length; normalize at the call site if needed.
+    /// Matches the behaviour of <c>MathNet.Spatial.Euclidean.Vector3D.Orthogonal</c>.
+    /// </remarks>
+    public readonly Vec3 Orthogonal()
+    {
+        var ax = System.Math.Abs(X);
+        var ay = System.Math.Abs(Y);
+        var az = System.Math.Abs(Z);
+
+        if (ax <= ay && ax <= az)
+            return new Vec3(0, -Z, Y);
+        if (ay <= az)
+            return new Vec3(-Z, 0, X);
+        return new Vec3(-Y, X, 0);
+    }
+
+    /// <summary>
     /// Returns a unit-length vector in the same direction, or <see cref="Zero"/> if the magnitude
     /// is below a safety threshold.
     /// </summary>
