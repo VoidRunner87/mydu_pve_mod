@@ -104,6 +104,8 @@ public static class HitCalculator
     /// <remarks>
     /// Formula: <c>|(shooterToTarget × relativeVelocity) / |shooterToTarget|² - localAngularVelocity|</c>.
     /// Returns 0 when the shooter-to-target distance is near-zero.
+    /// Use <see cref="ComputeAngularVelocityDegrees"/> when passing the result to
+    /// <see cref="HitCalculationInput.AngularVelocityDegrees"/>.
     /// </remarks>
     public static double ComputeAngularVelocity(
         Vec3 shooterToTarget,
@@ -116,6 +118,29 @@ public static class HitCalculator
 
         var angVel = shooterToTarget.CrossProduct(relativeVelocity) / distSq - localAngularVelocity;
         return angVel.Size();
+    }
+
+    /// <summary>
+    /// Computes the angular velocity of a target as seen from the shooter, in degrees per second.
+    /// </summary>
+    /// <param name="shooterToTarget">Vector from shooter to target position.</param>
+    /// <param name="relativeVelocity">Velocity of target minus velocity of shooter.</param>
+    /// <param name="localAngularVelocity">Angular velocity of the shooter's construct.
+    /// NPC callers pass <see cref="Vec3.Zero"/>.</param>
+    /// <returns>The magnitude of the angular velocity vector in degrees per second.
+    /// Ready to pass directly to <see cref="HitCalculationInput.AngularVelocityDegrees"/>.</returns>
+    /// <remarks>
+    /// This is a convenience wrapper around <see cref="ComputeAngularVelocity"/> that converts
+    /// the result from radians to degrees, matching the original <c>ComputeAngularVelocity().Degrees</c>
+    /// call pattern in <c>WeaponGrainOverrides</c> and <c>ShootWeaponAction</c>.
+    /// </remarks>
+    public static double ComputeAngularVelocityDegrees(
+        Vec3 shooterToTarget,
+        Vec3 relativeVelocity,
+        Vec3 localAngularVelocity)
+    {
+        return ComputeAngularVelocity(shooterToTarget, relativeVelocity, localAngularVelocity)
+               * (180.0 / Math.PI);
     }
 
     /// <summary>
@@ -151,15 +176,24 @@ public static class HitCalculator
     public static StasisHitOutput CalculateStasisHit(StasisHitInput input)
     {
         var isHit = input.Distance <= input.Range * 3.0;
-        var overshoot = Math.Max(input.Distance - input.Range, 0.0);
 
+        if (!isHit)
+        {
+            return new StasisHitOutput
+            {
+                IsHit = false,
+                EffectStrength = 0.0,
+            };
+        }
+
+        var overshoot = Math.Max(input.Distance - input.Range, 0.0);
         var effectStrength = input.Range > 0.0
             ? Math.Pow(0.5, overshoot / input.Range) * input.BaseEffectStrength
             : 0.0;
 
         return new StasisHitOutput
         {
-            IsHit = isHit,
+            IsHit = true,
             EffectStrength = effectStrength,
         };
     }

@@ -201,6 +201,34 @@ public class HitCalculatorTests
         Assert.Equal(0.0, result);
     }
 
+    // ── ComputeAngularVelocityDegrees ──────────────────────────────
+
+    [Fact]
+    public void ComputeAngularVelocityDegrees_MatchesRadiansConversion()
+    {
+        var target = new Vec3(100, 0, 0);
+        var velocity = new Vec3(0, 10, 0);
+        var angVel = Vec3.Zero;
+
+        var radians = HitCalculator.ComputeAngularVelocity(target, velocity, angVel);
+        var degrees = HitCalculator.ComputeAngularVelocityDegrees(target, velocity, angVel);
+
+        _output.WriteLine($"Radians: {radians:F6}, Degrees: {degrees:F6}, Expected: {radians * 180 / Math.PI:F6}");
+        Assert.Equal(radians * 180.0 / Math.PI, degrees, precision: 10);
+    }
+
+    [Fact]
+    public void ComputeAngularVelocityDegrees_PerpendicularVelocity_MatchesExpected()
+    {
+        // 0.1 rad/s = 5.7296 deg/s
+        var target = new Vec3(100, 0, 0);
+        var velocity = new Vec3(0, 10, 0);
+
+        var degrees = HitCalculator.ComputeAngularVelocityDegrees(target, velocity, Vec3.Zero);
+
+        Assert.Equal(0.1 * 180.0 / Math.PI, degrees, precision: 4);
+    }
+
     // ── CalculateStasisRange ───────────────────────────────────────
 
     [Fact]
@@ -288,7 +316,7 @@ public class HitCalculatorTests
     }
 
     [Fact]
-    public void CalculateStasisHit_BeyondTripleRange_IsMiss()
+    public void CalculateStasisHit_BeyondTripleRange_IsMiss_WithZeroEffect()
     {
         var output = HitCalculator.CalculateStasisHit(new StasisHitInput
         {
@@ -298,6 +326,7 @@ public class HitCalculatorTests
         });
 
         Assert.False(output.IsHit);
+        Assert.Equal(0.0, output.EffectStrength);
     }
 
     // ── CalculateMissImpact ────────────────────────────────────────
